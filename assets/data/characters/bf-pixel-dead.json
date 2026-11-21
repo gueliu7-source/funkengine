@@ -1,0 +1,54 @@
+{
+ "name": "bf-pixel-dead",
+ "asset": "characters/bfPixelsDEAD",
+ "barColor": "#31B0D1",
+ "icon": "bf-pixel",
+ "flipX": true,
+ "swapSides": false,
+ "scale": 6,
+ "antialiasing": false,
+ "singDuration": 4,
+ "danceEvery": 2,
+ "animations": [
+  {
+   "name": "singUP",
+   "prefix": "BF Dies pixel",
+   "fps": 24,
+   "loop": false,
+   "offsets": [
+    0,
+    0
+   ]
+  },
+  {
+   "name": "firstDeath",
+   "prefix": "BF Dies pixel",
+   "fps": 24,
+   "loop": false,
+   "offsets": [
+    0,
+    0
+   ]
+  },
+  {
+   "name": "deathLoop",
+   "prefix": "Retry Loop",
+   "fps": 24,
+   "loop": false,
+   "offsets": [
+    -37,
+    0
+   ]
+  },
+  {
+   "name": "deathConfirm",
+   "prefix": "RETRY CONFIRM",
+   "fps": 24,
+   "loop": false,
+   "offsets": [
+    -37,
+    0
+   ]
+  }
+ ]
+}

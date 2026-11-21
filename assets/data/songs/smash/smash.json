@@ -1,0 +1,1 @@
+{"format":"funkforge-2","id":"smash","name":"Smash","bpm":144.0,"speed":1,"needsVoices":true,"player1":"bf","player2":"dad","gf":"gf","stage":"stage","noteStyle":"normal","bpmChanges":[{"time":0,"beat":0,"bpm":144.0}],"sections":[{"start":0.0,"beat":0.0,"steps":16,"mustHit":false,"alt":false}],"notes":[],"events":[]}

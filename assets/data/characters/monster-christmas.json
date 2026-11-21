@@ -1,0 +1,61 @@
+{
+ "name": "monster-christmas",
+ "asset": "characters/monsterChristmas",
+ "barColor": "#F3FF6E",
+ "icon": "monster",
+ "swapSides": true,
+ "singDuration": 4,
+ "danceEvery": 2,
+ "animations": [
+  {
+   "name": "idle",
+   "prefix": "monster idle",
+   "fps": 24,
+   "loop": false,
+   "offsets": [
+    0,
+    0
+   ]
+  },
+  {
+   "name": "singUP",
+   "prefix": "monster up note",
+   "fps": 24,
+   "loop": false,
+   "offsets": [
+    -20,
+    50
+   ]
+  },
+  {
+   "name": "singDOWN",
+   "prefix": "monster down",
+   "fps": 24,
+   "loop": false,
+   "offsets": [
+    -40,
+    -94
+   ]
+  },
+  {
+   "name": "singLEFT",
+   "prefix": "Monster left note",
+   "fps": 24,
+   "loop": false,
+   "offsets": [
+    -30,
+    0
+   ]
+  },
+  {
+   "name": "singRIGHT",
+   "prefix": "Monster Right note",
+   "fps": 24,
+   "loop": false,
+   "offsets": [
+    -51,
+    0
+   ]
+  }
+ ]
+}
