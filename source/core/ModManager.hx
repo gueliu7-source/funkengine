@@ -3,6 +3,7 @@ package core;
 import haxe.Json;
 #if sys
 import sys.FileSystem;
+import sys.io.File;
 #end
 
 typedef ModInfo =
@@ -130,6 +131,48 @@ class ModManager
 		var on = mods.filter(function(m) return m.enabled);
 		var off = mods.filter(function(m) return !m.enabled);
 		mods = on.concat(off);
+	}
+
+	/**
+	 * Pasta onde os editores salvam: o mod ativo de maior prioridade. Se não houver nenhum,
+	 * cria e ativa o mod "editor" (sem limpar o cache, para não derrubar as texturas em uso).
+	 */
+	public static function saveRoot():String
+	{
+		var on = enabledIds();
+		if (on.length > 0)
+			return "mods/" + on[0];
+		#if sys
+		if (!FileSystem.exists("mods/editor"))
+		{
+			mkdirs("mods/editor");
+			File.saveContent("mods/editor/pack.json",
+				'{ "name": "Editor", "description": "Criado pelos editores do FunkForge", "author": "", "version": "1.0", "color": "#FFB347" }');
+		}
+		scan();
+		for (m in mods)
+			if (m.id == "editor")
+				m.enabled = true;
+		normalize();
+		Settings.d.enabledMods = enabledIds();
+		Settings.flush();
+		Paths.rebuild(Settings.d.enabledMods);
+		#end
+		return "mods/editor";
+	}
+
+	/** Cria a pasta e as pais dela. */
+	public static function mkdirs(path:String):Void
+	{
+		#if sys
+		var cur = "";
+		for (part in path.split("/"))
+		{
+			cur = cur == "" ? part : cur + "/" + part;
+			if (!FileSystem.exists(cur))
+				FileSystem.createDirectory(cur);
+		}
+		#end
 	}
 
 	/** Salva a escolha e reindexa os arquivos. Libera o cache para não misturar texturas de mods diferentes. */

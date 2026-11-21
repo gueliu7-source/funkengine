@@ -39,11 +39,17 @@ class PlayState extends FlxState
 
 	/** Story Mode: músicas que ainda faltam tocar na semana. */
 	public static var isStory:Bool = false;
+	public static var fromEditor:Bool = false; // veio do Chart Editor: ao sair, volta para ele
 	public static var storyPlaylist:Array<String> = [];
 
 	/** Para onde voltar ao sair da partida (Story ou Freeplay). */
 	public static function leave():FlxState
 	{
+		if (fromEditor)
+		{
+			fromEditor = false;
+			return new editor.ChartEditorState();
+		}
 		if (isStory)
 			return new StoryMenuState();
 		return new FreeplayState();

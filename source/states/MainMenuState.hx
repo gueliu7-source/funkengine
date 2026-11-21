@@ -77,7 +77,7 @@ class MainMenuState extends FlxState
 
 		FlxG.camera.follow(camFollow, LOCKON, 0.06);
 
-		var ver = MenuUtil.text(12, FlxG.height - 28, 0, 16, FlxTextAlign.LEFT, "FunkForge v0.1.0");
+		var ver = MenuUtil.text(12, FlxG.height - 28, 0, 16, FlxTextAlign.LEFT, "FunkForge v0.1.0   |   7: Editores");
 		ver.scrollFactor.set();
 		add(ver);
 
@@ -122,6 +122,13 @@ class MainMenuState extends FlxState
 			change(-1);
 		if (FlxG.keys.justPressed.DOWN || FlxG.keys.justPressed.S)
 			change(1);
+
+		if (FlxG.keys.justPressed.SEVEN)
+		{
+			MenuUtil.sfx("confirmMenu");
+			FlxG.switchState(new EditorsState());
+			return;
+		}
 
 		if (FlxG.keys.justPressed.ESCAPE)
 		{
