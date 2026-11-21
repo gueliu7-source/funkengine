@@ -76,7 +76,7 @@ class GameOverSubState extends FlxSubState
 		{
 			if (FlxG.sound.music != null)
 				FlxG.sound.music.stop();
-			FlxG.switchState(new MenuState());
+			FlxG.switchState(PlayState.leave());
 		}
 	}
 }

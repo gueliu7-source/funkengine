@@ -37,6 +37,18 @@ class PlayState extends FlxState
 	public static var difficulty:String = ""; // "", "-easy" ou "-hard"
 	public static var week:Int = 1;
 
+	/** Story Mode: músicas que ainda faltam tocar na semana. */
+	public static var isStory:Bool = false;
+	public static var storyPlaylist:Array<String> = [];
+
+	/** Para onde voltar ao sair da partida (Story ou Freeplay). */
+	public static function leave():FlxState
+	{
+		if (isStory)
+			return new StoryMenuState();
+		return new FreeplayState();
+	}
+
 	public var chart:Chart;
 	public var judge:Judge;
 	public var hud:Hud;
@@ -78,7 +90,7 @@ class PlayState extends FlxState
 		chart = ChartLoader.load(songId, difficulty, week);
 		if (chart == null)
 		{
-			FlxG.switchState(new MenuState());
+			FlxG.switchState(leave());
 			return;
 		}
 		scrollSpeed = Settings.d.scrollSpeed > 0 ? Settings.d.scrollSpeed : chart.speed;
@@ -410,6 +422,7 @@ class PlayState extends FlxState
 				voices.volume = 0;
 				boyfriend.sing(lane, false, true);
 				missSound();
+				hud.onMiss();
 				hud.refresh();
 				scripts.call("noteMiss", [lane, ""]);
 			}
@@ -450,6 +463,7 @@ class PlayState extends FlxState
 		voices.volume = 0;
 		boyfriend.sing(n.lane, false, true);
 		missSound();
+		hud.onMiss();
 		hud.refresh();
 		scripts.call("noteMiss", [n.lane, n.type]);
 	}
@@ -624,7 +638,13 @@ class PlayState extends FlxState
 		scripts.call("onSongEnd");
 		inst.stop();
 		voices.stop();
-		FlxG.switchState(new MenuState());
+		if (isStory && storyPlaylist.length > 0)
+		{
+			songId = storyPlaylist.shift(); // próxima música da semana
+			FlxG.switchState(new PlayState());
+		}
+		else
+			FlxG.switchState(leave());
 	}
 
 	override public function destroy():Void

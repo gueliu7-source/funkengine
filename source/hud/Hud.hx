@@ -48,7 +48,8 @@ class Hud extends FlxGroup
 	var iconP2:HealthIcon;
 	var barX:Float;
 	var barY:Float;
-	var lastHealth:Float = -1;
+	var shownHealth:Float = 1; // vida "desenhada": desliza até a vida real (a barra e os ícones andam suave)
+	var shownScore:Float = 0; // pontuação que sobe contando até o valor real
 
 	var scoreText:FlxText;
 	var counters:Array<FlxText> = [];
@@ -132,8 +133,9 @@ class Hud extends FlxGroup
 		add(msText);
 
 		buildPools();
+		shownHealth = judge.health;
 		refresh();
-		updateBar(true);
+		applyBar();
 	}
 
 	function buildPools():Void
@@ -200,8 +202,7 @@ class Hud extends FlxGroup
 	/** Reconstrói os textos. Chame depois de qualquer mudança de pontuação. */
 	public function refresh():Void
 	{
-		var acc = Math.fround(judge.accuracy * 100) / 100;
-		scoreText.text = "Score: " + judge.score + "  |  Misses: " + judge.misses + "  |  Accuracy: " + acc + "%  |  " + judge.rank;
+		writeScore();
 		if (counters.length == 5)
 		{
 			counters[0].text = "Sick: " + judge.sicks;
@@ -218,8 +219,39 @@ class Hud extends FlxGroup
 		iconP2.bump();
 	}
 
+	/** Errou uma nota: o ícone do jogador encolhe de leve e volta ao normal. */
+	public function onMiss():Void
+		iconP1.kick(0.82);
+
+	/** Formata com 2 casas decimais (95.4 -> "95.40"). Só para valores >= 0. */
+	static function fmt2(v:Float):String
+	{
+		var n = Math.round(v * 100);
+		var whole = Std.int(n / 100);
+		var frac = Std.int(n - whole * 100);
+		return whole + "." + (frac < 10 ? "0" : "") + frac;
+	}
+
+	function writeScore():Void
+	{
+		scoreText.text = "Score: " + Std.int(Math.round(shownScore)) + "  |  Combo: " + judge.combo + "  |  Misses: " + judge.misses
+			+ "  |  Accuracy: " + fmt2(judge.accuracy) + "%  |  " + judge.rank;
+		// cor por desempenho: sem erros = azul-claro, precisão baixa = rosado
+		if (judge.totalPlayed == 0)
+			scoreText.color = FlxColor.WHITE;
+		else if (judge.misses == 0)
+			scoreText.color = 0xFF9EF0FF;
+		else if (judge.accuracy < 70)
+			scoreText.color = 0xFFFFB0B0;
+		else
+			scoreText.color = FlxColor.WHITE;
+	}
+
 	public function popRating(rating:String, combo:Int, diffMs:Float):Void
 	{
+		if (rating == "sick" || rating == "good")
+			iconP1.kick(1.1);
+
 		var baseX = FlxG.width * 0.55;
 		var baseY = FlxG.height * 0.42;
 
@@ -312,7 +344,8 @@ class Hud extends FlxGroup
 	override function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
-		updateBar(false);
+		tickHealth(elapsed);
+		tickScore(elapsed);
 		iconP1.settle(elapsed);
 		iconP2.settle(elapsed);
 
@@ -341,18 +374,48 @@ class Hud extends FlxGroup
 		botplayText.visible = Settings.d.botplay;
 	}
 
-	function updateBar(force:Bool):Void
+	/** A vida desenhada desliza até a real (≈0,15 s), então barra e ícones nunca "pulam". */
+	function tickHealth(elapsed:Float):Void
 	{
-		if (!force && judge.health == lastHealth)
+		var d = judge.health - shownHealth;
+		if (d == 0)
 			return;
-		lastHealth = judge.health;
-		var pct = judge.health / 2; // 0..1
-		barPlr.scale.x = pct;
-		var edge = barX + BAR_W * (1 - pct); // onde o jogador e o oponente se encontram
+		if (Math.abs(d) < 0.0005)
+			shownHealth = judge.health;
+		else
+			shownHealth += d * (1 - Math.exp(-elapsed * 14));
+		applyBar();
+	}
+
+	/** A pontuação sobe contando até o valor real, em vez de trocar de uma vez. */
+	function tickScore(elapsed:Float):Void
+	{
+		var target:Float = judge.score;
+		if (shownScore == target)
+			return;
+		var d = target - shownScore;
+		if (Math.abs(d) < 1)
+			shownScore = target;
+		else
+		{
+			var step = d * (1 - Math.exp(-elapsed * 16));
+			shownScore += Math.abs(step) < 1 ? (d > 0 ? 1.0 : -1.0) : step;
+		}
+		writeScore();
+	}
+
+	/** Posiciona barra e ícones com a vida desenhada; o quadro do ícone usa a vida real. */
+	function applyBar():Void
+	{
+		var shown = shownHealth / 2; // 0..1
+		barPlr.scale.x = shown;
+		var edge = barX + BAR_W * (1 - shown); // onde o jogador e o oponente se encontram
 		iconP1.setPosition(edge - 26, barY + BAR_H / 2 - iconP1.height / 2);
 		iconP2.setPosition(edge - (iconP2.width - 26), barY + BAR_H / 2 - iconP2.height / 2);
-		iconP1.setLosing(pct < 0.2);
-		iconP2.setLosing(pct > 0.8);
+
+		var pct = judge.health / 2;
+		iconP1.setState(pct < 0.2 ? 1 : (pct > 0.8 ? 2 : 0));
+		iconP2.setState(pct > 0.8 ? 1 : (pct < 0.2 ? 2 : 0));
 	}
 
 	function take(list:Array<Popup>):Null<Popup>

@@ -5,7 +5,7 @@ import core.Settings;
 import flixel.FlxG;
 import flixel.FlxGame;
 import openfl.display.Sprite;
-import states.MenuState;
+import states.TitleState;
 
 class Main extends Sprite
 {
@@ -16,7 +16,7 @@ class Main extends Sprite
 		ModManager.init();
 
 		var fps:Int = Settings.d.fps;
-		addChild(new FlxGame(1280, 720, MenuState, fps, fps, true, false));
+		addChild(new FlxGame(1280, 720, TitleState, fps, fps, true, false));
 
 		FlxG.autoPause = false;
 		FlxG.mouse.visible = false;

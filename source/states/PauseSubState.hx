@@ -72,7 +72,7 @@ class PauseSubState extends FlxSubState
 				case 1:
 					FlxG.resetState();
 				default:
-					FlxG.switchState(new MenuState());
+					FlxG.switchState(PlayState.leave());
 			}
 		}
 	}

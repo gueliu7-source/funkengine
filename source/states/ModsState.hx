@@ -110,7 +110,7 @@ class ModsState extends FlxState
 		if (FlxG.keys.justPressed.ESCAPE)
 		{
 			ModManager.apply();
-			FlxG.switchState(new MenuState());
+			FlxG.switchState(new OptionsState());
 		}
 	}
 }

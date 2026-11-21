@@ -24,5 +24,11 @@ Veja `mods/example/scripts` e `assets/data/stages/halloween.hx`. Callbacks: onCr
 onBeatHit, onStepHit, onEvent, goodNoteHit, noteMiss, etc. Mesma API em .hx e .lua.
 Modcharts antigos da Kade foram salvos como `.kade` e não são compatíveis.
 
-## Controles do menu
-Setas, ENTER, F1 downscroll, F2 middlescroll, F3 botplay, F4 ghost tap, F5 mod, [ ] velocidade, ; ' offset.
+## Menus (estilo FNF original)
+Título (intro + ENTER) -> Menu principal (Story Mode / Freeplay / Options) -> telas.
+Setas ou W/S/A/D navegam, ENTER confirma, ESC volta. Os antigos atalhos F1-F5 agora estão em Options
+(downscroll, middlescroll, ghost tap, botplay, velocidade, offset, mods e opções do HUD).
+
+## HUD
+Barra de vida e ícones deslizam suaves; ícones pulsam na batida, crescem ao acertar e encolhem ao errar;
+suportam 3 frames (normal/perdendo/ganhando). Score conta subindo; accuracy com 2 casas.
