@@ -1,6 +1,6 @@
 package;
 
-import core.Paths;
+import core.ModManager;
 import core.Settings;
 import flixel.FlxG;
 import flixel.FlxGame;
@@ -13,7 +13,7 @@ class Main extends Sprite
 	{
 		super();
 		Settings.load();
-		Paths.mod = Settings.d.mod;
+		ModManager.init();
 
 		var fps:Int = Settings.d.fps;
 		addChild(new FlxGame(1280, 720, MenuState, fps, fps, true, false));

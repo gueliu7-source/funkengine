@@ -46,14 +46,7 @@ class MenuState extends FlxState
 		title.text = "FUNKFORGE";
 		add(title);
 
-		var text = Paths.getText("data/songs.json");
-		if (text != null)
-		{
-			var arr:Array<SongEntry> = Json.parse(text).songs;
-			for (s in arr)
-				if (Paths.exists('data/songs/${s.id}/${s.id}.json'))
-					songs.push(s);
-		}
+		loadSongList();
 
 		for (i in 0...VISIBLE)
 		{
@@ -79,6 +72,39 @@ class MenuState extends FlxState
 			if (m != null)
 				FlxG.sound.playMusic(m, 0.7);
 		}
+	}
+
+	/** Junta o data/songs.json de assets/ e de cada mod ativo; pastas de música sem entrada entram com o nome da pasta. */
+	function loadSongList():Void
+	{
+		var seen:Map<String, Bool> = new Map();
+		for (file in Paths.findAll("data/songs.json"))
+		{
+			try
+			{
+				var arr:Array<Dynamic> = Json.parse(Paths.readFile(file)).songs;
+				for (s in arr)
+				{
+					var id:String = Std.string(s.id);
+					if (seen.exists(id) || !Paths.exists('data/songs/$id/$id.json'))
+						continue;
+					seen.set(id, true);
+					var w:Dynamic = Reflect.field(s, "week");
+					var nm:Dynamic = Reflect.field(s, "name");
+					songs.push({id: id, name: nm != null ? Std.string(nm) : id, week: w != null ? Std.int(w) : 0});
+				}
+			}
+			catch (e:Dynamic)
+				trace('[Menu] songs.json inválido em $file: $e');
+		}
+		var extra = Paths.list("data/songs");
+		extra.sort(function(a, b) return a < b ? -1 : (a > b ? 1 : 0));
+		for (id in extra)
+			if (!seen.exists(id) && Paths.exists('data/songs/$id/$id.json'))
+			{
+				seen.set(id, true);
+				songs.push({id: id, name: id, week: 0});
+			}
 	}
 
 	function label(x:Float, y:Float, w:Float, size:Int, align:FlxTextAlign):FlxText
@@ -132,7 +158,7 @@ class MenuState extends FlxState
 		var d = Settings.d;
 		optionsText.text = "F1 Downscroll: " + onOff(d.downscroll) + "   F2 Middlescroll: " + onOff(d.middlescroll) + "   F3 Botplay: " + onOff(d.botplay)
 			+ "   F4 Ghost tapping: " + onOff(d.ghostTapping) + "\n[ ] Velocidade: " + (d.scrollSpeed <= 0 ? "do chart" : Std.string(d.scrollSpeed))
-			+ "   ; ' Offset: " + d.offsetMs + "ms   F5 Mod: " + (d.mod == "" ? "nenhum" : d.mod) + "   ENTER jogar";
+			+ "   ; ' Offset: " + d.offsetMs + "ms   F5 Mods (" + d.enabledMods.length + " ativos)   ENTER jogar";
 	}
 
 	inline function onOff(b:Bool):String
@@ -194,12 +220,7 @@ class MenuState extends FlxState
 		}
 		if (FlxG.keys.justPressed.F5)
 		{
-			var mods = [""].concat(Paths.listMods());
-			var i = mods.indexOf(d.mod);
-			d.mod = mods[(i + 1) % mods.length];
-			Paths.mod = d.mod;
-			Settings.flush();
-			FlxG.resetState();
+			FlxG.switchState(new ModsState());
 			return;
 		}
 		if (FlxG.keys.justPressed.LBRACKET)

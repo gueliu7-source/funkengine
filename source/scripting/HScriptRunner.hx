@@ -54,6 +54,9 @@ class HScriptRunner extends ScriptRunner
 		}
 	}
 
+	override public function hasFn(fn:String):Bool
+		return !closed && interp != null && interp.variables.exists(fn);
+
 	override public function set(name:String, value:Dynamic):Void
 		interp.variables.set(name, value);
 

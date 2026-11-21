@@ -26,7 +26,8 @@ using StringTools;
  *   data/songs/<musica>/*.hx|lua         da música
  *   data/stages/<stage>.hx|lua           do cenário
  *   data/characters/<personagem>.hx|lua  de cada personagem em uso
- * (cada caminho é procurado primeiro em mods/<mod>/ e depois em assets/)
+ * scripts/ e data/songs/<musica>/ somam os arquivos de assets/ e de todos os mods ativos;
+ * stage e personagem usam só o arquivo de maior prioridade (o mod substitui o original).
  */
 class ScriptManager
 {
@@ -74,11 +75,10 @@ class ScriptManager
 
 	function loadDir(dir:String):Void
 	{
-		var names = Paths.list(dir);
-		names.sort(function(a, b) return a < b ? -1 : (a > b ? 1 : 0));
-		for (n in names)
-			if (n.endsWith(".hx") || n.endsWith(".lua"))
-				loadFile(dir + "/" + n);
+		// soma os scripts de TODAS as raízes (assets e cada mod ativo), como no Psych
+		for (real in Paths.listAll(dir))
+			if (real.endsWith(".hx") || real.endsWith(".lua"))
+				loadReal(real);
 	}
 
 	function loadNamed(basePath:String):Void
@@ -92,11 +92,16 @@ class ScriptManager
 	public function loadFile(rel:String):Void
 	{
 		var real = Paths.find(rel);
-		if (real == null)
-			return;
+		if (real != null)
+			loadReal(real);
+	}
+
+	function loadReal(real:String):Void
+	{
 		for (r in runners)
 			if (r.path == real)
 				return; // já carregado (personagem repetido)
+		var rel = real;
 
 		if (rel.endsWith(".hx"))
 			runners.push(new HScriptRunner(this, real, Paths.readFile(real)));
@@ -129,12 +134,16 @@ class ScriptManager
 	/** Chama a função em todos os scripts. Devolve true se algum devolveu "stop". */
 	public function call(fn:String, ?args:Array<Dynamic>):Bool
 	{
+		if (runners.length == 0)
+			return false;
 		if (args == null)
 			args = [];
 		var stop = false;
 		for (r in runners)
 		{
 			if (r.closed)
+				continue;
+			if (!r.hasFn(fn) && !(r.isLua && legacy.exists(fn)))
 				continue;
 			var v = r.call(fn, args);
 			if (r.isLua && legacy.exists(fn))

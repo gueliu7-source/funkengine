@@ -18,6 +18,10 @@ class ScriptRunner
 	public function call(fn:String, args:Array<Dynamic>):Dynamic
 		return null;
 
+	/** Falso se dá para saber que o script não define a função (evita alocar e chamar à toa todo frame). */
+	public function hasFn(fn:String):Bool
+		return true;
+
 	public function set(name:String, value:Dynamic):Void
 	{
 	}

@@ -21,7 +21,7 @@ typedef SettingsData =
 	var goodMs:Float;
 	var badMs:Float;
 	var shitMs:Float;
-	var mod:String; // pasta ativa em mods/ ("" = nenhuma)
+	var enabledMods:Array<String>; // mods ativos (pastas em mods/), do de maior prioridade ao de menor
 	var keys:Array<Array<FlxKey>>; // 4 lanes: esquerda, baixo, cima, direita
 }
 
@@ -52,7 +52,7 @@ class Settings
 			goodMs: 90,
 			badMs: 135,
 			shitMs: 166,
-			mod: "",
+			enabledMods: [],
 			keys: [[FlxKey.A, FlxKey.LEFT], [FlxKey.S, FlxKey.DOWN], [FlxKey.W, FlxKey.UP], [FlxKey.D, FlxKey.RIGHT]]
 		};
 	}

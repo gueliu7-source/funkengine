@@ -1,0 +1,7 @@
+{
+  "name": "Mod de Exemplo",
+  "description": "Mostra scripts .hx e .lua e um cenário novo (example) que reaproveita as imagens do cenário base.",
+  "author": "FunkForge",
+  "version": "1.0",
+  "color": "#66CCFF"
+}
