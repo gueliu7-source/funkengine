@@ -1,0 +1,11 @@
+{
+  "name": "FunkForge (Haxe)",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  "hostRequirements": { "cpus": 4 },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": ["vshaxe.haxe-extension", "openfl.lime-vscode-extension"]
+    }
+  }
+}

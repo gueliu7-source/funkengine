@@ -1,0 +1,25 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.6
+      - name: Bibliotecas
+        shell: bash
+        run: bash tools/install_libs.sh
+      - name: Compilar (Windows)
+        shell: bash
+        run: haxelib run lime build windows -release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FunkForge-windows
+          path: export/release/windows/bin
