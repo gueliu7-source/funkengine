@@ -1,0 +1,11 @@
+{
+  "name": "halloween",
+  "zoom": 1.05,
+  "bf": [790, 450],
+  "dad": [100, 100],
+  "gf": [400, 130],
+  "charOffsets": { "spooky": [100, 300], "monster": [100, 200] },
+  "objects": [
+    { "id": "bg", "image": "stages/halloween_bg", "x": -200, "y": -100, "animated": true, "idle": "halloweem bg0" }
+  ]
+}

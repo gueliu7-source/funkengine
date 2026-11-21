@@ -1,0 +1,11 @@
+assets/images/
+assets/music/
+assets/sounds/
+assets/songs/
+assets/fonts/
+assets/data/songs/
+assets/data/characters/
+assets/data/songs.json
+*.ogg
+*.zip
+export/

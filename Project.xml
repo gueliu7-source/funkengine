@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://lime.openfl.org/project/1.0.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://lime.openfl.org/project/1.0.4 http://lime.openfl.org/xsd/project-1.0.4.xsd">
+
+	<!-- FunkForge: engine de FNF modular, baseada na Kade Engine 1.8 (Apache 2.0). Veja NOTICE. -->
+	<app title="FunkForge" file="FunkForge" main="Main" version="0.1.0" company="FunkForge" packageName="dev.funkforge" package="dev.funkforge" />
+	<app preloader="flixel.system.FlxPreloader" />
+	<set name="SWF_VERSION" value="11.8" />
+
+	<window width="1280" height="720" background="#000000" hardware="true" vsync="false" fps="" />
+	<window if="desktop" orientation="landscape" fullscreen="false" resizable="true" />
+
+	<set name="BUILD_DIR" value="export/debug" if="debug" />
+	<set name="BUILD_DIR" value="export/release" unless="debug" />
+
+	<source path="source" />
+
+	<!-- Os assets ficam como arquivos soltos ao lado do executável (embed="false"):
+	     o jogo lê tudo pelo sistema de arquivos, o que permite mods e scripts sem recompilar. -->
+	<assets path="assets" rename="assets" embed="false" />
+	<assets path="mods" rename="mods" embed="false" />
+	<assets path="NOTICE" rename="NOTICE.txt" />
+
+	<haxelib name="flixel" />
+	<haxelib name="flixel-addons" />
+	<haxelib name="hscript" />
+
+	<!-- Lua (LuaJIT). Para compilar sem Lua use:  lime build windows -DNO_LUA -->
+	<set name="FEATURE_LUA" if="desktop" unless="NO_LUA" />
+	<haxedef name="FEATURE_LUA" if="FEATURE_LUA" />
+	<haxelib name="linc_luajit" if="FEATURE_LUA" />
+	<haxedef name="LINC_LUA_RELATIVE_DYNAMIC_LIB" if="FEATURE_LUA" />
+
+	<!-- posição de erro nos scripts HScript -->
+	<haxedef name="hscriptPos" />
+
+	<!-- Otimizações: desliga recursos do Flixel que a engine não usa -->
+	<haxedef name="FLX_NO_DEBUG" unless="debug" />
+	<haxedef name="FLX_NO_FOCUS_LOST_SCREEN" />
+	<haxedef name="FLX_NO_TOUCH" if="desktop" />
+	<haxedef name="FLX_NO_GAMEPAD" if="desktop" />
+	<haxedef name="FLX_NO_HEALTH" />
+	<haxedef name="FLX_NO_SOUND_TRAY" />
+
+</project>

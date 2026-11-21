@@ -1,0 +1,162 @@
+package scripting;
+
+import core.Chart;
+import core.Conductor;
+import core.Paths;
+import core.Settings;
+import flixel.FlxG;
+import flixel.FlxSprite;
+import flixel.math.FlxMath;
+import flixel.text.FlxText;
+import flixel.tweens.FlxTween;
+import flixel.util.FlxTimer;
+import states.PlayState;
+
+using StringTools;
+
+/**
+ * Carrega e dispara scripts .hx e .lua. Os dois tipos usam os mesmos callbacks:
+ *   onCreate, onCreatePost, onUpdate(elapsed), onUpdatePost(elapsed), onStepHit(step), onBeatHit(beat),
+ *   onSectionHit(sec), onCountdown(tick), onSongStart, onSongEnd, goodNoteHit(lane, rating, isSustain, type),
+ *   opponentNoteHit(lane, isSustain, type), noteMiss(lane, type), onEvent(name, v1, v2), onPause, onResume,
+ *   onGameOver (devolva "stop" para impedir), onTimerCompleted(tag, loops, loopsLeft), onTweenCompleted(tag), onDestroy.
+ *
+ * Onde procura scripts (todos opcionais):
+ *   scripts/*.hx|lua                     globais, em toda música
+ *   data/songs/<musica>/*.hx|lua         da música
+ *   data/stages/<stage>.hx|lua           do cenário
+ *   data/characters/<personagem>.hx|lua  de cada personagem em uso
+ * (cada caminho é procurado primeiro em mods/<mod>/ e depois em assets/)
+ */
+class ScriptManager
+{
+	public var game:PlayState;
+	public var api:Map<String, Dynamic>;
+	public var classes:Map<String, Dynamic>;
+	public var runners:Array<ScriptRunner> = [];
+	public var errors:Array<String> = [];
+
+	// nomes antigos da Kade Engine, chamados também em scripts Lua
+	static var legacy:Map<String, String> = [
+		"onCreatePost" => "start", "onUpdate" => "update", "onBeatHit" => "beatHit", "onStepHit" => "stepHit", "onSongStart" => "songStart"
+	];
+
+	public function new(game:PlayState)
+	{
+		this.game = game;
+		api = ScriptApi.build(game, this);
+		classes = new Map();
+		classes.set("FlxG", FlxG);
+		classes.set("FlxSprite", FlxSprite);
+		classes.set("FlxText", FlxText);
+		classes.set("FlxTween", FlxTween);
+		classes.set("FlxTimer", FlxTimer);
+		classes.set("FlxMath", FlxMath);
+		classes.set("FlxEase", ScriptApi.easeObject());
+		classes.set("Paths", Paths);
+		classes.set("Conductor", Conductor);
+		classes.set("Settings", Settings);
+		classes.set("Math", Math);
+		classes.set("Std", Std);
+		classes.set("StringTools", StringTools);
+		classes.set("Reflect", Reflect);
+	}
+
+	public function loadAll(chart:Chart):Void
+	{
+		loadDir("scripts");
+		loadDir("data/songs/" + chart.id);
+		loadNamed("data/stages/" + chart.stage);
+		for (c in [chart.player1, chart.player2, chart.gf])
+			loadNamed("data/characters/" + c);
+		pushGlobals();
+	}
+
+	function loadDir(dir:String):Void
+	{
+		var names = Paths.list(dir);
+		names.sort(function(a, b) return a < b ? -1 : (a > b ? 1 : 0));
+		for (n in names)
+			if (n.endsWith(".hx") || n.endsWith(".lua"))
+				loadFile(dir + "/" + n);
+	}
+
+	function loadNamed(basePath:String):Void
+	{
+		if (Paths.exists(basePath + ".hx"))
+			loadFile(basePath + ".hx");
+		if (Paths.exists(basePath + ".lua"))
+			loadFile(basePath + ".lua");
+	}
+
+	public function loadFile(rel:String):Void
+	{
+		var real = Paths.find(rel);
+		if (real == null)
+			return;
+		for (r in runners)
+			if (r.path == real)
+				return; // já carregado (personagem repetido)
+
+		if (rel.endsWith(".hx"))
+			runners.push(new HScriptRunner(this, real, Paths.readFile(real)));
+		else
+		{
+			#if FEATURE_LUA
+			runners.push(new LuaRunner(this, real));
+			#else
+			reportError('[$rel] Lua desativado nesta build (compilada com -DNO_LUA)');
+			#end
+		}
+	}
+
+	/** Variáveis globais no estilo Kade/Psych, visíveis nos scripts. */
+	function pushGlobals():Void
+	{
+		for (r in runners)
+		{
+			r.set("songName", game.chart.id);
+			r.set("bpm", game.chart.bpm);
+			r.set("crochet", Conductor.crochet);
+			r.set("scrollSpeed", game.scrollSpeed);
+			r.set("downscroll", Settings.d.downscroll);
+			r.set("middlescroll", Settings.d.middlescroll);
+			r.set("botplay", Settings.d.botplay);
+			r.set("difficulty", PlayState.difficulty);
+		}
+	}
+
+	/** Chama a função em todos os scripts. Devolve true se algum devolveu "stop". */
+	public function call(fn:String, ?args:Array<Dynamic>):Bool
+	{
+		if (args == null)
+			args = [];
+		var stop = false;
+		for (r in runners)
+		{
+			if (r.closed)
+				continue;
+			var v = r.call(fn, args);
+			if (r.isLua && legacy.exists(fn))
+				r.call(legacy.get(fn), args);
+			if (v != null && Std.string(v) == "stop")
+				stop = true;
+		}
+		return stop;
+	}
+
+	public function reportError(msg:String):Void
+	{
+		errors.push(msg);
+		if (game != null)
+			game.showError(msg);
+	}
+
+	public function destroy():Void
+	{
+		call("onDestroy");
+		for (r in runners)
+			r.destroy();
+		runners = [];
+	}
+}
