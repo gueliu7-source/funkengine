@@ -12,6 +12,8 @@ import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import game.Judge;
 import game.NoteSkin;
+import hud.HudStyles;
+import states.PlayState;
 
 private class Popup
 {
@@ -35,10 +37,10 @@ private class Popup
 @:keep
 class Hud extends FlxGroup
 {
-	static inline var BAR_W:Int = 600;
-	static inline var BAR_H:Int = 14;
-
+	var style:HudStyle;
 	var judge:Judge;
+	var songTitle:String;
+	var diffName:String;
 	var down:Bool;
 
 	var barBg:FlxSprite;
@@ -46,20 +48,26 @@ class Hud extends FlxGroup
 	var barPlr:FlxSprite;
 	var iconP1:HealthIcon;
 	var iconP2:HealthIcon;
-	var barX:Float;
-	var barY:Float;
+	var fillX:Float; // área interna da barra (onde as cores aparecem)
+	var fillY:Float;
+	var fillW:Int;
+	var fillH:Int;
+	var frameBottom:Float;
 	var shownHealth:Float = 1; // vida "desenhada": desliza até a vida real (a barra e os ícones andam suave)
 	var shownScore:Float = 0; // pontuação que sobe contando até o valor real
 
 	var scoreText:FlxText;
+	var scoreL:FlxText; // usados só no layout "codename" (esquerda / meio / direita)
+	var scoreM:FlxText;
+	var scoreR:FlxText;
+	var timeTxt:FlxText;
+	var infoText:FlxText;
 	var counters:Array<FlxText> = [];
 	var botplayText:FlxText;
 
 	var progBg:FlxSprite;
 	var progFill:FlxSprite;
-	var songName:FlxText;
-	var songTime:FlxText;
-	var lastSecond:Int = -1;
+	var timeLeftSec:Int = -1;
 	var songLength:Float = 1;
 
 	var ratingPools:Map<String, Array<Popup>> = new Map();
@@ -72,16 +80,52 @@ class Hud extends FlxGroup
 	{
 		super();
 		this.judge = judge;
+		this.songTitle = songTitle;
+		style = HudStyles.get(Settings.d.hudStyle);
 		down = Settings.d.downscroll;
+		diffName = switch (PlayState.difficulty)
+		{
+			case "-easy": "Easy";
+			case "-hard": "Hard";
+			default: "Normal";
+		}
 
-		barX = (FlxG.width - BAR_W) / 2;
-		barY = down ? 76 : FlxG.height - 78;
+		if (style.fixedColors)
+		{
+			p1Color = 0xFF66FF33;
+			p2Color = 0xFFFF0000;
+		}
 
-		barBg = rect(barX - 4, barY - 4, BAR_W + 8, BAR_H + 8, 0xFF101018);
-		barOpp = rect(barX, barY, BAR_W, BAR_H, p2Color);
-		barPlr = rect(barX, barY, BAR_W, BAR_H, p1Color);
-		barPlr.origin.set(BAR_W, 0); // a barra do jogador encolhe a partir da direita
-		add(barBg);
+		// --- barra de vida
+		fillW = style.barW;
+		fillH = style.barH;
+		var inset = style.barImage ? 4 : style.border;
+		var frameW = fillW + inset * 2;
+		var frameH = fillH + inset * 2;
+		var frameX = (FlxG.width - frameW) / 2;
+		var frameY = down ? FlxG.height * 0.11 : FlxG.height * 0.89 - frameH / 2;
+		fillX = frameX + inset;
+		fillY = frameY + inset;
+		frameBottom = frameY + frameH;
+
+		if (style.barImage)
+		{
+			var g = Paths.graphic("images/healthBar.png");
+			if (g != null)
+			{
+				var bgImg = new FlxSprite(frameX, frameY).loadGraphic(g);
+				bgImg.scrollFactor.set();
+				bgImg.moves = false;
+				add(bgImg);
+			}
+			else
+				add(rect(frameX, frameY, frameW, frameH, 0xFF000000));
+		}
+		else if (inset > 0)
+			add(rect(frameX, frameY, frameW, frameH, 0xFF101018));
+		barOpp = rect(fillX, fillY, fillW, fillH, p2Color);
+		barPlr = rect(fillX, fillY, fillW, fillH, p1Color);
+		barPlr.origin.set(fillW, 0); // a barra do jogador encolhe a partir da direita
 		add(barOpp);
 		add(barPlr);
 
@@ -90,33 +134,64 @@ class Hud extends FlxGroup
 		add(iconP1);
 		add(iconP2);
 
-		scoreText = text(0, down ? barY - 44 : barY + 28, FlxG.width, 20, FlxTextAlign.CENTER);
-		add(scoreText);
+		// --- textos de pontuação
+		var ty = frameBottom + style.scoreDy;
+		if (style.score == "codename")
+		{
+			var w = frameW / 3;
+			scoreL = text(frameX, ty, w, style.scoreSize, FlxTextAlign.LEFT);
+			scoreM = text(frameX + w, ty, w, style.scoreSize, FlxTextAlign.CENTER);
+			scoreR = text(frameX + w * 2, ty, w, style.scoreSize, FlxTextAlign.RIGHT);
+			add(scoreL);
+			add(scoreM);
+			add(scoreR);
+			scoreText = text(0, -100, 10, 8, FlxTextAlign.LEFT); // não usado, evita null
+		}
+		else
+		{
+			scoreText = text(0, ty, FlxG.width, style.scoreSize, FlxTextAlign.CENTER);
+			add(scoreText);
+		}
 
 		botplayText = text(0, down ? FlxG.height - 120 : 120, FlxG.width, 32, FlxTextAlign.CENTER);
 		botplayText.text = "BOTPLAY";
 		botplayText.visible = Settings.d.botplay;
 		add(botplayText);
 
-		// barra de progresso da música
-		var progY = down ? FlxG.height - 22 : 14;
-		progBg = rect((FlxG.width - 400) / 2, progY, 400, 8, 0xFF101018);
-		progFill = rect((FlxG.width - 400) / 2, progY, 400, 8, 0xFFE8E8F0);
-		progFill.origin.set(0, 0);
-		progFill.scale.x = 0;
-		songName = text(0, down ? progY - 26 : progY + 12, FlxG.width, 16, FlxTextAlign.CENTER);
-		songName.text = songTitle;
-		songTime = text(0, down ? progY - 26 : progY + 12, FlxG.width - 300, 14, FlxTextAlign.RIGHT);
-		songTime.visible = false;
-		if (Settings.d.hudSongBar)
+		// --- tempo da música
+		var showTime = Settings.d.hudSongBar && style.time != "none";
+		if (showTime && (style.time == "top" || style.time == "bottom"))
 		{
+			var atTop = (style.time == "top") != down;
+			var barH = style.timeInside ? 18 : 8;
+			var progY:Float = atTop ? 14 : FlxG.height - 22;
+			progBg = rect((FlxG.width - 400) / 2 - 2, progY - 2, 404, barH + 4, 0xFF000000);
+			progFill = rect((FlxG.width - 400) / 2, progY, 400, barH, 0xFFE8E8F0);
+			progFill.origin.set(0, 0);
+			progFill.scale.x = 0;
 			add(progBg);
 			add(progFill);
-			add(songName);
+			var ny:Float = style.timeInside ? progY - 3 : (atTop ? progY + 14 : progY - 26);
+			timeTxt = text(0, ny, FlxG.width, style.timeInside ? 16 : 16, FlxTextAlign.CENTER);
+			timeTxt.text = songTitle;
+			add(timeTxt);
+		}
+		else if (showTime && style.time == "text")
+		{
+			timeTxt = text(0, down ? FlxG.height - 34 : 12, FlxG.width, 18, FlxTextAlign.CENTER);
+			timeTxt.text = songTitle + " - " + diffName;
+			add(timeTxt);
 		}
 
-		// contador de julgamentos
-		if (Settings.d.hudJudgementCounter)
+		if (style.info)
+		{
+			infoText = text(8, FlxG.height - 28, 500, 16, FlxTextAlign.LEFT);
+			infoText.text = songTitle + " - " + diffName;
+			add(infoText);
+		}
+
+		// --- contador de julgamentos
+		if (Settings.d.hudJudgementCounter && style.counters)
 		{
 			var colors:Array<FlxColor> = [0xFF00D5FF, 0xFF6BFF6B, 0xFFFFB84D, 0xFFFF5A5A, 0xFFB01E1E];
 			for (i in 0...5)
@@ -136,13 +211,14 @@ class Hud extends FlxGroup
 		shownHealth = judge.health;
 		refresh();
 		applyBar();
+		timeLeftSec = -1;
 	}
 
 	function buildPools():Void
 	{
 		var suffix = NoteSkin.pixel ? "-pixel" : "";
 		var folder = NoteSkin.pixel ? "pixelUI/" : "";
-		var zoom = NoteSkin.pixel ? NoteSkin.PIXEL_ZOOM * 0.7 : 0.7;
+		var zoom = NoteSkin.pixel ? NoteSkin.PIXEL_ZOOM * 0.7 : style.ratingScale;
 		for (r in ["sick", "good", "bad", "shit"])
 		{
 			var list:Array<Popup> = [];
@@ -163,7 +239,7 @@ class Hud extends FlxGroup
 			}
 			ratingPools.set(r, list);
 		}
-		var dz = NoteSkin.pixel ? NoteSkin.PIXEL_ZOOM * 0.5 : 0.5;
+		var dz = NoteSkin.pixel ? NoteSkin.PIXEL_ZOOM * 0.5 : style.ratingScale * 0.7;
 		for (d in 0...10)
 		{
 			var list:Array<Popup> = [];
@@ -196,7 +272,18 @@ class Hud extends FlxGroup
 		if (!Settings.d.hudSongBar)
 			return;
 		var p = posMs / songLength;
-		progFill.scale.x = p < 0 ? 0 : (p > 1 ? 1 : p);
+		if (progFill != null)
+			progFill.scale.x = p < 0 ? 0 : (p > 1 ? 1 : p);
+		if (timeTxt != null && style.time != "none")
+		{
+			var left = Std.int(Math.max(0, (songLength - posMs) / 1000));
+			if (left != timeLeftSec)
+			{
+				timeLeftSec = left;
+				var t = Std.int(left / 60) + ":" + (left % 60 < 10 ? "0" : "") + (left % 60);
+				timeTxt.text = style.time == "text" ? songTitle + " - " + diffName + "   " + t : (style.timeInside ? songTitle + " (" + t + ")" : songTitle + "  " + t);
+			}
+		}
 	}
 
 	/** Reconstrói os textos. Chame depois de qualquer mudança de pontuação. */
@@ -215,8 +302,8 @@ class Hud extends FlxGroup
 
 	public function onBeat(beat:Int):Void
 	{
-		iconP1.bump();
-		iconP2.bump();
+		iconP1.kick(style.bump);
+		iconP2.kick(style.bump);
 	}
 
 	/** Errou uma nota: o ícone do jogador encolhe de leve e volta ao normal. */
@@ -232,19 +319,71 @@ class Hud extends FlxGroup
 		return whole + "." + (frac < 10 ? "0" : "") + frac;
 	}
 
+	/** Nome de rating do Psych a partir da precisão. */
+	static function psychRating(acc:Float):String
+	{
+		if (acc >= 100)
+			return "Perfect!!";
+		if (acc >= 90)
+			return "Sick!";
+		if (acc >= 80)
+			return "Great";
+		if (acc >= 70)
+			return "Good";
+		if (acc >= 69)
+			return "Nice";
+		if (acc >= 60)
+			return "Meh";
+		if (acc >= 50)
+			return "Bruh";
+		if (acc >= 40)
+			return "Bad";
+		if (acc >= 20)
+			return "Shit";
+		return "You Suck!";
+	}
+
 	function writeScore():Void
 	{
-		scoreText.text = "Score: " + Std.int(Math.round(shownScore)) + "  |  Combo: " + judge.combo + "  |  Misses: " + judge.misses
-			+ "  |  Accuracy: " + fmt2(judge.accuracy) + "%  |  " + judge.rank;
-		// cor por desempenho: sem erros = azul-claro, precisão baixa = rosado
-		if (judge.totalPlayed == 0)
-			scoreText.color = FlxColor.WHITE;
-		else if (judge.misses == 0)
-			scoreText.color = 0xFF9EF0FF;
-		else if (judge.accuracy < 70)
-			scoreText.color = 0xFFFFB0B0;
-		else
-			scoreText.color = FlxColor.WHITE;
+		var sc = Std.string(Std.int(Math.round(shownScore)));
+		var acc = fmt2(judge.accuracy);
+		var none = judge.totalPlayed == 0;
+		switch (style.score)
+		{
+			case "kade":
+				scoreText.text = "Score:" + sc + " | Combo Breaks:" + judge.misses + " | Accuracy:" + (none ? "0" : acc) + "% | " + judge.rank;
+			case "psych":
+				var fc = switch (judge.fc)
+				{
+					case "MFC": " - SFC";
+					case "GFC": " - GFC";
+					case "FC": " - FC";
+					case "SDCB": " - SDCB";
+					default: "";
+				}
+				scoreText.text = "Score: " + sc + " | Misses: " + judge.misses + " | Rating: "
+					+ (none ? "?" : psychRating(judge.accuracy) + " (" + acc + "%)" + fc);
+			case "codename":
+				scoreL.text = "Score: " + sc;
+				scoreM.text = "Misses: " + judge.misses;
+				scoreR.text = "Accuracy: " + (none ? "-" : acc + "%");
+			case "leather":
+				scoreText.text = "Score: " + sc + " ~ Misses: " + judge.misses + " ~ Accuracy: " + (none ? "0" : acc) + "% ~ " + judge.rank;
+			case "forever":
+				scoreText.text = "Score: " + sc + " - Accuracy: " + (none ? "0" : acc) + "%" + (judge.fc != "" ? " [" + judge.fc + "]" : "") + " - Combo Breaks: "
+					+ judge.misses;
+			default:
+				scoreText.text = "Score: " + sc + "  |  Combo: " + judge.combo + "  |  Misses: " + judge.misses + "  |  Accuracy: " + acc + "%  |  " + judge.rank;
+				// cor por desempenho: sem erros = azul-claro, precisão baixa = rosado
+				if (none)
+					scoreText.color = FlxColor.WHITE;
+				else if (judge.misses == 0)
+					scoreText.color = 0xFF9EF0FF;
+				else if (judge.accuracy < 70)
+					scoreText.color = 0xFFFFB0B0;
+				else
+					scoreText.color = FlxColor.WHITE;
+		}
 	}
 
 	public function popRating(rating:String, combo:Int, diffMs:Float):Void
@@ -252,8 +391,8 @@ class Hud extends FlxGroup
 		if (rating == "sick" || rating == "good")
 			iconP1.kick(1.1);
 
-		var baseX = FlxG.width * 0.55;
-		var baseY = FlxG.height * 0.42;
+		var baseX = FlxG.width * style.ratingX;
+		var baseY = FlxG.height * style.ratingY;
 
 		var p = take(ratingPools.get(rating));
 		if (p != null)
@@ -409,9 +548,9 @@ class Hud extends FlxGroup
 	{
 		var shown = shownHealth / 2; // 0..1
 		barPlr.scale.x = shown;
-		var edge = barX + BAR_W * (1 - shown); // onde o jogador e o oponente se encontram
-		iconP1.setPosition(edge - 26, barY + BAR_H / 2 - iconP1.height / 2);
-		iconP2.setPosition(edge - (iconP2.width - 26), barY + BAR_H / 2 - iconP2.height / 2);
+		var edge = fillX + fillW * (1 - shown); // onde o jogador e o oponente se encontram
+		iconP1.setPosition(edge - 26, fillY + fillH / 2 - iconP1.height / 2);
+		iconP2.setPosition(edge - (iconP2.width - 26), fillY + fillH / 2 - iconP2.height / 2);
 
 		var pct = judge.health / 2;
 		iconP1.setState(pct < 0.2 ? 1 : (pct > 0.8 ? 2 : 0));

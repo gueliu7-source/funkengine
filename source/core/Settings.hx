@@ -21,6 +21,8 @@ typedef SettingsData =
 	var goodMs:Float;
 	var badMs:Float;
 	var shitMs:Float;
+	var accuracyMode:String; // "simple" (sick 100%, good 75%...) ou "wife3" (Kade, mais rígido)
+	var hudStyle:String; // funkforge, kade, psych, codename, leather, forever
 	var enabledMods:Array<String>; // mods ativos (pastas em mods/), do de maior prioridade ao de menor
 	var keys:Array<Array<FlxKey>>; // 4 lanes: esquerda, baixo, cima, direita
 }
@@ -52,6 +54,8 @@ class Settings
 			goodMs: 90,
 			badMs: 135,
 			shitMs: 166,
+			accuracyMode: "simple",
+			hudStyle: "funkforge",
 			enabledMods: [],
 			keys: [[FlxKey.A, FlxKey.LEFT], [FlxKey.S, FlxKey.DOWN], [FlxKey.W, FlxKey.UP], [FlxKey.D, FlxKey.RIGHT]]
 		};

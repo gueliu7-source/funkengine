@@ -27,6 +27,7 @@ class Judge
 
 	public var accuracy(get, never):Float;
 	public var rank(get, never):String;
+	public var fc(get, never):String; // MFC, GFC, FC, SDCB ou Clear ("" se ainda não jogou)
 
 	public function new()
 	{
@@ -52,7 +53,7 @@ class Judge
 
 		combo++;
 		totalPlayed++;
-		totalHit += wife3(abs, ts);
+		totalHit += hitValue(r, abs, ts);
 
 		switch (r)
 		{
@@ -81,12 +82,27 @@ class Judge
 		return r;
 	}
 
+	/** Valor de um acerto para a precisão. Modo "simple": sick 100%, good 75%, bad 50%, shit 25%. */
+	function hitValue(rating:String, absMs:Float, ts:Float):Float
+	{
+		if (Settings.d.accuracyMode == "wife3")
+			return wife3(absMs, ts);
+		return switch (rating)
+		{
+			case "sick": 1.0;
+			case "good": 0.75;
+			case "bad": 0.5;
+			default: 0.25;
+		}
+	}
+
 	public function registerMiss(healthLoss:Float):Void
 	{
 		combo = 0;
 		misses++;
 		totalPlayed++;
-		totalHit -= 1;
+		if (Settings.d.accuracyMode == "wife3")
+			totalHit -= 1;
 		score -= 10;
 		health -= healthLoss;
 		clampHealth();
@@ -124,21 +140,24 @@ class Judge
 		return a < 0 ? 0 : a;
 	}
 
+	function get_fc():String
+	{
+		if (totalPlayed == 0)
+			return "";
+		if (misses == 0 && bads == 0 && shits == 0 && goods == 0)
+			return "MFC";
+		if (misses == 0 && bads == 0 && shits == 0)
+			return "GFC";
+		if (misses == 0)
+			return "FC";
+		return misses < 10 ? "SDCB" : "Clear";
+	}
+
 	function get_rank():String
 	{
 		if (totalPlayed == 0)
 			return "N/A";
-		var fc = "";
-		if (misses == 0 && bads == 0 && shits == 0 && goods == 0)
-			fc = "(MFC) ";
-		else if (misses == 0 && bads == 0 && shits == 0)
-			fc = "(GFC) ";
-		else if (misses == 0)
-			fc = "(FC) ";
-		else if (misses < 10)
-			fc = "(SDCB) ";
-		else
-			fc = "(Clear) ";
+		var fc = "(" + this.fc + ") ";
 
 		var acc = accuracy;
 		var letters:Array<Array<Dynamic>> = [

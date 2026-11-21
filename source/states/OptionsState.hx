@@ -6,6 +6,7 @@ import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
+import hud.HudStyles;
 import ui.MenuUtil;
 
 /** Opções: tudo que antes ficava nos atalhos F1–F5 do menu. ESC salva e volta. */
@@ -13,7 +14,7 @@ class OptionsState extends FlxState
 {
 	static final NAMES:Array<String> = [
 		"Downscroll", "Middlescroll", "Ghost tapping", "Botplay", "Antialiasing", "Zoom da câmera na batida", "Barra da música",
-		"Contador de julgamentos", "Ms nos acertos", "Velocidade das notas", "Offset", "Mods"
+		"Contador de julgamentos", "Ms nos acertos", "Velocidade das notas", "Offset", "Estilo do HUD", "Precisão", "Controles", "Mods"
 	];
 
 	var rows:Array<FlxText> = [];
@@ -34,7 +35,7 @@ class OptionsState extends FlxState
 
 		for (i in 0...NAMES.length)
 		{
-			var t = MenuUtil.text(0, 90 + i * 44, FlxG.width, 30, FlxTextAlign.CENTER);
+			var t = MenuUtil.text(0, 80 + i * 40, FlxG.width, 28, FlxTextAlign.CENTER);
 			rows.push(t);
 			add(t);
 		}
@@ -62,6 +63,9 @@ class OptionsState extends FlxState
 			case 8: onOff(d.hudMsDisplay);
 			case 9: d.scrollSpeed <= 0 ? "do chart" : Std.string(d.scrollSpeed);
 			case 10: d.offsetMs + " ms";
+			case 11: HudStyles.get(d.hudStyle).name;
+			case 12: d.accuracyMode == "wife3" ? "Wife3 (Kade, rígida)" : "Simples (sick 100%, good 75%)";
+			case 13: "ENTER para trocar teclas";
 			default: "(" + d.enabledMods.length + " ativos)";
 		}
 	}
@@ -84,6 +88,11 @@ class OptionsState extends FlxState
 				var v = d.scrollSpeed + 0.1 * dir;
 				d.scrollSpeed = Math.min(5, Math.max(0, Math.round(v * 10) / 10));
 			case 10: d.offsetMs += 5 * dir;
+			case 11: d.hudStyle = HudStyles.next(d.hudStyle, dir);
+			case 12: d.accuracyMode = d.accuracyMode == "wife3" ? "simple" : "wife3";
+			case 13:
+				Settings.flush();
+				FlxG.switchState(new ControlsState());
 			default:
 				Settings.flush();
 				FlxG.switchState(new ModsState());
