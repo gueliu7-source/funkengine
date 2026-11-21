@@ -111,7 +111,7 @@ class Stepper extends FlxSpriteGroup
 	var value:FlxText;
 	var get:Void->Float;
 	var decimals:Int;
-	var last:String = "";
+	var lastText:String = "";
 
 	public function new(x:Float, y:Float, w:Int, label:String, get:Void->Float, set:Float->Void, step:Float, min:Float, max:Float, decimals:Int = 0)
 	{
@@ -141,9 +141,9 @@ class Stepper extends FlxSpriteGroup
 		var f = get();
 		var p = Math.pow(10, decimals);
 		var s = Std.string(Math.round(f * p) / p);
-		if (s != last)
+		if (s != lastText)
 		{
-			last = s;
+			lastText = s;
 			value.text = s;
 		}
 	}
@@ -185,7 +185,7 @@ class Selector extends FlxSpriteGroup
 	var value:FlxText;
 	var get:Void->String;
 	var options:Void->Array<String>;
-	var last:String = "\u0000";
+	var lastText:String = "\u0000";
 
 	public function new(x:Float, y:Float, w:Int, label:String, options:Void->Array<String>, get:Void->String, set:String->Void)
 	{
@@ -212,9 +212,9 @@ class Selector extends FlxSpriteGroup
 	{
 		super.update(elapsed);
 		var s = get();
-		if (s != last)
+		if (s != lastText)
 		{
-			last = s;
+			lastText = s;
 			value.text = s == "" ? "(nenhum)" : s;
 		}
 	}
