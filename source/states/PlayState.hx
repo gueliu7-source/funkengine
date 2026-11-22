@@ -634,6 +634,8 @@ class PlayState extends FlxState
 				}
 			case "Camera Focus":
 				focusCamera(StringTools.trim(v1).toLowerCase());
+			case "Change Character":
+				changeCharacter(v1, v2);
 			case "Hey!":
 				var who = StringTools.trim(v1).toLowerCase();
 				for (c in [who == "gf" || who == "ambos" ? gf : null, who == "bf" || who == "ambos" ? boyfriend : null])
@@ -644,6 +646,30 @@ class PlayState extends FlxState
 					}
 			default:
 		}
+	}
+
+	/** Evento "Change Character": recria o personagem de um slot na posição do cenário. */
+	function changeCharacter(slotName:String, newId:String):Void
+	{
+		var id = StringTools.trim(newId);
+		var old = characterByName(slotName);
+		if (old == null || id == "" || id == old.id)
+			return;
+		var slot = (old == boyfriend) ? "bf" : (old == gf ? "gf" : "dad");
+		var p = stage.positionFor(slot, id);
+		var nc = new Character(p[0], p[1], id, old == boyfriend);
+		var i = members.indexOf(old);
+		if (i >= 0)
+			members[i] = nc;
+		else
+			add(nc);
+		if (old == boyfriend)
+			boyfriend = nc;
+		else if (old == gf)
+			gf = nc;
+		else
+			dad = nc;
+		old.destroy();
 	}
 
 	// ------------------------------------------------------------------ pausa, morte, fim

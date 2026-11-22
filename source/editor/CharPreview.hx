@@ -65,6 +65,9 @@ class CharPreview extends FlxGroup
 	var kP2:String = "\u0000";
 	var kGf:String = "\u0000";
 	var kNames:String = "";
+	var eP1:String = "bf";
+	var eP2:String = "dad";
+	var eGf:String = "gf";
 
 	var nameL:FlxText;
 	var nameC:FlxText;
@@ -122,9 +125,37 @@ class CharPreview extends FlxGroup
 
 	// ------------------------------------------------------------------ montagem
 
-	function refreshWorld():Void
+	/** Quem ocupa cada slot no instante t: o chart, mais os eventos "Change Character" já passados. */
+	function resolveIds(t:Float):Void
 	{
 		var c = doc.chart;
+		eP1 = c.player1;
+		eP2 = c.player2;
+		eGf = c.gf;
+		for (e in c.events)
+		{
+			if (e.time > t)
+				break;
+			if (e.name != "Change Character" || e.v2 == null || e.v2.trim() == "")
+				continue;
+			var id = e.v2.trim();
+			switch (e.v1.trim().toLowerCase())
+			{
+				case "bf", "boyfriend", "player":
+					eP1 = id;
+				case "dad", "opponent":
+					eP2 = id;
+				case "gf", "girlfriend":
+					eGf = id;
+				default:
+			}
+		}
+	}
+
+	function refreshWorld(t:Float):Void
+	{
+		var c = doc.chart;
+		resolveIds(t);
 		var stageChanged = c.stage != kStage;
 		if (stageChanged)
 		{
@@ -133,17 +164,17 @@ class CharPreview extends FlxGroup
 		}
 		if (stg == null)
 			return;
-		var dadChanged = stageChanged || c.player2 != kP2 || c.gf != kGf;
-		var bfChanged = stageChanged || c.player1 != kP1;
+		var dadChanged = stageChanged || eP2 != kP2 || eGf != kGf;
+		var bfChanged = stageChanged || eP1 != kP1;
 		if (dadChanged)
 		{
-			kP2 = c.player2;
-			kGf = c.gf;
+			kP2 = eP2;
+			kGf = eGf;
 			buildDadGf();
 		}
 		if (bfChanged)
 		{
-			kP1 = c.player1;
+			kP1 = eP1;
 			buildBf();
 		}
 		if (dadChanged || bfChanged)
@@ -230,12 +261,12 @@ class CharPreview extends FlxGroup
 		disposeChar(dad, wDad);
 		disposeChar(gf, wGf);
 		var c = doc.chart;
-		gf = make("gf", c.gf, false);
-		dad = make("dad", c.player2, false);
-		gfHidden = c.player2 == c.gf;
+		gf = make("gf", eGf, false);
+		dad = make("dad", eP2, false);
+		gfHidden = eP2 == eGf;
 		if (gfHidden && dad != null) // gf como oponente: ocupa o lugar da gf (igual ao PlayState)
 		{
-			var gp = stg.positionFor("gf", c.gf);
+			var gp = stg.positionFor("gf", eGf);
 			dad.setPosition(gp[0], gp[1]);
 			if (gf != null)
 				gf.visible = false;
@@ -252,7 +283,7 @@ class CharPreview extends FlxGroup
 	function buildBf():Void
 	{
 		disposeChar(bf, wBf);
-		bf = make("bf", doc.chart.player1, true);
+		bf = make("bf", eP1, true);
 		if (bf != null)
 			wBf.add(bf);
 		hold[1] = 0;
@@ -272,7 +303,7 @@ class CharPreview extends FlxGroup
 	public function sync(t:Float, playing:Bool, section:Int, bpm:Float, dt:Float):Void
 	{
 		cam.visible = EdLock.free(); // a ajuda (F1) cobre a tela inteira
-		refreshWorld();
+		refreshWorld(t);
 		if (stg == null)
 			return;
 
@@ -692,13 +723,13 @@ class CharPreview extends FlxGroup
 	function updateNames():Void
 	{
 		var c = doc.chart;
-		var k = c.player2 + "|" + c.gf + "|" + c.player1 + "|" + optSel;
+		var k = eP2 + "|" + eGf + "|" + eP1 + "|" + optSel;
 		if (k == kNames)
 			return;
 		kNames = k;
-		nameL.text = c.player2;
-		nameC.text = c.gf;
-		nameR.text = c.player1;
+		nameL.text = eP2;
+		nameC.text = eGf;
+		nameR.text = eP1;
 		nameL.color = optSel == 0 ? EdTheme.ACCENT : EdTheme.TEXT;
 		nameC.color = optSel == 2 ? EdTheme.ACCENT : EdTheme.TEXT;
 		nameR.color = optSel == 1 ? EdTheme.ACCENT : EdTheme.TEXT;

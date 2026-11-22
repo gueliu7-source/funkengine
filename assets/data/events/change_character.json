@@ -1,0 +1,2 @@
+{ "name": "Change Character", "description": "Troca quem ocupa um slot (bf, dad ou gf) a partir deste ponto da música.", "color": "#FF8FB1",
+  "params": [ { "label": "Slot", "kind": "choice", "default": "dad", "options": ["bf", "dad", "gf"] }, { "label": "Personagem (id)", "kind": "text", "default": "pico" } ] }
