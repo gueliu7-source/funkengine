@@ -79,6 +79,32 @@ class ChartDoc
 
 	// ------------------------------------------------------------ histórico
 
+	// ------------------------------------------------------------ marcadores de estrutura
+
+	function sortMarkers():Void
+		chart.markers.sort(function(a, b) return a.beat < b.beat ? -1 : (a.beat > b.beat ? 1 : 0));
+
+	public function addMarker(beat:Float, name:String, color:String):Void
+	{
+		var m:core.Chart.ChartMarker = {beat: beat, name: name, color: color};
+		run(new Cmd("marcador " + name, function() {
+			chart.markers.push(m);
+			sortMarkers();
+		}, function() {
+			chart.markers.remove(m);
+		}));
+	}
+
+	public function removeMarker(m:core.Chart.ChartMarker):Void
+	{
+		run(new Cmd("remover marcador", function() {
+			chart.markers.remove(m);
+		}, function() {
+			chart.markers.push(m);
+			sortMarkers();
+		}));
+	}
+
 	public function run(c:Cmd):Void
 	{
 		c.redo();

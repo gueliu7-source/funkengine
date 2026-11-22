@@ -78,7 +78,8 @@ class ChartIO
 			bpmChanges: [for (s in c.segments) {time: round(s.timeMs), beat: s.beat, bpm: s.bpm}],
 			sections: [for (s in c.sections) {start: round(s.startMs), beat: s.startBeat, steps: s.steps, mustHit: s.mustHit, alt: s.alt}],
 			notes: notes,
-			events: events
+			events: events,
+			markers: [for (m in c.markers) {beat: m.beat, name: m.name, color: m.color}]
 		};
 	}
 

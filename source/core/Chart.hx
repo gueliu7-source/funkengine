@@ -6,6 +6,14 @@ import haxe.Json;
 
 using StringTools;
 
+/** Marcador de estrutura musical (Intro, Verso, Refrão...). Cor em hex "RRGGBB". */
+typedef ChartMarker =
+{
+	var beat:Float;
+	var name:String;
+	var color:String;
+}
+
 /** Uma nota do chart (dado puro; o sprite só existe enquanto a nota está na tela). */
 class NoteData
 {
@@ -93,6 +101,7 @@ class Chart
 	public var sections:Array<SectionData> = [];
 	public var segments:Array<BpmSegment> = [];
 	public var events:Array<EventData> = [];
+	public var markers:Array<ChartMarker> = [];
 
 	public function new()
 	{
@@ -306,6 +315,10 @@ class ChartLoader
 		if (ev != null)
 			for (e in ev)
 				c.events.push(new EventData(num(e[0], 0), str(e[1], ""), str(e[2], ""), str(e[3], "")));
+		var mk:Array<Dynamic> = Reflect.field(j, "markers");
+		if (mk != null)
+			for (m in mk)
+				c.markers.push({beat: num(m.beat, 0), name: str(m.name, ""), color: str(m.color, "FFFFFF")});
 		return c;
 	}
 

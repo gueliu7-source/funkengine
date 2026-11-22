@@ -3,6 +3,7 @@ package editor;
 import core.Paths;
 import editor.ChartDoc.ClipNote;
 import editor.ChartDoc.Cmd;
+import editor.panels.AnalysisTab;
 import editor.panels.ChartTab;
 import editor.panels.EventsTab;
 import editor.panels.PreviewTab;
@@ -55,6 +56,8 @@ class ChartEditorState extends FlxState
 	var voiceVol:Float = 1;
 
 	var tabs:Tabs;
+	var analysis:AnalysisTab;
+	var markers:MarkerLayer;
 	var help:HelpOverlay;
 	var toast:Toast;
 	var playBtn:Btn;
@@ -113,6 +116,8 @@ class ChartEditorState extends FlxState
 				tabs.select(2);
 		};
 		add(lane);
+		markers = new MarkerLayer(doc, grid);
+		add(markers);
 		add(new Minimap(doc, function() return lengthMs, function() return songTime, function(t) seek(t)));
 
 		preview = new CharPreview(doc, function(s, good) say(s, good));
@@ -190,16 +195,18 @@ class ChartEditorState extends FlxState
 	function buildSidebar():Void
 	{
 		add(new Card(EdTheme.SIDE_X, EdTheme.TOP_H + 12, EdTheme.SIDE_W, FlxG.height - EdTheme.TOP_H - 26));
-		tabs = new Tabs(EdTheme.SIDE_X + 16, EdTheme.TOP_H + 22, EdTheme.SIDE_W - 32, ["CHART", "SEÇÃO", "EVENTOS", "PREVIEW"]);
+		tabs = new Tabs(EdTheme.SIDE_X + 16, EdTheme.TOP_H + 22, EdTheme.SIDE_W - 32, ["CHART", "SEÇÃO", "EVENTOS", "PREVIEW", "ANÁLISE"]);
 		var a = new ChartTab(this);
 		var b = new SectionTab(this);
 		var c = new EventsTab(this);
 		var d = new PreviewTab(this);
+		analysis = new AnalysisTab(this);
 		add(a);
 		add(b);
 		add(c);
 		add(d);
-		tabs.setContents([a, b, c, d]);
+		add(analysis);
+		tabs.setContents([a, b, c, d, analysis]);
 		add(tabs);
 		tabs.select(tabIndex);
 	}
@@ -246,6 +253,12 @@ class ChartEditorState extends FlxState
 		doc.setBpmAt(doc.chart.sections[curSection].startBeat, v);
 		seek(doc.tempo.msAt(keep));
 	}
+
+	public function songTimeNow():Float
+		return songTime;
+
+	public function lengthNow():Float
+		return lengthMs;
 
 	public function say(s:String, good:Bool = true):Void
 		toast.show(s, good);
@@ -338,7 +351,10 @@ class ChartEditorState extends FlxState
 	{
 		var p = ChartIO.save(doc);
 		if (p != null)
-			say("Salvo em " + p);
+		{
+			var note = analysis.cohesionSummary();
+			say(note == null ? "Salvo em " + p : "Salvo. Atenção: " + note, note == null);
+		}
 		else
 			say("Erro ao salvar (veja o log).", false);
 	}
@@ -490,7 +506,7 @@ class ChartEditorState extends FlxState
 		if (k.justPressed.ENTER)
 			testPlay();
 		if (k.justPressed.TAB)
-			tabs.select((tabs.index + 1) % 4);
+			tabs.select((tabs.index + 1) % 5);
 		if (ctrl && k.justPressed.S)
 			save();
 		if (ctrl && k.justPressed.Z)
