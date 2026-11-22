@@ -20,6 +20,10 @@ typedef StageObject =
 	@:optional var animated:Bool; // atlas Sparrow animado
 	@:optional var idle:String; // prefixo da animação em loop
 	@:optional var visible:Bool;
+	@:optional var alpha:Float;
+	@:optional var color:String; // tint em hex "RRGGBB"
+	@:optional var angle:Float;
+	@:optional var locked:Bool; // só do editor
 }
 
 typedef StageDef =
@@ -93,6 +97,16 @@ class Stage
 		s.antialiasing = (o.antialiasing != false) && Settings.d.antialiasing;
 		s.flipX = (o.flipX == true);
 		s.visible = (o.visible != false);
+		if (o.alpha != null)
+			s.alpha = o.alpha;
+		if (o.angle != null)
+			s.angle = o.angle;
+		if (o.color != null && o.color != "")
+		{
+			var tc = flixel.util.FlxColor.fromString("#" + o.color.split("#").join(""));
+			if (tc != null)
+				s.color = tc;
+		}
 		objects.set(o.id, s);
 
 		switch (o.layer)
