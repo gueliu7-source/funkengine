@@ -20,10 +20,10 @@ import openfl.geom.Rectangle;
  */
 class GridView extends FlxGroup
 {
-	public static inline var CELL:Int = 40;
-	public static inline var GX:Int = 370;
+	public static inline var CELL:Int = 44;
+	public static inline var GX:Int = 472;
 	public static inline var COLS:Int = 8;
-	public static inline var PLAY_Y:Int = 240;
+	public static inline var PLAY_Y:Int = 280;
 	static inline var H:Int = 720;
 
 	public var doc:ChartDoc;
@@ -47,6 +47,12 @@ class GridView extends FlxGroup
 	var ghost:FlxSprite;
 	var selBox:FlxSprite;
 	var playhead:FlxSprite;
+	var rowGlow:FlxSprite;
+	var hoverBand:FlxSprite;
+	var hoverLine:FlxSprite;
+	var pulse:Float = 0;
+	var lastBeatInt:Int = -1;
+	public var playing:Bool = false;
 
 	var dragNote:Null<NoteData>;
 	var dragOld:Float = 0;
@@ -83,7 +89,7 @@ class GridView extends FlxGroup
 			l.visible = false;
 			lines.push(l);
 			add(l);
-			var t = EdTheme.text(GX - 74, 0, 68, 14, "", EdTheme.ACCENT, FlxTextAlign.RIGHT);
+			var t = EdTheme.text(GX - CELL - 70, 0, 62, 14, "", EdTheme.ACCENT, FlxTextAlign.RIGHT);
 			t.visible = false;
 			labels.push(t);
 			labelIds.push(-1);
@@ -113,23 +119,32 @@ class GridView extends FlxGroup
 		selBox.visible = false;
 		add(selBox);
 
-		playhead = EdTheme.rect(GX - 12, PLAY_Y - 1, CELL * COLS + 24, 2, EdTheme.CYAN);
+		rowGlow = EdTheme.rect(GX, PLAY_Y, CELL * COLS, CELL, EdTheme.CYAN);
+		rowGlow.alpha = 0.07;
+		add(rowGlow);
+		hoverBand = EdTheme.rect(GX, 0, CELL, H, 0xFFFFFFFF);
+		hoverBand.alpha = 0;
+		add(hoverBand);
+		hoverLine = EdTheme.rect(GX, 0, CELL * COLS, 1, 0xFFFFFFFF);
+		hoverLine.alpha = 0;
+		add(hoverLine);
+		playhead = EdTheme.rect(GX - CELL - 14, PLAY_Y - 1, CELL * (COLS + 1) + 28, 2, EdTheme.CYAN);
 		add(playhead);
 	}
 
 	/** Uma batida (4 steps) da grade: colunas alternadas + linhas de step. */
 	static function tileGraphic(parity:Int):FlxGraphic
 	{
-		var bd = new BitmapData(CELL * COLS, CELL * 4, false, 0xFF161B23);
+		var bd = new BitmapData(CELL * COLS, CELL * 4, false, 0xFF10141B);
 		for (c in 0...COLS)
 			if (c % 2 == 1)
-				bd.fillRect(new Rectangle(c * CELL, 0, CELL, CELL * 4), parity == 0 ? 0xFF1A202A : 0xFF1D2430);
+				bd.fillRect(new Rectangle(c * CELL, 0, CELL, CELL * 4), parity == 0 ? 0xFF131820 : 0xFF151A23);
 			else if (parity == 1)
-				bd.fillRect(new Rectangle(c * CELL, 0, CELL, CELL * 4), 0xFF181E27);
+				bd.fillRect(new Rectangle(c * CELL, 0, CELL, CELL * 4), 0xFF11161D);
 		for (k in 0...4)
-			bd.fillRect(new Rectangle(0, k * CELL, CELL * COLS, k == 0 ? 2 : 1), k == 0 ? 0xFF3A465A : 0xFF232C3A);
+			bd.fillRect(new Rectangle(0, k * CELL, CELL * COLS, k == 0 ? 2 : 1), k == 0 ? 0xFF2E3948 : 0xFF1A212C);
 		for (c in 1...COLS)
-			bd.fillRect(new Rectangle(c * CELL, 0, 1, CELL * 4), 0xFF1E2632);
+			bd.fillRect(new Rectangle(c * CELL, 0, 1, CELL * 4), 0xFF171D27);
 		var g = FlxGraphic.fromBitmapData(bd, false, "ed_tile" + parity);
 		g.persist = true;
 		return g;
@@ -153,6 +168,15 @@ class GridView extends FlxGroup
 	{
 		curStep = step;
 		var total = doc.totalBeats();
+		var bi = Math.floor(step / 4);
+		if (bi != lastBeatInt)
+		{
+			lastBeatInt = bi;
+			if (playing)
+				pulse = 1;
+		}
+		pulse = EdTheme.lerpf(pulse, 0, elapsed, 9);
+		rowGlow.alpha = 0.07 + 0.16 * pulse;
 
 		// fundo (batidas)
 		var firstBeat = Math.floor((step - PLAY_Y / CELL) / 4);
@@ -318,18 +342,27 @@ class GridView extends FlxGroup
 		return 4 / quant; // batidas por divisão
 
 	/** Trata cliques na grade. Chame uma vez por frame. */
-	public function mouse():Void
+	public function mouse(allow:Bool = true):Void
 	{
 		var mx = FlxG.mouse.x;
 		var my = FlxG.mouse.y;
 		var c = colAt(mx);
-		var over = c >= 0 && c < COLS && my >= 0 && my < H;
+		var over = allow && c >= 0 && c < COLS && my >= EdTheme.TOP_H && my < H;
 		var mBeat = (curStep + (my - PLAY_Y) / CELL) / 4;
 		var u = unit();
 		var snapped = Math.floor(mBeat / u + 0.000001) * u;
 		var total = doc.totalBeats();
 		var inSong = mBeat >= 0 && mBeat < total;
 
+		hoverBand.alpha = EdTheme.lerpf(hoverBand.alpha, over ? 0.045 : 0, FlxG.elapsed, 20);
+		if (over)
+			hoverBand.x = GX + c * CELL;
+		hoverLine.visible = over && inSong;
+		if (hoverLine.visible)
+		{
+			hoverLine.y = stepY(snapped * 4);
+			hoverLine.alpha = 0.25;
+		}
 		ghost.visible = over && inSong && dragNote == null;
 		if (ghost.visible)
 		{

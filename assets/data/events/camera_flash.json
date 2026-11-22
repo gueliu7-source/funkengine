@@ -1,0 +1,2 @@
+{ "name": "Camera Flash", "description": "Flash de tela. Cor em hex e duração em segundos.", "color": "#FFFFFF",
+  "params": [ { "label": "Cor", "kind": "color", "default": "FFFFFF" }, { "label": "Duração (s)", "kind": "number", "default": "0.5" } ] }

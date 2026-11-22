@@ -1,0 +1,2 @@
+{ "name": "Screen Shake", "description": "Treme a câmera do jogo. Intensidade (ex.: 0.01) e duração em segundos.", "color": "#FF8A5C",
+  "params": [ { "label": "Intensidade", "kind": "number", "default": "0.01" }, { "label": "Duração (s)", "kind": "number", "default": "0.4" } ] }

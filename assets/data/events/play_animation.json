@@ -1,0 +1,2 @@
+{ "name": "Play Animation", "description": "Toca uma animação num personagem (ex.: hey, singUP).", "color": "#B48CFF",
+  "params": [ { "label": "Animação", "kind": "text", "default": "hey" }, { "label": "Personagem", "kind": "choice", "default": "bf", "options": ["bf", "dad", "gf"] } ] }

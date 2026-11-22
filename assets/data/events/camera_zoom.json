@@ -1,0 +1,2 @@
+{ "name": "Camera Zoom", "description": "Soma zoom na câmera do jogo e na do HUD (volta suave ao normal).", "color": "#5CC8FF",
+  "params": [ { "label": "Zoom do jogo", "kind": "number", "default": "0.03" }, { "label": "Zoom do HUD", "kind": "number", "default": "0.05" } ] }

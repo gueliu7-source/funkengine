@@ -586,7 +586,61 @@ class PlayState extends FlxState
 		while (eventIdx < chart.events.length && chart.events[eventIdx].time <= pos)
 		{
 			var e = chart.events[eventIdx++];
+			builtinEvent(e.name, e.v1, e.v2);
 			scripts.call("onEvent", [e.name, e.v1, e.v2]);
+		}
+	}
+
+	static function hexColor(s:String, def:FlxColor):FlxColor
+	{
+		var h = StringTools.replace(StringTools.replace(StringTools.trim(s), "#", ""), "0x", "");
+		var v = Std.parseInt("0xFF" + h);
+		return v == null ? def : v;
+	}
+
+	static function num(s:String, def:Float):Float
+	{
+		var f = Std.parseFloat(s);
+		return Math.isNaN(f) ? def : f;
+	}
+
+	function characterByName(n:String):Null<Character>
+		return switch (StringTools.trim(n).toLowerCase())
+		{
+			case "bf", "boyfriend", "player": boyfriend;
+			case "dad", "opponent": dad;
+			case "gf", "girlfriend": gf;
+			default: null;
+		}
+
+	/** Eventos que vêm com a engine (definidos em data/events/*.json). Os outros ficam por conta dos scripts. */
+	function builtinEvent(name:String, v1:String, v2:String):Void
+	{
+		switch (name)
+		{
+			case "Camera Flash":
+				camHUD.flash(hexColor(v1, FlxColor.WHITE), num(v2, 0.5));
+			case "Screen Shake":
+				camGame.shake(num(v1, 0.01), num(v2, 0.4));
+			case "Camera Zoom":
+				camGame.zoom += num(v1, 0.03);
+				camHUD.zoom += num(v2, 0.05);
+			case "Play Animation":
+				var c = characterByName(v2);
+				if (c != null && v1 != "")
+				{
+					c.playAnim(v1, true);
+					c.specialAnim = (c.animation.curAnim != null && !c.animation.curAnim.looped);
+				}
+			case "Hey!":
+				var who = StringTools.trim(v1).toLowerCase();
+				for (c in [who == "gf" || who == "ambos" ? gf : null, who == "bf" || who == "ambos" ? boyfriend : null])
+					if (c != null)
+					{
+						c.playAnim("hey", true);
+						c.specialAnim = true;
+					}
+			default:
 		}
 	}
 

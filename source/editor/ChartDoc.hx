@@ -18,6 +18,13 @@ class Cmd
 	}
 }
 
+typedef EventConflict =
+{
+	var a:EventData;
+	var b:EventData;
+	var reason:String;
+}
+
 /** Nota copiada, com posição relativa ao início da seção. */
 typedef ClipNote =
 {
@@ -352,6 +359,99 @@ class ChartDoc
 			if (c.beat < b - a)
 				all.push(c);
 		replaceRange("colar", a, b, all);
+	}
+
+	// ------------------------------------------------------------ eventos
+
+	public function eventBeat(e:EventData):Float
+		return tempo.beatAt(e.time);
+
+	public function addEvent(beat:Float, name:String, v1:String, v2:String):EventData
+	{
+		var e = new EventData(tempo.msAt(beat), name, v1, v2);
+		run(new Cmd("adicionar evento", function() chart.events.push(e), function() chart.events.remove(e)));
+		return e;
+	}
+
+	public function removeEvent(e:EventData):Void
+		run(new Cmd("remover evento", function() chart.events.remove(e), function() chart.events.push(e)));
+
+	public function setEventFields(e:EventData, name:String, v1:String, v2:String):Void
+	{
+		var on = e.name;
+		var o1 = e.v1;
+		var o2 = e.v2;
+		if (on == name && o1 == v1 && o2 == v2)
+			return;
+		run(new Cmd("editar evento", function() {
+			e.name = name;
+			e.v1 = v1;
+			e.v2 = v2;
+		}, function() {
+			e.name = on;
+			e.v1 = o1;
+			e.v2 = o2;
+		}));
+	}
+
+	public function moveEventLive(e:EventData, beat:Float):Void
+	{
+		e.time = tempo.msAt(Math.max(0, beat));
+		version++;
+		dirty = true;
+	}
+
+	public function commitEventMove(e:EventData, oldTime:Float):Void
+	{
+		var now = e.time;
+		if (Math.abs(now - oldTime) < 0.5)
+			return;
+		undoStack.push(new Cmd("mover evento", function() e.time = now, function() e.time = oldTime));
+		redoStack = [];
+		changed();
+	}
+
+	public function eventsIn(beatA:Float, beatB:Float):Array<EventData>
+	{
+		var a = tempo.msAt(beatA) - 0.5;
+		var b = tempo.msAt(beatB) - 0.5;
+		return [for (e in chart.events) if (e.time >= a && e.time < b) e];
+	}
+
+	var conflictVersion:Int = -1;
+	var conflictCache:Array<EventConflict> = [];
+
+	/** Eventos iguais no mesmo step (ou colados, a menos de meia batida): podem causar tranco visual. */
+	public function conflicts():Array<EventConflict>
+	{
+		if (conflictVersion == version)
+			return conflictCache;
+		conflictVersion = version;
+		conflictCache = [];
+		var ev = chart.events;
+		for (i in 0...ev.length)
+		{
+			var bi = eventBeat(ev[i]);
+			var j = i + 1;
+			while (j < ev.length && eventBeat(ev[j]) - bi < 0.5)
+			{
+				if (ev[j].name == ev[i].name)
+				{
+					var same = (eventBeat(ev[j]) - bi) < 0.25;
+					conflictCache.push({a: ev[i], b: ev[j], reason: same ? "mesmo step" : "muito colados"});
+				}
+				j++;
+			}
+		}
+		return conflictCache;
+	}
+
+	public function inConflict(e:EventData):Bool
+	{
+		for (c in conflicts())
+			if (c.a == e || c.b == e)
+				return true;
+		return false;
 	}
 
 	// ------------------------------------------------------------ tempo
