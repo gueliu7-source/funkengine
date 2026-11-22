@@ -2,6 +2,7 @@ package editor.panels;
 
 import editor.ChartEditorState;
 import editor.analysis.Analyzer;
+import editor.analysis.AudioPeaks;
 import editor.analysis.Analyzer.Finding;
 import editor.ui.EdUI;
 import flixel.FlxG;
@@ -33,12 +34,15 @@ class AnalysisTab extends FlxSpriteGroup
 	var gx:Float;
 	var gy:Float;
 	var gw:Int;
-	var gh:Int = 64;
+	var gh:Int = 56;
 	var drawnVersion:Int = -1;
 	var drawnSide:Int = -1;
 	var cooldown:Float = 0;
 	var lengthMs:Float = 1;
 	var lastMarkers:String = "\u0000";
+	var audioText:FlxText;
+	var peaks:Null<Array<Float>>;
+	var shiftMs:Float = 0;
 
 	public function new(ed:ChartEditorState)
 	{
@@ -62,34 +66,41 @@ class AnalysisTab extends FlxSpriteGroup
 		stats = EdTheme.text(x, gy + gh + 6, w, 12, "", EdTheme.TEXT);
 		add(stats);
 
-		add(EdTheme.text(x, 290, w, 12, "PADRÕES DE MÃO (clique para ir)", EdTheme.DIM));
-		for (i in 0...4)
+		add(EdTheme.text(x, 282, w, 12, "PADRÕES DE MÃO (clique para ir)", EdTheme.DIM));
+		for (i in 0...3)
 		{
 			var k = i;
-			var b = new Btn(x, 308 + i * 24, w, 22, "", function() jump(patList, k), 2);
+			var b = new Btn(x, 298 + i * 23, w, 22, "", function() jump(patList, k), 2);
 			patRows.push(b);
 			add(b);
 		}
 
-		add(EdTheme.text(x, 414, w, 12, "COESÃO", EdTheme.DIM));
-		add(new Btn(x + w - 150, 408, 150, 24, "GERAR RELATÓRIO", function() runCohesion(true), 0));
-		cohTitle = EdTheme.text(x + 56, 414, w - 220, 12, "", EdTheme.DIM);
+		add(EdTheme.text(x, 376, w, 12, "COESÃO", EdTheme.DIM));
+		add(new Btn(x + w - 150, 370, 150, 24, "GERAR RELATÓRIO", function() runCohesion(true), 0));
+		cohTitle = EdTheme.text(x + 56, 376, w - 220, 12, "", EdTheme.DIM);
 		add(cohTitle);
-		for (i in 0...5)
+		for (i in 0...4)
 		{
 			var k = i;
-			var b = new Btn(x, 438 + i * 24, w, 22, "", function() jump(cohList, k), 2);
+			var b = new Btn(x, 400 + i * 23, w, 22, "", function() jump(cohList, k), 2);
 			cohRows.push(b);
 			add(b);
 		}
 
-		add(EdTheme.rect(x, 568, w, 1, EdTheme.LINE));
-		add(EdTheme.text(x, 580, w, 12, "MARCADORES DE ESTRUTURA", EdTheme.DIM));
-		add(new Selector(x, 600, w, "Tipo", function() return PRESETS, function() return PRESETS[preset], function(v) preset = PRESETS.indexOf(v), 50));
+		add(EdTheme.rect(x, 497, w, 1, EdTheme.LINE));
+		add(EdTheme.text(x, 504, w, 12, "ÁUDIO: PICOS E ALINHAMENTO", EdTheme.DIM));
+		audioText = EdTheme.text(x, 520, w, 12, "Analise o Inst para ver os picos no gráfico e checar o offset.", EdTheme.TEXT);
+		add(audioText);
+		var ah = Std.int((w - 8) / 2);
+		add(new Btn(x, 550, ah, 26, "ANALISAR ÁUDIO", analyzeAudio, 0));
+		add(new Btn(x + ah + 8, 550, ah, 26, "APLICAR AJUSTE", applyShift, 1, function() return Math.abs(shiftMs) >= 3));
+		add(EdTheme.rect(x, 584, w, 1, EdTheme.LINE));
+		add(EdTheme.text(x, 590, w, 12, "MARCADORES DE ESTRUTURA", EdTheme.DIM));
+		add(new Selector(x, 608, w, "Tipo", function() return PRESETS, function() return PRESETS[preset], function(v) preset = PRESETS.indexOf(v), 50));
 		var half = Std.int((w - 8) / 2);
-		add(new Btn(x, 636, half, 28, "MARCAR AQUI", addMarker, 1));
-		add(new Btn(x + half + 8, 636, half, 28, "REMOVER ESTE", removeMarker, 0));
-		markerText = EdTheme.text(x, 670, w, 12, "", EdTheme.DIM);
+		add(new Btn(x, 642, half, 26, "MARCAR AQUI", addMarker, 1));
+		add(new Btn(x + half + 8, 642, half, 26, "REMOVER ESTE", removeMarker, 0));
+		markerText = EdTheme.text(x, 674, w, 12, "", EdTheme.DIM);
 		add(markerText);
 	}
 
@@ -131,6 +142,38 @@ class AnalysisTab extends FlxSpriteGroup
 		ed.say("Marcador \"" + best.name + "\" removido");
 	}
 
+	// ------------------------------------------------------------------ áudio
+
+	function analyzeAudio():Void
+	{
+		peaks = AudioPeaks.detect(ed.instSound());
+		if (peaks == null)
+		{
+			audioText.text = "Falhou: " + AudioPeaks.lastError;
+			ed.say("Análise de áudio: " + AudioPeaks.lastError, false);
+			return;
+		}
+		var al = AudioPeaks.alignment(Analyzer.pick(ed.doc, 2), peaks);
+		var pct = al.total == 0 ? 0 : Std.int(al.matched * 100 / al.total);
+		shiftMs = al.matched < 8 ? 0 : -al.median;
+		var dir = al.median > 0 ? "depois" : "antes";
+		audioText.text = peaks.length + " picos. " + pct + "% das notas casam com um pico (±60 ms).\n"
+			+ (al.matched < 8 ? "Poucas notas casadas: sem sugestão." : "Notas em média " + Std.int(Math.abs(al.median)) + " ms " + dir + " dos picos"
+				+ (Math.abs(shiftMs) >= 3 ? " (ajuste sugerido: " + (shiftMs > 0 ? "+" : "") + Std.int(Math.round(shiftMs)) + " ms)." : " (ok)."));
+		drawnVersion = -1; // redesenha o gráfico com os picos
+		cooldown = 0;
+	}
+
+	function applyShift():Void
+	{
+		if (Math.abs(shiftMs) < 3)
+			return;
+		ed.doc.shiftTimes(shiftMs);
+		ed.say("Notas e eventos deslocados " + Std.int(Math.round(shiftMs)) + " ms (Ctrl+Z desfaz).");
+		shiftMs = 0;
+		audioText.text = "Ajuste aplicado. Analise de novo para conferir.";
+	}
+
 	// ------------------------------------------------------------------ cálculos
 
 	function recompute():Void
@@ -157,6 +200,9 @@ class AnalysisTab extends FlxSpriteGroup
 			if (fh > 0)
 				bd.fillRect(new Rectangle(px, gh - 3 - fh, 1, 2), f >= 100 ? 0xFFFF6B6B : 0xFFFFB347);
 		}
+		if (peaks != null) // picos de áudio: tracinhos brancos no topo
+			for (pk in peaks)
+				bd.fillRect(new Rectangle(Std.int(pk / lengthMs * gw), 0, 1, 3), 0xCCFFFFFF);
 		for (s in ed.doc.chart.sections) // régua de seções
 			bd.fillRect(new Rectangle(Std.int(s.startMs / lengthMs * gw), gh - 3, 1, 3), 0x66FFFFFF);
 		graph.pixels = bd;

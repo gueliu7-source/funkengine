@@ -84,6 +84,24 @@ class ChartDoc
 	function sortMarkers():Void
 		chart.markers.sort(function(a, b) return a.beat < b.beat ? -1 : (a.beat > b.beat ? 1 : 0));
 
+	/** Desloca todas as notas e eventos por delta ms (alinhamento com o áudio). */
+	public function shiftTimes(delta:Float):Void
+	{
+		var ns = [for (n in chart.notes) n.time];
+		var es = [for (e in chart.events) e.time];
+		run(new Cmd("alinhar " + Math.round(delta * 10) / 10 + " ms", function() {
+			for (n in chart.notes)
+				n.time = Math.max(0, n.time + delta);
+			for (e in chart.events)
+				e.time = Math.max(0, e.time + delta);
+		}, function() {
+			for (i in 0...chart.notes.length)
+				chart.notes[i].time = ns[i];
+			for (i in 0...chart.events.length)
+				chart.events[i].time = es[i];
+		}));
+	}
+
 	public function addMarker(beat:Float, name:String, color:String):Void
 	{
 		var m:core.Chart.ChartMarker = {beat: beat, name: name, color: color};

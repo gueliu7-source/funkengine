@@ -54,6 +54,8 @@ class ChartEditorState extends FlxState
 	var metronome:Bool = false;
 	var instVol:Float = 1;
 	var voiceVol:Float = 1;
+	var speed:Float = 1;
+	var instSnd:Null<openfl.media.Sound>;
 
 	var tabs:Tabs;
 	var analysis:AnalysisTab;
@@ -91,6 +93,7 @@ class ChartEditorState extends FlxState
 
 		inst = new FlxSound();
 		var s = Paths.song(songId, "Inst");
+		instSnd = s;
 		if (s != null)
 			inst.loadEmbedded(s);
 		FlxG.sound.list.add(inst);
@@ -165,34 +168,36 @@ class ChartEditorState extends FlxState
 	function buildInfoCard():Void
 	{
 		var y = CharPreview.PY + CharPreview.PH + 12;
-		add(new Card(EdTheme.LEFT_X, y, EdTheme.LEFT_W, 104, "Posição"));
+		add(new Card(EdTheme.LEFT_X, y, EdTheme.LEFT_W, 90, "Posição"));
 		infoText = EdTheme.text(EdTheme.LEFT_X + 16, y + 34, EdTheme.LEFT_W - 32, 14, "", EdTheme.TEXT);
 		add(infoText);
-		hoverText = EdTheme.text(EdTheme.LEFT_X + 16, y + 80, EdTheme.LEFT_W - 32, 12, "", EdTheme.DIM);
+		hoverText = EdTheme.text(EdTheme.LEFT_X + 16, y + 72, EdTheme.LEFT_W - 32, 12, "", EdTheme.DIM);
 		add(hoverText);
 	}
 
 	function buildPlaybackCard():Void
 	{
 		var x = EdTheme.LEFT_X;
-		var y = CharPreview.PY + CharPreview.PH + 12 + 104 + 12;
+		var y = CharPreview.PY + CharPreview.PH + 12 + 90 + 12;
 		var h = FlxG.height - 14 - y;
 		add(new Card(x, y, EdTheme.LEFT_W, h, "Reprodução"));
 		var ix = x + 16;
 		var iw = EdTheme.LEFT_W - 32;
 		add(EdTheme.text(ix, y + 34, iw, 12, "DIVISÃO DA GRADE", EdTheme.DIM));
 		add(new Segments(ix - 2, y + 52, iw + 4, [for (q in QUANTS) "1/" + q], function() return "1/" + grid.quant, function(v) grid.quant = Std.parseInt(v.substr(2))));
-		add(new Slider(ix, y + 96, iw, "Volume da música", function() return instVol, function(v) {
+		add(new Slider(ix, y + 88, iw, "Volume da música", function() return instVol, function(v) {
 			instVol = v;
 			inst.volume = v;
 		}, 0, 1, 2));
-		add(new Slider(ix, y + 142, iw, "Volume da voz", function() return voiceVol, function(v) {
+		add(new Slider(ix, y + 128, iw, "Volume da voz", function() return voiceVol, function(v) {
 			voiceVol = v;
 			voices.volume = v;
 		}, 0, 1, 2));
-		add(new Toggle(ix, y + 190, iw, "Som nas notas do jogador", function() return hitPlayer, function(v) hitPlayer = v));
-		add(new Toggle(ix, y + 220, iw, "Som nas notas do oponente", function() return hitOpp, function(v) hitOpp = v));
-		add(new Toggle(ix, y + 250, iw, "Metrônomo", function() return metronome, function(v) metronome = v));
+		add(new Toggle(ix, y + 170, iw, "Som nas notas do jogador", function() return hitPlayer, function(v) hitPlayer = v));
+		add(new Toggle(ix, y + 196, iw, "Som nas notas do oponente", function() return hitOpp, function(v) hitOpp = v));
+		add(new Toggle(ix, y + 222, iw, "Metrônomo", function() return metronome, function(v) metronome = v));
+		var spd = ["50%", "75%", "100%", "125%"];
+		add(new Segments(ix - 2, y + 254, iw + 4, spd, function() return Std.int(speed * 100) + "%", function(v) setSpeed(Std.parseInt(v.substr(0, v.length - 1)) / 100)));
 	}
 
 	function buildSidebar():Void
@@ -257,6 +262,9 @@ class ChartEditorState extends FlxState
 		seek(doc.tempo.msAt(keep));
 	}
 
+	public function instSound():Null<openfl.media.Sound>
+		return instSnd;
+
 	public function songTimeNow():Float
 		return songTime;
 
@@ -279,6 +287,14 @@ class ChartEditorState extends FlxState
 		}
 		doc.pasteInto(curSection, c, replace);
 		say("Importadas " + c.length + " notas da sombra (" + shadow.source + ")");
+	}
+
+	/** Velocidade de reprodução. Atenção: muda o tom junto (sem preservação de pitch). */
+	public function setSpeed(v:Float):Void
+	{
+		speed = Math.max(0.25, Math.min(2, v));
+		inst.pitch = speed;
+		voices.pitch = speed;
 	}
 
 	public function say(s:String, good:Bool = true):Void
@@ -346,6 +362,8 @@ class ChartEditorState extends FlxState
 			songTime = 0;
 		inst.volume = instVol;
 		voices.volume = voiceVol;
+		inst.pitch = speed;
+		voices.pitch = speed;
 		inst.play(true, songTime);
 		if (hasVoices && doc.chart.needsVoices)
 			voices.play(true, songTime);
@@ -431,7 +449,7 @@ class ChartEditorState extends FlxState
 
 		if (playing)
 		{
-			songTime += elapsed * 1000;
+			songTime += elapsed * 1000 * speed;
 			if (inst.playing && Math.abs(inst.time - songTime) > 40)
 				songTime = inst.time;
 			if (songTime >= lengthMs)
@@ -479,7 +497,7 @@ class ChartEditorState extends FlxState
 		var secNotes = doc.notesIn(s.startBeat, doc.sectionEndBeat(curSection)).length;
 		setText(infoText, "beat " + Math.floor(beat * 100) / 100 + "   step " + Math.floor(beat * 4) + "   seção " + curSection + "\nBPM " + currentBpm() + "   notas "
 			+ doc.chart.notes.length + " (" + secNotes + " na seção)   eventos " + doc.chart.events.length);
-		setText(hoverText, lane.hoverName != "" ? "evento: " + lane.hoverName : (playing ? "tocando" : "pausado"));
+		setText(hoverText, lane.hoverName != "" ? "evento: " + lane.hoverName : (playing ? "tocando a " + Std.int(speed * 100) + "%" : "pausado"));
 	}
 
 	function setText(t:FlxText, s:String):Void
@@ -541,6 +559,10 @@ class ChartEditorState extends FlxState
 			else
 				grid.deleteSelected();
 		}
+		if (k.justPressed.LBRACKET)
+			setSpeed(speed - 0.25);
+		if (k.justPressed.RBRACKET)
+			setSpeed(speed + 0.25);
 		if (k.justPressed.Q)
 			cycleQuant(-1);
 		if (k.justPressed.E)
