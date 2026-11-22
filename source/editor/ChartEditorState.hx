@@ -6,6 +6,7 @@ import editor.ChartDoc.Cmd;
 import editor.panels.AnalysisTab;
 import editor.panels.ChartTab;
 import editor.panels.EventsTab;
+import editor.panels.GuideTab;
 import editor.panels.PreviewTab;
 import editor.panels.SectionTab;
 import editor.ui.EdUI;
@@ -61,6 +62,8 @@ class ChartEditorState extends FlxState
 	var analysis:AnalysisTab;
 	var markers:MarkerLayer;
 	public var shadow:ShadowLayer;
+	public var guide:GuideLayer;
+	var voicesSnd:Null<openfl.media.Sound>;
 	var help:HelpOverlay;
 	var toast:Toast;
 	var playBtn:Btn;
@@ -99,6 +102,7 @@ class ChartEditorState extends FlxState
 		FlxG.sound.list.add(inst);
 		voices = new FlxSound();
 		var v = Paths.song(songId, "Voices");
+		voicesSnd = v;
 		if (v != null)
 		{
 			voices.loadEmbedded(v);
@@ -124,6 +128,8 @@ class ChartEditorState extends FlxState
 		add(markers);
 		shadow = new ShadowLayer(doc, grid);
 		add(shadow);
+		guide = new GuideLayer(doc, grid);
+		add(guide);
 		add(new Minimap(doc, function() return lengthMs, function() return songTime, function(t) seek(t)));
 
 		preview = new CharPreview(doc, function(s, good) say(s, good));
@@ -203,7 +209,7 @@ class ChartEditorState extends FlxState
 	function buildSidebar():Void
 	{
 		add(new Card(EdTheme.SIDE_X, EdTheme.TOP_H + 12, EdTheme.SIDE_W, FlxG.height - EdTheme.TOP_H - 26));
-		tabs = new Tabs(EdTheme.SIDE_X + 16, EdTheme.TOP_H + 22, EdTheme.SIDE_W - 32, ["CHART", "SEÇÃO", "EVENTOS", "PREVIEW", "ANÁLISE"]);
+		tabs = new Tabs(EdTheme.SIDE_X + 16, EdTheme.TOP_H + 22, EdTheme.SIDE_W - 32, ["CHART", "SEÇÃO", "EVENTOS", "PREVIEW", "ANÁLISE", "GUIA"]);
 		var a = new ChartTab(this);
 		var b = new SectionTab(this);
 		var c = new EventsTab(this);
@@ -213,8 +219,10 @@ class ChartEditorState extends FlxState
 		add(b);
 		add(c);
 		add(d);
+		var g = new GuideTab(this);
 		add(analysis);
-		tabs.setContents([a, b, c, d, analysis]);
+		add(g);
+		tabs.setContents([a, b, c, d, analysis, g]);
 		add(tabs);
 		tabs.select(tabIndex);
 	}
@@ -261,6 +269,9 @@ class ChartEditorState extends FlxState
 		doc.setBpmAt(doc.chart.sections[curSection].startBeat, v);
 		seek(doc.tempo.msAt(keep));
 	}
+
+	public function voicesSound():Null<openfl.media.Sound>
+		return voicesSnd;
 
 	public function instSound():Null<openfl.media.Sound>
 		return instSnd;
@@ -545,7 +556,7 @@ class ChartEditorState extends FlxState
 		if (k.justPressed.ENTER)
 			testPlay();
 		if (k.justPressed.TAB)
-			tabs.select((tabs.index + 1) % 5);
+			tabs.select((tabs.index + 1) % 6);
 		if (ctrl && k.justPressed.S)
 			save();
 		if (ctrl && k.justPressed.Z)

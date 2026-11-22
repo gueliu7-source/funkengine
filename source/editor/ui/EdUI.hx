@@ -115,7 +115,7 @@ class Btn extends FlxSpriteGroup
 	var heldFor:Float = 0;
 	var lastRepeat:Float = 0;
 
-	public function new(x:Float, y:Float, w:Int, h:Int, text:String, onClick:Void->Void, kind:Int = 0, ?enabledFn:Void->Bool)
+	public function new(x:Float, y:Float, w:Int, h:Int, text:String, onClick:Void->Void, kind:Int = 0, ?enabledFn:Void->Bool, size:Int = 14)
 	{
 		super();
 		this.onClick = onClick;
@@ -125,7 +125,7 @@ class Btn extends FlxSpriteGroup
 		bg = EdTheme.round(x, y, w, h, Std.int(Math.min(10, h / 2)));
 		bg.active = true;
 		add(bg);
-		label = EdTheme.text(x, y + (h - 14) / 2 - 1, w, 14, text, kind == 1 ? 0xFF1A1305 : EdTheme.TEXT, FlxTextAlign.CENTER);
+		label = EdTheme.text(x, y + (h - size) / 2 - 1, w, size, text, kind == 1 ? 0xFF1A1305 : EdTheme.TEXT, FlxTextAlign.CENTER);
 		add(label);
 		paint(0);
 	}
@@ -480,7 +480,7 @@ class Tabs extends FlxSpriteGroup
 		cw = w / names.length;
 		for (i in 0...names.length)
 		{
-			var b = new Btn(x + i * cw, y, Std.int(cw), 30, names[i], function() select(i), 2);
+			var b = new Btn(x + i * cw, y, Std.int(cw), 30, names[i], function() select(i), 2, null, names.length > 5 ? 11 : 14);
 			buttons.push(b);
 			add(b);
 		}

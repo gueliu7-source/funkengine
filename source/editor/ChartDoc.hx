@@ -102,6 +102,47 @@ class ChartDoc
 		}));
 	}
 
+	/** Troca todas as notas de uma vez (gerador). */
+	public function replaceAllNotes(list:Array<core.Chart.NoteData>, name:String):Void
+	{
+		var old = chart.notes.copy();
+		run(new Cmd(name, function() {
+			chart.notes = list.copy();
+		}, function() {
+			chart.notes = old.copy();
+		}));
+	}
+
+	/** Soma notas novas às existentes, sem duplicar (mesmo tempo, coluna e lado). */
+	public function mergeNotes(list:Array<core.Chart.NoteData>, name:String):Int
+	{
+		var old = chart.notes.copy();
+		var merged = old.copy();
+		var added = 0;
+		for (n in list)
+		{
+			var dup = false;
+			for (o in old)
+				if (Math.abs(o.time - n.time) <= 1 && o.lane == n.lane && o.player == n.player)
+				{
+					dup = true;
+					break;
+				}
+			if (!dup)
+			{
+				merged.push(n);
+				added++;
+			}
+		}
+		merged.sort(function(a, b) return a.time < b.time ? -1 : (a.time > b.time ? 1 : 0));
+		run(new Cmd(name, function() {
+			chart.notes = merged.copy();
+		}, function() {
+			chart.notes = old.copy();
+		}));
+		return added;
+	}
+
 	public function addMarker(beat:Float, name:String, color:String):Void
 	{
 		var m:core.Chart.ChartMarker = {beat: beat, name: name, color: color};
