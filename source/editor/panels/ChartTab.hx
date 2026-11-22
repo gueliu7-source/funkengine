@@ -35,5 +35,15 @@ class ChartTab extends FlxSpriteGroup
 		add(new Toggle(x, 484, w, "Esta música usa voz (Voices.ogg)", function() return c.needsVoices, function(v) ed.prop("voz", c.needsVoices, function(a) c.needsVoices = a, v)));
 
 		add(EdTheme.text(x, 548, w, 28, "O BPM vale a partir do início da seção atual.\nAs notas ficam no mesmo lugar da grade.", EdTheme.DIM));
+
+		add(EdTheme.rect(x, 584, w, 1, EdTheme.LINE));
+		add(EdTheme.text(x, 592, w, 12, "SOMBRA (REFERÊNCIA NA GRADE)", EdTheme.DIM));
+		add(new Selector(x, 612, w, "Mostrar", function() return ed.shadow.options(), function() return ed.shadow.source, function(v) {
+			if (!ed.shadow.set(v))
+				ed.say("Não consegui carregar a sombra.", false);
+		}, 70));
+		var half = Std.int((w - 8) / 2);
+		add(new Btn(x, 650, half, 28, "IMPORTAR (troca)", function() ed.importShadow(true), 0));
+		add(new Btn(x + half + 8, 650, half, 28, "IMPORTAR (soma)", function() ed.importShadow(false), 0));
 	}
 }

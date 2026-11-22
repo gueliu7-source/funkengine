@@ -58,6 +58,7 @@ class ChartEditorState extends FlxState
 	var tabs:Tabs;
 	var analysis:AnalysisTab;
 	var markers:MarkerLayer;
+	public var shadow:ShadowLayer;
 	var help:HelpOverlay;
 	var toast:Toast;
 	var playBtn:Btn;
@@ -118,6 +119,8 @@ class ChartEditorState extends FlxState
 		add(lane);
 		markers = new MarkerLayer(doc, grid);
 		add(markers);
+		shadow = new ShadowLayer(doc, grid);
+		add(shadow);
 		add(new Minimap(doc, function() return lengthMs, function() return songTime, function(t) seek(t)));
 
 		preview = new CharPreview(doc, function(s, good) say(s, good));
@@ -259,6 +262,24 @@ class ChartEditorState extends FlxState
 
 	public function lengthNow():Float
 		return lengthMs;
+
+	/** Copia para a seção atual as notas que a sombra tem nesse trecho. */
+	public function importShadow(replace:Bool):Void
+	{
+		if (shadow.source == ShadowLayer.NONE)
+		{
+			say("Escolha uma sombra primeiro (aba CHART).", false);
+			return;
+		}
+		var c = shadow.clip(doc.chart.sections[curSection].startBeat, doc.sectionEndBeat(curSection));
+		if (c.length == 0)
+		{
+			say("A sombra não tem notas nesta seção.", false);
+			return;
+		}
+		doc.pasteInto(curSection, c, replace);
+		say("Importadas " + c.length + " notas da sombra (" + shadow.source + ")");
+	}
 
 	public function say(s:String, good:Bool = true):Void
 		toast.show(s, good);
