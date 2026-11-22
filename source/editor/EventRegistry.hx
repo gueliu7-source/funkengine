@@ -52,7 +52,7 @@ class EventRegistry
 						ps.push({
 							label: p.label != null ? Std.string(p.label) : "Valor",
 							kind: p.kind != null ? Std.string(p.kind) : "text",
-							def: p.default != null ? Std.string(p.default) : "",
+							def: Reflect.hasField(p, "default") ? Std.string(Reflect.field(p, "default")) : "",
 							options: opts
 						});
 					}
