@@ -18,7 +18,7 @@ class PreviewArea extends FlxSpriteGroup
 	var doc:ChartDoc;
 	var oppName:FlxText;
 	var plrName:FlxText;
-	var last:String = "";
+	var lastKey:String = "";
 
 	public function new(doc:ChartDoc)
 	{
@@ -48,9 +48,9 @@ class PreviewArea extends FlxSpriteGroup
 	{
 		super.update(elapsed);
 		var s = doc.chart.player2 + "|" + doc.chart.player1;
-		if (s != last)
+		if (s != lastKey)
 		{
-			last = s;
+			lastKey = s;
 			oppName.text = doc.chart.player2;
 			plrName.text = doc.chart.player1;
 		}

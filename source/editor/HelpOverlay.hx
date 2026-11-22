@@ -3,6 +3,7 @@ package editor;
 import editor.ui.EdUI;
 import flixel.FlxG;
 import flixel.group.FlxSpriteGroup;
+import flixel.text.FlxText.FlxTextAlign;
 
 /** Lista de atalhos, aberta por F1 ou pelo botão "?". Clique, ESC ou F1 fecham. */
 class HelpOverlay extends FlxSpriteGroup

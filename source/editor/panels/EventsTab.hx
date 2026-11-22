@@ -78,7 +78,7 @@ class EventsTab extends FlxSpriteGroup
 	var moreText:FlxText;
 	var warnText:FlxText;
 	var secHead:FlxText;
-	var last:String = "";
+	var lastKey:String = "";
 	var lastWarn:String = "";
 
 	public function new(ed:ChartEditorState)
@@ -182,9 +182,9 @@ class EventsTab extends FlxSpriteGroup
 		var s = ed.doc.chart.sections[ed.curSection];
 		rowEvents = ed.doc.eventsIn(s.startBeat, ed.doc.sectionEndBeat(ed.curSection));
 		var key = ed.curSection + ":" + rowEvents.length + ":" + ed.doc.version;
-		if (key != last)
+		if (key != lastKey)
 		{
-			last = key;
+			lastKey = key;
 			secHead.text = "NESTA SEÇÃO (" + ed.curSection + ")   " + rowEvents.length + " evento(s)";
 			for (i in 0...rows.length)
 			{
