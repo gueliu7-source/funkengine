@@ -369,6 +369,10 @@ class Hud extends FlxGroup
 				scoreR.text = "Accuracy: " + (none ? "-" : acc + "%");
 			case "leather":
 				scoreText.text = "Score: " + sc + " ~ Misses: " + judge.misses + " ~ Accuracy: " + (none ? "0" : acc) + "% ~ " + judge.rank;
+			case "neon":
+				scoreText.text = sc + "   //   " + (none ? "--" : acc + "%") + "   //   x" + judge.combo + "   //   " + judge.misses + " miss"
+					+ (judge.fc != "" ? "   //   " + judge.fc : "");
+				scoreText.color = none ? FlxColor.WHITE : (judge.misses == 0 ? 0xFF7DF9FF : (judge.accuracy < 70 ? 0xFFFF8FA3 : FlxColor.WHITE));
 			case "forever":
 				scoreText.text = "Score: " + sc + " - Accuracy: " + (none ? "0" : acc) + "%" + (judge.fc != "" ? " [" + judge.fc + "]" : "") + " - Combo Breaks: "
 					+ judge.misses;

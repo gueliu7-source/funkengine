@@ -49,6 +49,10 @@ class HudStyles
 		{
 			id: "forever", name: "Forever Engine", barW: 400, barH: 10, barImage: false, border: 2, fixedColors: false, bump: 1.1, score: "forever",
 			scoreSize: 18, scoreDy: 14, time: "text", timeInside: false, counters: true, info: false, ratingX: 0.5, ratingY: 0.4, ratingScale: 0.8
+		},
+		{
+			id: "neon", name: "Neon (minimalista)", barW: 460, barH: 6, barImage: false, border: 0, fixedColors: false, bump: 1.25, score: "neon",
+			scoreSize: 18, scoreDy: 16, time: "text", timeInside: false, counters: false, info: false, ratingX: 0.5, ratingY: 0.38, ratingScale: 0.65
 		}
 	];
 
