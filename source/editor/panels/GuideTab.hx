@@ -4,6 +4,8 @@ import core.Chart.NoteData;
 import editor.ChartEditorState;
 import editor.analysis.AudioPeaks;
 import editor.analysis.ChartGen;
+import editor.analysis.GenOpts;
+import editor.analysis.Onset;
 import editor.ui.EdUI;
 import flixel.group.FlxSpriteGroup;
 import flixel.text.FlxText;
@@ -27,7 +29,7 @@ class GuideTab extends FlxSpriteGroup
 	var report:FlxText;
 	var rows:Array<Btn> = [];
 	var rowMs:Array<Float> = [0, 0, 0, 0];
-	var ons:Array<ChartGen.Onset> = [];
+	var ons:Array<Onset> = [];
 	var guide:Array<NoteData> = [];
 
 	public function new(ed:ChartEditorState)
@@ -83,7 +85,7 @@ class GuideTab extends FlxSpriteGroup
 		return ed.instSound();
 	}
 
-	function opts():ChartGen.GenOpts
+	function opts():GenOpts
 		return {sens: sens, quant: quant, mode: mode, sustains: sustains};
 
 	function analyze():Void
