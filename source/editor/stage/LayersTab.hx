@@ -47,7 +47,7 @@ class LayersTab extends FlxSpriteGroup
 
 	var ed:StageEditorState;
 	var rows:Array<Row> = [];
-	var offset:Int = 0;
+	var scrollRow:Int = 0;
 	var shown:Array<String> = []; // ids, da frente para o fundo
 	var x0:Float;
 	var w0:Int;
@@ -135,13 +135,13 @@ class LayersTab extends FlxSpriteGroup
 		var my = FlxG.mouse.y;
 		var inList = mx >= x0 && mx < x0 + w0 && my >= LIST_Y && my < LIST_Y + ROWS * ROW_H;
 		if (inList && FlxG.mouse.wheel != 0 && !EdLock.locked)
-			offset -= FlxG.mouse.wheel > 0 ? 1 : -1;
-		offset = Std.int(Math.max(0, Math.min(Math.max(0, shown.length - ROWS), offset)));
+			scrollRow -= FlxG.mouse.wheel > 0 ? 1 : -1;
+		scrollRow = Std.int(Math.max(0, Math.min(Math.max(0, shown.length - ROWS), scrollRow)));
 
 		for (i in 0...ROWS)
 		{
 			var r = rows[i];
-			var idx = offset + i;
+			var idx = scrollRow + i;
 			if (idx >= shown.length)
 			{
 				r.visible = false;
