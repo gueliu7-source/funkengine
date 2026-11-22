@@ -1,0 +1,2 @@
+{ "name": "Camera Focus", "description": "Move o foco da câmera para um personagem (vale até a próxima seção).", "color": "#7BE0A4",
+  "params": [ { "label": "Quem", "kind": "choice", "default": "bf", "options": ["bf", "dad", "gf"] } ] }

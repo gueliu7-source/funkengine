@@ -632,6 +632,8 @@ class PlayState extends FlxState
 					c.playAnim(v1, true);
 					c.specialAnim = (c.animation.curAnim != null && !c.animation.curAnim.looped);
 				}
+			case "Camera Focus":
+				focusCamera(StringTools.trim(v1).toLowerCase());
 			case "Hey!":
 				var who = StringTools.trim(v1).toLowerCase();
 				for (c in [who == "gf" || who == "ambos" ? gf : null, who == "bf" || who == "ambos" ? boyfriend : null])

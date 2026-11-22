@@ -5,6 +5,7 @@ import editor.ChartDoc.ClipNote;
 import editor.ChartDoc.Cmd;
 import editor.panels.ChartTab;
 import editor.panels.EventsTab;
+import editor.panels.PreviewTab;
 import editor.panels.SectionTab;
 import editor.ui.EdUI;
 import flixel.FlxG;
@@ -34,6 +35,7 @@ class ChartEditorState extends FlxState
 	public var doc:ChartDoc;
 	public var grid:GridView;
 	public var lane:EventLane;
+	public var preview:CharPreview;
 	public var curSection:Int = 0;
 
 	var inst:FlxSound;
@@ -113,7 +115,8 @@ class ChartEditorState extends FlxState
 		add(lane);
 		add(new Minimap(doc, function() return lengthMs, function() return songTime, function(t) seek(t)));
 
-		add(new PreviewArea(doc));
+		preview = new CharPreview(doc, function(s, good) say(s, good));
+		add(preview);
 		buildInfoCard();
 		buildPlaybackCard();
 		buildSidebar();
@@ -153,7 +156,7 @@ class ChartEditorState extends FlxState
 
 	function buildInfoCard():Void
 	{
-		var y = PreviewArea.PY + PreviewArea.PH + 12;
+		var y = CharPreview.PY + CharPreview.PH + 12;
 		add(new Card(EdTheme.LEFT_X, y, EdTheme.LEFT_W, 104, "Posição"));
 		infoText = EdTheme.text(EdTheme.LEFT_X + 16, y + 34, EdTheme.LEFT_W - 32, 14, "", EdTheme.TEXT);
 		add(infoText);
@@ -164,7 +167,7 @@ class ChartEditorState extends FlxState
 	function buildPlaybackCard():Void
 	{
 		var x = EdTheme.LEFT_X;
-		var y = PreviewArea.PY + PreviewArea.PH + 12 + 104 + 12;
+		var y = CharPreview.PY + CharPreview.PH + 12 + 104 + 12;
 		var h = FlxG.height - 14 - y;
 		add(new Card(x, y, EdTheme.LEFT_W, h, "Reprodução"));
 		var ix = x + 16;
@@ -187,14 +190,16 @@ class ChartEditorState extends FlxState
 	function buildSidebar():Void
 	{
 		add(new Card(EdTheme.SIDE_X, EdTheme.TOP_H + 12, EdTheme.SIDE_W, FlxG.height - EdTheme.TOP_H - 26));
-		tabs = new Tabs(EdTheme.SIDE_X + 16, EdTheme.TOP_H + 22, EdTheme.SIDE_W - 32, ["CHART", "SEÇÃO / NOTA", "EVENTOS"]);
+		tabs = new Tabs(EdTheme.SIDE_X + 16, EdTheme.TOP_H + 22, EdTheme.SIDE_W - 32, ["CHART", "SEÇÃO", "EVENTOS", "PREVIEW"]);
 		var a = new ChartTab(this);
 		var b = new SectionTab(this);
 		var c = new EventsTab(this);
+		var d = new PreviewTab(this);
 		add(a);
 		add(b);
 		add(c);
-		tabs.setContents([a, b, c]);
+		add(d);
+		tabs.setContents([a, b, c, d]);
 		add(tabs);
 		tabs.select(tabIndex);
 	}
@@ -425,6 +430,7 @@ class ChartEditorState extends FlxState
 		grid.playing = playing;
 		grid.sync(beat * 4, elapsed);
 		lane.sync();
+		preview.sync(songTime, playing, curSection, currentBpm(), elapsed);
 		var allow = !EdLock.locked && !TextInput.typing();
 		grid.mouse(allow);
 		lane.mouse(allow);
@@ -484,7 +490,7 @@ class ChartEditorState extends FlxState
 		if (k.justPressed.ENTER)
 			testPlay();
 		if (k.justPressed.TAB)
-			tabs.select((tabs.index + 1) % 3);
+			tabs.select((tabs.index + 1) % 4);
 		if (ctrl && k.justPressed.S)
 			save();
 		if (ctrl && k.justPressed.Z)
