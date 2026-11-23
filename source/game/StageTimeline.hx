@@ -102,8 +102,10 @@ class StageTimeline
 
 	/** Esquece qual imagem cada peça está mostrando (use ao recriar os sprites). */
 	public function forget():Void
+	{
 		curImage = new Map();
 		curAnim = new Map();
+	}
 
 	public function animates(id:String):Bool
 		return targets.exists(id);
