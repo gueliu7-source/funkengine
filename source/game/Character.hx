@@ -56,27 +56,33 @@ class Character extends FlxSprite
 	public var iconName:String = "face";
 	public var camOffset:Array<Float>;
 
-	var offsets:Map<String, Array<Float>> = new Map();
+	public var offsets:Map<String, Array<Float>> = new Map(); // público: o Character Editor ajusta ao vivo
 
-	public function new(x:Float, y:Float, id:String, isPlayer:Bool = false)
+	/** fromDef: usa esta definição em vez de ler o arquivo (o Character Editor mostra o que ainda não foi salvo). */
+	public function new(x:Float, y:Float, id:String, isPlayer:Bool = false, ?fromDef:CharDef)
 	{
 		super(x, y);
 		this.id = id;
 		this.isPlayer = isPlayer;
 		moves = false;
-		load();
+		load(fromDef);
 		dance();
 	}
 
-	function load():Void
+	function load(fromDef:Null<CharDef>):Void
 	{
-		var text = Paths.getText('data/characters/$id.json');
-		if (text == null)
+		if (fromDef != null)
+			def = fromDef;
+		else
 		{
-			trace('[Character] $id.json não encontrado, usando bf');
-			text = Paths.getText("data/characters/bf.json");
+			var text = Paths.getText('data/characters/$id.json');
+			if (text == null)
+			{
+				trace('[Character] $id.json não encontrado, usando bf');
+				text = Paths.getText("data/characters/bf.json");
+			}
+			def = Json.parse(text);
 		}
-		def = Json.parse(text);
 
 		frames = (def.packer == true) ? Paths.packer("images/" + def.asset) : Paths.sparrow("images/" + def.asset);
 

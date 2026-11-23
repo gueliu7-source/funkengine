@@ -1,6 +1,7 @@
 package states;
 
 import core.Paths;
+import editor.CharEditorState;
 import editor.ChartEditorState;
 import editor.StageEditorState;
 import flixel.FlxG;
@@ -13,7 +14,7 @@ import ui.MenuUtil;
 /** Menu dos editores (tecla 7 no menu principal). Por enquanto: Chart Editor. */
 class EditorsState extends FlxState
 {
-	static final ITEMS:Array<String> = ["Chart Editor", "Character Editor (em breve)", "Stage Editor"];
+	static final ITEMS:Array<String> = ["Chart Editor", "Character Editor", "Stage Editor"];
 	static final DIFFS:Array<String> = ["", "-easy", "-hard"];
 	static final DIFF_NAMES:Array<String> = ["normal", "easy", "hard"];
 	static var lastSong:Int = 0;
@@ -62,7 +63,7 @@ class EditorsState extends FlxState
 		{
 			title.text = "EDITORES";
 			for (i in 0...ITEMS.length)
-				style(rows[i], ITEMS[i], i == cur, i == 0 || i == 2);
+				style(rows[i], ITEMS[i], i == cur, i <= 2);
 			hint.text = "↑↓ escolher   ENTER abrir   ESC voltar";
 			return;
 		}
@@ -142,6 +143,11 @@ class EditorsState extends FlxState
 					cur = Std.int(Math.min(lastSong, Math.max(0, songs.length - 1)));
 					diff = lastDiff;
 					paint();
+				}
+				else if (cur == 1)
+				{
+					MenuUtil.sfx("confirmMenu");
+					FlxG.switchState(new CharEditorState());
 				}
 				else if (cur == 2)
 				{
