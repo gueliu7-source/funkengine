@@ -80,13 +80,14 @@ class TimelineTab extends FlxSpriteGroup
 		}), 70));
 		valueG.add(EdTheme.text(x, ey + 64, 70, 12, "Para", EdTheme.DIM));
 		valueG.add(new TextInput(x + 74, ey + 60, w - 74, function() return selEv != null ? selEv.value : "", function(v) change("valor", function(e) e.value = v.trim())));
-		imageG.add(new Selector(x, ey + 60, w, "Para", function() return ed.images(), function() return selEv != null && selEv.value != "" ? selEv.value : "(escolha)", function(v) change("imagem", function(e) e.value = v), 70));
+		imageG.add(new Selector(x, ey + 60, w - 76, "Para", function() return ed.images(), function() return selEv != null && selEv.value != "" ? selEv.value : "(escolha)", function(v) change("imagem", function(e) e.value = v), 44));
+		imageG.add(new Btn(x + w - 70, ey + 60, 70, 26, "+ PNG", function() ed.importImage(function(img) change("imagem", function(e) e.value = img)), 1, hasSel, 12));
 		add(valueG);
 		add(imageG);
 		add(new Stepper(x, ey + 94, w, "No beat", function() return selEv != null ? selEv.beat : 0, function(v) change("beat", function(e) e.beat = v), 0.25, 0, 2000, 2));
 		add(new Stepper(x, ey + 122, w, "Duração (beats)", function() return selEv != null ? selEv.dur : 0, function(v) change("duração", function(e) e.dur = v), 0.25, 0, 500, 2));
 		add(new Selector(x, ey + 152, w, "Curva", function() return StageTimeline.EASES, function() return selEv != null ? selEv.ease : "linear", function(v) change("curva", function(e) e.ease = v), 70));
-		add(EdTheme.text(x, ey + 186, w, 12, "Cor: hex (ex.: 202040). Escala/alpha/x/y/ângulo: número. Duração 0 = instantâneo.", EdTheme.DIM));
+		add(EdTheme.text(x, ey + 186, w, 12, "anim = toca a animação (prefixo do atlas; \"prefixo:loop\" repete). Cor: hex. Outros: número. Duração 0 = instantâneo.", EdTheme.DIM));
 	}
 
 	/** O grupo pai propaga "visible" aos filhos; por isso a escolha texto/imagem é refeita a cada desenho. */
@@ -111,6 +112,7 @@ class TimelineTab extends FlxSpriteGroup
 			case "scale": "1";
 			case "color": "FFFFFF";
 			case "image": "";
+			case "anim": "idle";
 			case "angle": "0";
 			default: "0";
 		}

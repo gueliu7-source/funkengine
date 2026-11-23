@@ -94,6 +94,7 @@ class StageView extends FlxGroup
 	var lines:Array<FlxSprite> = [];
 	var handles:Array<FlxSprite> = [];
 	var frameLines:Array<FlxSprite> = [];
+	var hoverLines:Array<FlxSprite> = [];
 	var axes:Array<FlxSprite> = [];
 
 	public function new(doc:StageDoc, x:Float, y:Float, w:Float, h:Float)
@@ -116,6 +117,8 @@ class StageView extends FlxGroup
 			handles.push(mk(overlay));
 		for (_ in 0...4)
 			frameLines.push(mk(overlay));
+		for (_ in 0...4)
+			hoverLines.push(mk(overlay));
 		for (_ in 0...2)
 			axes.push(mk(overlay));
 		add(world);
@@ -707,16 +710,13 @@ class StageView extends FlxGroup
 					line(handles[i], cs[i][0] - hs / 2, cs[i][1] - hs / 2, hs, hs, 0xFFFFFFFF, 1);
 			}
 		}
-		else if (hover != "" && !testCam)
-		{
-			var hb = boundsOf(hover);
-			if (hb != null)
-			{
-				box(lines, hb[0], hb[1], hb[2], hb[3], px, EdTheme.CYAN, 0.7);
-				for (l in lines)
-					l.visible = true;
-			}
-		}
+
+		// contorno do que está sob o mouse (mesmo com outra peça selecionada)
+		var hb = (hover != "" && hover != sel && drag == 0 && !testCam) ? boundsOf(hover) : null;
+		for (l in hoverLines)
+			l.visible = hb != null;
+		if (hb != null)
+			box(hoverLines, hb[0], hb[1], hb[2], hb[3], 2 * px, EdTheme.CYAN, 0.9);
 
 		// moldura da câmera do jogo no ponto de foco
 		var showF = showFrame && !testCam;

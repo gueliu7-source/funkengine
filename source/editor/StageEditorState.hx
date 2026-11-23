@@ -126,7 +126,8 @@ class StageEditorState extends FlxState
 		add(titleText);
 		add(EdTheme.text(EdTheme.LEFT_X, 29, 250, 12, "STAGE EDITOR", EdTheme.DIM));
 
-		add(new Selector(280, 10, 280, "Stage", function() return stageNames(), function() return doc.name, openStage, 56));
+		add(new Selector(280, 10, 220, "Stage", function() return stageNames(), function() return doc.name, openStage, 56));
+		add(new Btn(506, 10, 66, 32, "NOVO", newStage, 1));
 		add(new Btn(580, 10, 80, 32, "DESFAZER", doUndo, 2, function() return doc.canUndo));
 		add(new Btn(666, 10, 80, 32, "REFAZER", doRedo, 2, function() return doc.canRedo));
 		add(new Btn(766, 10, 84, 32, "SALVAR", save, 1));
@@ -256,13 +257,13 @@ class StageEditorState extends FlxState
 	// ------------------------------------------------------------------ importar imagens
 
 	/** Abre o seletor de arquivos do sistema para escolher um PNG. */
-	public function importImage():Void
+	public function importImage(?then:String->Void):Void
 	{
 		#if (sys && lime)
 		try
 		{
 			var fd = new lime.ui.FileDialog();
-			fd.onSelect.add(function(p:String) importFile(p));
+			fd.onSelect.add(function(p:String) importFile(p, then));
 			fd.browse(lime.ui.FileDialogType.OPEN, "png", null, "Escolha uma imagem PNG");
 		}
 		catch (e:Dynamic)
@@ -276,7 +277,7 @@ class StageEditorState extends FlxState
 	}
 
 	/** Copia o PNG para mods/<mod>/images/stages/<stage>/ e cria a camada, que segue o mouse até o clique. */
-	public function importFile(path:String):Void
+	public function importFile(path:String, ?then:String->Void):Void
 	{
 		#if sys
 		if (!path.toLowerCase().endsWith(".png"))
@@ -294,6 +295,12 @@ class StageEditorState extends FlxState
 			sys.io.File.copy(path, dir + "/" + base + ".png");
 			Paths.rebuild(Settings.d.enabledMods);
 			imageCache = null;
+			if (then != null)
+			{
+				then("stages/" + doc.name + "/" + base);
+				say("Imagem importada e escolhida para o evento.");
+				return;
+			}
 			var c = view.centerOfView();
 			var o = doc.add("stages/" + doc.name + "/" + base, false, c[0], c[1], "front");
 			tabs.select(0);
@@ -322,6 +329,25 @@ class StageEditorState extends FlxState
 		}
 		stageName = name;
 		tabIndex = tabs.index;
+		FlxG.switchState(new StageEditorState());
+	}
+
+	/** Cria um stage em branco com nome livre (stage_novo, stage_novo2...) em vez de alterar o atual. */
+	function newStage():Void
+	{
+		if (doc.dirty && !exitArmed)
+		{
+			exitArmed = true;
+			say("Há alterações não salvas! Clique em NOVO de novo para continuar sem salvar.", false);
+			return;
+		}
+		var have = stageNames();
+		var n = "stage_novo";
+		var i = 2;
+		while (have.indexOf(n) >= 0)
+			n = "stage_novo" + (i++);
+		stageName = n;
+		tabIndex = 0;
 		FlxG.switchState(new StageEditorState());
 	}
 

@@ -5,6 +5,8 @@ import flixel.FlxSprite;
 import flixel.tweens.FlxEase;
 import flixel.util.FlxColor;
 
+using StringTools;
+
 /** Um evento da timeline do cenário. value é texto: número, cor hex "RRGGBB" ou caminho de imagem (prop "image"). */
 typedef TlEvent =
 {
@@ -34,7 +36,7 @@ typedef TlBase =
  */
 class StageTimeline
 {
-	public static final PROPS:Array<String> = ["alpha", "x", "y", "scale", "angle", "color", "image"];
+	public static final PROPS:Array<String> = ["alpha", "x", "y", "scale", "angle", "color", "image", "anim"];
 	public static final EASES:Array<String> = ["linear", "in", "out", "inout"];
 
 	public var events:Array<TlEvent> = [];
@@ -42,6 +44,7 @@ class StageTimeline
 	var index:Map<String, Array<TlEvent>> = new Map(); // "id|prop" -> eventos ordenados
 	var targets:Map<String, Array<String>> = new Map(); // id -> props animadas
 	var curImage:Map<String, String> = new Map();
+	var curAnim:Map<String, TlEvent> = new Map();
 
 	public function new(?list:Array<TlEvent>)
 	{
@@ -100,6 +103,7 @@ class StageTimeline
 	/** Esquece qual imagem cada peça está mostrando (use ao recriar os sprites). */
 	public function forget():Void
 		curImage = new Map();
+		curAnim = new Map();
 
 	public function animates(id:String):Bool
 		return targets.exists(id);
@@ -184,6 +188,41 @@ class StageTimeline
 		return cur;
 	}
 
+	/** Último evento "anim" já ocorrido para a peça (ou null). */
+	function lastAnim(id:String, beat:Float):Null<TlEvent>
+	{
+		var l = index.get(id + "|anim");
+		var cur:Null<TlEvent> = null;
+		if (l != null)
+			for (e in l)
+			{
+				if (e.beat > beat)
+					break;
+				cur = e;
+			}
+		return cur;
+	}
+
+	/** Valor "prefixo" toca uma vez; "prefixo:loop" repete. Toca do começo quando o evento muda. */
+	function playAnim(id:String, s:FlxSprite, e:Null<TlEvent>):Void
+	{
+		if (e == curAnim.get(id))
+			return;
+		curAnim.set(id, e);
+		if (e == null || e.value == "")
+			return;
+		var loop = e.value.endsWith(":loop");
+		var prefix = loop ? e.value.substr(0, e.value.length - 5) : e.value;
+		var key = "tl_" + prefix;
+		if (!s.animation.exists(key))
+			s.animation.addByPrefix(key, prefix, 24, loop);
+		if (s.animation.exists(key))
+		{
+			s.active = true;
+			s.animation.play(key, true);
+		}
+	}
+
 	/** Aplica o estado do beat às peças que têm eventos (as outras não são tocadas). */
 	public function apply(beat:Float, sprites:Map<String, FlxSprite>, baseOf:String->Null<TlBase>):Void
 	{
@@ -210,6 +249,8 @@ class StageTimeline
 					curImage.set(id, want);
 				}
 			}
+			if (ps.indexOf("anim") >= 0)
+				playAnim(id, s, lastAnim(id, beat));
 			if (ps.indexOf("scale") >= 0 || swapped)
 			{
 				var sc = num(id, "scale", b.scale, beat);
