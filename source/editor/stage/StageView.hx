@@ -382,7 +382,19 @@ class StageView extends FlxGroup
 		if (id.startsWith("@"))
 		{
 			var c = chars.get(id.substr(1));
-			return (c == null || !c.visible) ? null : [c.x, c.y, c.width, c.height];
+			if (c == null || !c.visible)
+				return null;
+			// retângulo do que se VÊ (o hitbox do personagem muda com a animação e pode ser minúsculo)
+			var w = c.frameWidth * Math.abs(c.scale.x);
+			var h = c.frameHeight * Math.abs(c.scale.y);
+			if (w < 8 || h < 8)
+			{
+				w = Math.max(w, 150);
+				h = Math.max(h, 300);
+			}
+			var cx = c.x - c.offset.x + (c.frameWidth - w) / 2;
+			var cy = c.y - c.offset.y + (c.frameHeight - h) / 2;
+			return [cx, cy, w, h];
 		}
 		var s = sprites.get(id);
 		return s == null ? null : [s.x, s.y, s.width, s.height];
