@@ -124,6 +124,8 @@ class StageEditorState extends FlxState
 		add(new Btn(766, 10, 84, 32, "SALVAR", save, 1));
 		add(new Btn(856, 10, 34, 32, "?", function() help.toggle(), 2));
 		add(new Btn(900, 10, 90, 32, "PAINEL", togglePanel, 2));
+		hintText = EdTheme.text(1000, 19, 170, 11, "", EdTheme.DIM);
+		add(hintText);
 		add(new Btn(1180, 10, 84, 32, "SAIR", leave, 2));
 	}
 
@@ -162,8 +164,6 @@ class StageEditorState extends FlxState
 			doc.zoom = v;
 		}, 0.2, 2, 2, function(a, b) doc.end("zoom")));
 		add(new Toggle(VX + 752, cy + 10, 100, "Moldura", function() return view.showFrame, function(v) view.showFrame = v));
-		hintText = EdTheme.text(1000, 19, 170, 11, "", EdTheme.DIM);
-		add(hintText);
 	}
 
 	/** Carrega música e chart; usa os personagens do chart se a opção estiver ligada. */
