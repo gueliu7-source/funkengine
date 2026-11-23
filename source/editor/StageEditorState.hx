@@ -4,12 +4,17 @@ import core.Paths;
 import editor.stage.CharsTab;
 import editor.stage.LayersTab;
 import editor.stage.PropsTab;
+import editor.stage.SongTab;
 import editor.stage.StageDoc;
+import editor.stage.StageSong;
+import editor.stage.Transport;
 import editor.stage.StageView;
 import editor.ui.EdUI;
+import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.FlxState;
 import flixel.input.keyboard.FlxKey;
+import flixel.util.FlxColor;
 import flixel.text.FlxText;
 import states.EditorsState;
 
@@ -25,12 +30,14 @@ class StageEditorState extends FlxState
 	static var tabIndex:Int = 0;
 	static var focusIdx:Int = 0;
 
-	static inline var BOTTOM_H:Int = 62;
+	static inline var BOTTOM_H:Int = 112;
 	static final FOCUS:Array<String> = ["Jogador", "Oponente", "GF"];
 	static final FOCUS_SLOT:Array<String> = ["bf", "dad", "gf"];
 
 	public var doc:StageDoc;
 	public var view:StageView;
+	public var song:StageSong = new StageSong();
+	var uiCam:FlxCamera;
 
 	var tabs:Tabs;
 	var side:flixel.group.FlxGroup;
@@ -48,6 +55,9 @@ class StageEditorState extends FlxState
 
 	static inline var VX:Int = 16;
 	static inline var VY:Int = EdTheme.TOP_H + 12;
+
+	public function viewWidth():Float
+		return viewW();
 
 	function viewW():Float
 		return sideOpen ? EdTheme.SIDE_X - 12 - VX : FlxG.width - 2 * VX;
@@ -74,17 +84,27 @@ class StageEditorState extends FlxState
 		view = new StageView(doc, VX, VY, viewW(), viewH());
 		view.focus = FOCUS_SLOT[focusIdx];
 		add(view);
+		song.onNote = view.noteHit;
+		song.onBeat = view.beat;
+		// o palco tem câmera própria (fica por cima da padrão), então toast e ajuda vão para uma câmera ainda mais acima
+		uiCam = new FlxCamera(0, 0, FlxG.width, FlxG.height);
+		uiCam.bgColor = FlxColor.TRANSPARENT;
+		FlxG.cameras.add(uiCam, false);
 
 		buildSidebar();
 		buildBottomBar();
 		buildTopBar();
 
 		toast = new Toast(VX + viewW() / 2, FlxG.height - BOTTOM_H - 40);
+		toast.cameras = [uiCam];
 		add(toast);
-		help = new HelpOverlay("Clique / arrastar\nCantos da peça\nSHIFT ao arrastar\nRoda do mouse\nBotão do meio ou direito\nESPAÇO + arrastar\nSetas / SHIFT + setas\nDEL\nCtrl+D\nCtrl+Z / Ctrl+Y\nCtrl+S\nTAB\nP\nF1\nESC",
-			"selecionar e mover peças e personagens\nredimensionar (proporcional)\nencaixar em múltiplos de 10 px\nzoom no palco\nmover a visão\nmover a visão\nmover 1 px / 10 px\nexcluir a camada selecionada\nduplicar a camada\ndesfazer / refazer\nsalvar o stage\ntrocar de aba\nrecolher / abrir o painel lateral\nabrir/fechar esta ajuda\nsair (pede confirmação se não salvou)",
+		help = new HelpOverlay("Clique / arrastar\nCantos da peça\nSHIFT ao arrastar\nRoda do mouse\nBotão do meio ou direito\nESPAÇO + arrastar\nSetas / SHIFT + setas\nDEL\nCtrl+D\nCtrl+Z / Ctrl+Y\nCtrl+S\n\nENTER\nHOME / END\nPgUp / PgDn\n, e .\nL\nClique na barra\n\nTAB\nP\nF1\nESC",
+			"selecionar e mover peças e personagens\nredimensionar (proporcional)\nencaixar em múltiplos de 10 px\nzoom no palco\nmover a visão\nmover a visão\nmover 1 px / 10 px\nexcluir a camada selecionada\nduplicar a camada\ndesfazer / refazer\nsalvar o stage\n\ntocar / pausar a música\nir ao início / ao fim\nseção anterior / próxima\nbeat anterior / próximo\nligar/desligar o loop do trecho\nir para aquele ponto da música\n\ntrocar de aba\nrecolher / abrir o painel lateral\nabrir/fechar esta ajuda\nsair (pede confirmação se não salvou)",
 			"Atalhos do Stage Editor");
+		help.cameras = [uiCam];
 		add(help);
+		if (StageSong.lastId != "")
+			loadSong(StageSong.lastId, StageSong.lastSuffix, true);
 		say("Stage \"" + doc.name + "\" aberto. Clique numa peça para editar. F1 = atalhos.");
 	}
 
@@ -111,14 +131,16 @@ class StageEditorState extends FlxState
 	{
 		side = new flixel.group.FlxGroup();
 		side.add(new Card(EdTheme.SIDE_X, EdTheme.TOP_H + 12, EdTheme.SIDE_W, FlxG.height - EdTheme.TOP_H - 26));
-		tabs = new Tabs(EdTheme.SIDE_X + 16, EdTheme.TOP_H + 22, EdTheme.SIDE_W - 32, ["CAMADAS", "PROPRIEDADES", "PERSONAGENS"]);
+		tabs = new Tabs(EdTheme.SIDE_X + 16, EdTheme.TOP_H + 22, EdTheme.SIDE_W - 32, ["CAMADAS", "PROPRIEDADES", "PERSONAGENS", "MÚSICA"]);
 		var a = new LayersTab(this);
 		var b = new PropsTab(this);
 		var c = new CharsTab(this);
 		side.add(a);
 		side.add(b);
+		var d = new SongTab(this);
 		side.add(c);
-		tabs.setContents([a, b, c]);
+		side.add(d);
+		tabs.setContents([a, b, c, d]);
 		side.add(tabs);
 		tabs.select(tabIndex);
 		add(side);
@@ -126,20 +148,44 @@ class StageEditorState extends FlxState
 
 	function buildBottomBar():Void
 	{
-		var y = FlxG.height - BOTTOM_H - 4;
-		add(new Toggle(VX + 4, y + 16, 214, "Testar câmera (parallax)", function() return view.testCam, function(v) view.testCam = v));
-		add(EdTheme.text(VX + 240, y + 4, 60, 11, "FOCO", EdTheme.DIM));
-		add(new Segments(VX + 236, y + 22, 250, FOCUS, function() return FOCUS[focusIdx], function(v) {
+		var y = FlxG.height - BOTTOM_H;
+		add(new Transport(this, VX, y));
+		var cy = y + 62;
+		add(new Toggle(VX + 4, cy + 10, 214, "Testar câmera (parallax)", function() return view.testCam, function(v) view.testCam = v));
+		add(EdTheme.text(VX + 244, cy + 14, 40, 11, "FOCO", EdTheme.DIM));
+		add(new Segments(VX + 282, cy + 10, 230, FOCUS, function() return FOCUS[focusIdx], function(v) {
 			focusIdx = FOCUS.indexOf(v);
 			view.focus = FOCUS_SLOT[focusIdx];
 		}));
-		add(new Slider(VX + 510, y + 6, 200, "Zoom do stage", function() return doc.zoom, function(v) {
+		add(new Slider(VX + 540, cy + 2, 190, "Zoom do stage", function() return doc.zoom, function(v) {
 			doc.begin();
 			doc.zoom = v;
 		}, 0.2, 2, 2, function(a, b) doc.end("zoom")));
-		add(new Toggle(VX + 730, y + 16, 120, "Moldura", function() return view.showFrame, function(v) view.showFrame = v));
-		hintText = EdTheme.text(VX + 8, y - 2, 400, 11, "", EdTheme.DIM);
+		add(new Toggle(VX + 752, cy + 10, 100, "Moldura", function() return view.showFrame, function(v) view.showFrame = v));
+		hintText = EdTheme.text(1000, 19, 170, 11, "", EdTheme.DIM);
 		add(hintText);
+	}
+
+	/** Carrega música e chart; usa os personagens do chart se a opção estiver ligada. */
+	public function loadSong(id:String, suffix:String, quiet:Bool = false):Void
+	{
+		var msg = song.load(id, suffix);
+		if (!song.loaded)
+		{
+			say(msg != null ? msg : "Falha ao carregar " + id, false);
+			return;
+		}
+		var c = song.doc.chart;
+		if (SongTab.useChars)
+		{
+			StageView.idBf = c.player1;
+			StageView.idDad = c.player2;
+			StageView.idGf = c.gf;
+		}
+		if (quiet)
+			return;
+		var extra = c.stage != doc.name ? "  (o chart usa o stage \"" + c.stage + "\")" : "";
+		say(msg != null ? msg : "Música \"" + id + "\" carregada." + extra, msg == null);
 	}
 
 	// ------------------------------------------------------------------ API para as abas
@@ -246,6 +292,13 @@ class StageEditorState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		song.tick(elapsed);
+		view.songPlaying = song.playing;
+		if (song.loaded && SongTab.autoFocus)
+		{
+			view.focus = song.focusSlot();
+			focusIdx = Std.int(Math.max(0, FOCUS_SLOT.indexOf(view.focus)));
+		}
 		if (!TextInput.typing() && !TextInput.swallow)
 			keys();
 		TextInput.swallow = false;
@@ -291,9 +344,25 @@ class StageEditorState extends FlxState
 				view.sel = o.id;
 		}
 		if (k.justPressed.TAB && sideOpen)
-			tabs.select((tabs.index + 1) % 3);
+			tabs.select((tabs.index + 1) % 4);
 		if (k.justPressed.P)
 			togglePanel();
+		if (k.justPressed.ENTER)
+			song.toggle();
+		if (k.justPressed.HOME)
+			song.seek(0);
+		if (k.justPressed.END)
+			song.seek(song.lengthMs - 1);
+		if (k.justPressed.PAGEUP)
+			song.gotoSection(song.sectionIndex() - 1);
+		if (k.justPressed.PAGEDOWN)
+			song.gotoSection(song.sectionIndex() + 1);
+		if (k.justPressed.COMMA)
+			song.stepBeats(-1);
+		if (k.justPressed.PERIOD)
+			song.stepBeats(1);
+		if (k.justPressed.L && song.loaded)
+			song.setLoop(!song.loopOn);
 		if (k.justPressed.DELETE && view.sel != "" && !view.sel.startsWith("@"))
 		{
 			doc.remove(view.sel);
@@ -318,6 +387,9 @@ class StageEditorState extends FlxState
 		tabIndex = tabs != null ? tabs.index : 0;
 		EdLock.locked = false;
 		TextInput.current = null;
+		song.destroy();
+		if (uiCam != null)
+			FlxG.cameras.remove(uiCam);
 		FlxG.sound.muteKeys = savedMute;
 		FlxG.sound.volumeUpKeys = savedUp;
 		FlxG.sound.volumeDownKeys = savedDown;

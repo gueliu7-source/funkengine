@@ -1,5 +1,6 @@
 package editor.stage;
 
+import core.Chart.NoteData;
 import core.Paths;
 import editor.stage.StageDoc.SObj;
 import editor.ui.EdUI;
@@ -31,6 +32,7 @@ class StageView extends FlxGroup
 	public var focus:String = "bf";
 	public var showFrame:Bool = true;
 	public var animate:Bool = false;
+	public var songPlaying:Bool = false; // com música tocando, quem manda nas danças é o beat do chart
 
 	var cam:FlxCamera;
 	var vx:Float;
@@ -242,6 +244,26 @@ class StageView extends FlxGroup
 				}
 		}
 		return ok;
+	}
+
+	// ------------------------------------------------------------------ reação à música
+
+	/** Uma nota do chart foi tocada: o personagem do lado dela canta. step = duração de um passo em segundos. */
+	public function noteHit(n:NoteData, alt:Bool, step:Float):Void
+	{
+		var c = chars.get(n.player ? "bf" : "dad");
+		if (c == null)
+			return;
+		c.specialAnim = false;
+		c.sing(n.lane, alt);
+		release.set(c, clock + n.sustain / 1000 + step * Math.max(2, c.singDuration));
+	}
+
+	public function beat(b:Int):Void
+	{
+		for (c in chars)
+			if (b % Std.int(Math.max(1, c.danceEvery)) == 0 && !c.isSinging() && !c.specialAnim)
+				c.dance();
 	}
 
 	// ------------------------------------------------------------------ sincronização com o documento
@@ -670,7 +692,7 @@ class StageView extends FlxGroup
 		for (c in chars)
 			if (c.isSinging() && !c.specialAnim && release.exists(c) && clock >= release.get(c))
 				c.dance();
-		if (animate)
+		if (animate && !songPlaying)
 		{
 			beatT += elapsed;
 			if (beatT >= 0.5)
