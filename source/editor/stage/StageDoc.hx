@@ -3,6 +3,8 @@ package editor.stage;
 import core.ModManager;
 import core.Paths;
 import core.Settings;
+import game.StageTimeline;
+import game.StageTimeline.TlEvent;
 import haxe.Json;
 #if sys
 import sys.io.File;
@@ -55,6 +57,7 @@ class StageDoc
 	public var camBf:Null<Array<Float>>;
 	public var charOffsets:Dynamic = {};
 	public var objs:Array<SObj> = [];
+	public var tl:Array<TlEvent> = [];
 	public var version:Int = 0;
 	public var dirty:Bool = false;
 
@@ -97,6 +100,7 @@ class StageDoc
 		d.gf = arr(j.gf, [400, 130]);
 		d.camBf = j.camBf != null ? arr(j.camBf, [0, 0]) : null;
 		d.charOffsets = j.charOffsets != null ? j.charOffsets : {};
+		d.tl = StageTimeline.parse(j.timeline);
 		var list:Array<Dynamic> = j.objects;
 		if (list != null)
 			for (o in list)
@@ -189,6 +193,10 @@ class StageDoc
 		else
 			Reflect.deleteField(out, "charOffsets");
 		// a ordem do array é a ordem de desenho dentro de cada grupo
+		if (tl.length > 0)
+			out.timeline = [for (e in tl) {beat: round(e.beat), target: e.target, prop: e.prop, value: e.value, dur: round(e.dur), ease: e.ease}];
+		else
+			Reflect.deleteField(out, "timeline");
 		out.objects = [for (id in flat()) if (!id.startsWith("@")) toJson(byId(id))];
 		return out;
 	}
@@ -223,6 +231,7 @@ class StageDoc
 	function snapshot():String
 		return Json.stringify({
 			objs: objs,
+			tl: tl,
 			zoom: zoom,
 			bf: bf,
 			dad: dad,
@@ -236,6 +245,7 @@ class StageDoc
 		var j:Dynamic = Json.parse(s);
 		var list:Array<Dynamic> = j.objs;
 		objs = [for (o in list) (cast o : SObj)];
+		tl = StageTimeline.parse(j.tl);
 		zoom = j.zoom;
 		bf = arr(j.bf, bf);
 		dad = arr(j.dad, dad);

@@ -7,6 +7,7 @@ import editor.stage.CharsTab;
 import editor.stage.LayersTab;
 import editor.stage.PropsTab;
 import editor.stage.SongTab;
+import editor.stage.TimelineTab;
 import editor.stage.StageDoc;
 import editor.stage.StageSong;
 import editor.stage.Transport;
@@ -140,7 +141,7 @@ class StageEditorState extends FlxState
 	{
 		side = new flixel.group.FlxGroup();
 		side.add(new Card(EdTheme.SIDE_X, EdTheme.TOP_H + 12, EdTheme.SIDE_W, FlxG.height - EdTheme.TOP_H - 26));
-		tabs = new Tabs(EdTheme.SIDE_X + 16, EdTheme.TOP_H + 22, EdTheme.SIDE_W - 32, ["CAMADAS", "PROPRIEDADES", "PERSONAGENS", "MÚSICA"]);
+		tabs = new Tabs(EdTheme.SIDE_X + 16, EdTheme.TOP_H + 22, EdTheme.SIDE_W - 32, ["CAMADAS", "PROPRIED.", "PERSON.", "MÚSICA", "TIMELINE"]);
 		var a = new LayersTab(this);
 		var b = new PropsTab(this);
 		var c = new CharsTab(this);
@@ -149,7 +150,9 @@ class StageEditorState extends FlxState
 		var d = new SongTab(this);
 		side.add(c);
 		side.add(d);
-		tabs.setContents([a, b, c, d]);
+		var e = new TimelineTab(this);
+		side.add(e);
+		tabs.setContents([a, b, c, d, e]);
 		side.add(tabs);
 		tabs.select(tabIndex);
 		add(side);
@@ -231,6 +234,23 @@ class StageEditorState extends FlxState
 		out.sort(function(a, b) return a < b ? -1 : (a > b ? 1 : 0));
 		imageCache = out;
 		return out;
+	}
+
+	// ------------------------------------------------------------------ beat atual (timeline)
+
+	var manualBeat:Float = 0;
+
+	/** Com música carregada, o beat vem do transporte; sem música, de um valor manual. */
+	public function curBeat():Float
+		return song.loaded && song.doc != null ? song.doc.tempo.beatAt(song.ms) : manualBeat;
+
+	public function gotoBeat(b:Float):Void
+	{
+		b = Math.max(0, b);
+		if (song.loaded && song.doc != null)
+			song.seek(song.doc.tempo.msAt(b));
+		else
+			manualBeat = b;
 	}
 
 	// ------------------------------------------------------------------ importar imagens
@@ -356,6 +376,7 @@ class StageEditorState extends FlxState
 		super.update(elapsed);
 		song.tick(elapsed);
 		view.songPlaying = song.playing;
+		view.tlBeat = curBeat();
 		if (song.loaded && SongTab.autoFocus)
 		{
 			view.focus = song.focusSlot();
@@ -406,7 +427,7 @@ class StageEditorState extends FlxState
 				view.sel = o.id;
 		}
 		if (k.justPressed.TAB && sideOpen)
-			tabs.select((tabs.index + 1) % 4);
+			tabs.select((tabs.index + 1) % 5);
 		if (k.justPressed.P)
 			togglePanel();
 		if (k.justPressed.ENTER)

@@ -344,6 +344,8 @@ class PlayState extends FlxState
 		if (!started && Conductor.songPosition >= 0)
 			startSong();
 
+		stage.updateTimeline(Conductor.curDecBeat);
+
 		var pos = Conductor.songPosition - Settings.d.offsetMs;
 		opponentStrum.updateNotes(pos);
 		playerStrum.updateNotes(pos);

@@ -481,7 +481,7 @@ class Tabs extends FlxSpriteGroup
 		cw = w / names.length;
 		for (i in 0...names.length)
 		{
-			var b = new Btn(x + i * cw, y, Std.int(cw), 30, names[i], function() select(i), 2, null, names.length > 3 ? 11 : 14);
+			var b = new Btn(x + i * cw, y, Std.int(cw), 30, names[i], function() select(i), 2, null, names.length > 4 ? 10 : (names.length > 3 ? 11 : 14));
 			buttons.push(b);
 			add(b);
 		}

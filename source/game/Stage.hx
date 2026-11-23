@@ -4,6 +4,7 @@ import core.Paths;
 import core.Settings;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
+import game.StageTimeline;
 import haxe.Json;
 
 typedef StageObject =
@@ -35,6 +36,7 @@ typedef StageDef =
 	var gf:Array<Float>;
 	@:optional var objects:Array<StageObject>;
 	@:optional var camBf:Array<Float>; // deslocamento da câmera ao focar o jogador neste cenário
+	@:optional var timeline:Array<Dynamic>; // eventos que mudam o cenário durante a música (ver StageTimeline)
 	@:optional var charOffsets:Dynamic; // ex.: { "spooky": [100, 300] } substitui a posição por personagem
 }
 
@@ -49,6 +51,8 @@ class Stage
 	public var dadLayer:FlxGroup = new FlxGroup(); // depois do oponente
 	public var front:FlxGroup = new FlxGroup(); // na frente dos personagens
 	public var objects:Map<String, FlxSprite> = new Map();
+	public var timeline:StageTimeline;
+	var bases:Map<String, TlBase> = new Map();
 
 	public function new(name:String)
 	{
@@ -65,6 +69,14 @@ class Stage
 		if (def.objects != null)
 			for (o in def.objects)
 				build(o);
+		timeline = new StageTimeline(StageTimeline.parse(def.timeline));
+	}
+
+	/** Chamado todo frame pelo PlayState com o beat decimal da música. */
+	public function updateTimeline(beat:Float):Void
+	{
+		if (!timeline.empty)
+			timeline.apply(beat, objects, function(id) return bases.get(id));
 	}
 
 	function build(o:StageObject):Void
@@ -85,7 +97,7 @@ class Stage
 			if (g == null)
 				return;
 			s.loadGraphic(g);
-			s.active = false; // imagem estática não precisa de update
+			s.active = false; // imagem estática não precisa de update (a timeline mexe direto no sprite)
 		}
 		if (o.scale != null && o.scale != 1)
 		{
@@ -108,6 +120,15 @@ class Stage
 				s.color = tc;
 		}
 		objects.set(o.id, s);
+		bases.set(o.id, {
+			x: s.x,
+			y: s.y,
+			scale: o.scale != null ? o.scale : 1,
+			alpha: s.alpha,
+			angle: s.angle,
+			color: s.color,
+			image: o.image
+		});
 
 		switch (o.layer)
 		{

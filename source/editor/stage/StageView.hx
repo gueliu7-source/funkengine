@@ -10,6 +10,7 @@ import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import flixel.util.FlxColor;
 import game.Character;
+import game.StageTimeline;
 
 using StringTools;
 
@@ -29,6 +30,21 @@ class StageView extends FlxGroup
 	public var doc:StageDoc;
 	public var sel:String = "";
 	public var testCam:Bool = false;
+	public var tlBeat:Float = 0; // beat em que a timeline é avaliada
+	public var tlOn(default, set):Bool = false;
+	var tline:StageTimeline = new StageTimeline();
+	var tlVer:Int = -1;
+
+	function set_tlOn(v:Bool):Bool
+	{
+		if (tlOn && !v)
+		{
+			for (k in keys.keys()) // força recriar os sprites para voltar às imagens originais
+				keys.set(k, "");
+			tline.forget();
+		}
+		return tlOn = v;
+	}
 	public var focus:String = "bf";
 	public var showFrame:Bool = true;
 	public var animate:Bool = false;
@@ -720,6 +736,28 @@ class StageView extends FlxGroup
 		clock += elapsed;
 		syncChars();
 		syncObjects();
+		if (tlOn && placing == "")
+		{
+			if (tlVer != doc.version)
+			{
+				tlVer = doc.version;
+				tline.setEvents(doc.tl);
+			}
+			tline.apply(tlBeat, sprites, function(id) {
+				var o = doc.byId(id);
+				if (o == null)
+					return null;
+				return {
+					x: o.x,
+					y: o.y,
+					scale: o.scale,
+					alpha: o.alpha,
+					angle: o.angle,
+					color: tint(o.color),
+					image: o.image
+				};
+			});
+		}
 		mouse(!EdLock.locked && !TextInput.typing());
 
 		// personagens: voltam ao idle depois da pose, e "dançam" no ritmo se pedido
