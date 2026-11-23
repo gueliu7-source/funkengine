@@ -55,6 +55,8 @@ class Hud extends FlxGroup
 	var frameBottom:Float;
 	var shownHealth:Float = 1; // vida "desenhada": desliza até a vida real (a barra e os ícones andam suave)
 	var shownScore:Float = 0; // pontuação que sobe contando até o valor real
+	var lastScoreInt:Int = -1;
+	var lowT:Float = 0; // relógio do aviso de vida baixa
 
 	var scoreText:FlxText;
 	var scoreL:FlxText; // usados só no layout "codename" (esquerda / meio / direita)
@@ -289,6 +291,7 @@ class Hud extends FlxGroup
 	/** Reconstrói os textos. Chame depois de qualquer mudança de pontuação. */
 	public function refresh():Void
 	{
+		lastScoreInt = Math.round(shownScore);
 		writeScore();
 		if (counters.length == 5)
 		{
@@ -343,6 +346,14 @@ class Hud extends FlxGroup
 		return "You Suck!";
 	}
 
+	static function pad(v:Int, n:Int):String
+	{
+		var s = Std.string(v);
+		while (s.length < n)
+			s = "0" + s;
+		return s;
+	}
+
 	function writeScore():Void
 	{
 		var sc = Std.string(Std.int(Math.round(shownScore)));
@@ -350,6 +361,11 @@ class Hud extends FlxGroup
 		var none = judge.totalPlayed == 0;
 		switch (style.score)
 		{
+			case "clean":
+				// Score: 0000 - Accuracy: 00% - Misses: 0
+				scoreText.text = "Score: " + pad(Std.int(Math.round(shownScore)), 4) + " - Accuracy: " + pad(none ? 0 : Std.int(judge.accuracy), 2) + "% - Misses: "
+					+ judge.misses;
+				scoreText.color = none ? FlxColor.WHITE : (judge.misses == 0 ? 0xFF9EF0FF : (judge.accuracy < 70 ? 0xFFFFB0B0 : FlxColor.WHITE));
 			case "kade":
 				scoreText.text = "Score:" + sc + " | Combo Breaks:" + judge.misses + " | Accuracy:" + (none ? "0" : acc) + "% | " + judge.rank;
 			case "psych":
@@ -489,6 +505,13 @@ class Hud extends FlxGroup
 		super.update(elapsed);
 		tickHealth(elapsed);
 		tickScore(elapsed);
+		if (judge.health < 0.5) // vida baixa: a barra do jogador pulsa
+		{
+			lowT += elapsed;
+			barPlr.alpha = 0.78 + 0.22 * Math.sin(lowT * 9);
+		}
+		else if (barPlr.alpha != 1)
+			barPlr.alpha = 1;
 		iconP1.settle(elapsed);
 		iconP2.settle(elapsed);
 
@@ -544,6 +567,10 @@ class Hud extends FlxGroup
 			var step = d * (1 - Math.exp(-elapsed * 16));
 			shownScore += Math.abs(step) < 1 ? (d > 0 ? 1.0 : -1.0) : step;
 		}
+		var shownInt = Math.round(shownScore);
+		if (shownInt == lastScoreInt)
+			return; // o número na tela não mudou: não reconstrói o texto
+		lastScoreInt = shownInt;
 		writeScore();
 	}
 

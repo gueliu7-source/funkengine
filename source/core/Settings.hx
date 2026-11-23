@@ -55,7 +55,7 @@ class Settings
 			badMs: 135,
 			shitMs: 166,
 			accuracyMode: "simple",
-			hudStyle: "funkforge",
+			hudStyle: "clean",
 			enabledMods: [],
 			keys: [[FlxKey.A, FlxKey.LEFT], [FlxKey.S, FlxKey.DOWN], [FlxKey.W, FlxKey.UP], [FlxKey.D, FlxKey.RIGHT]]
 		};

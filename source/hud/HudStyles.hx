@@ -31,6 +31,11 @@ class HudStyles
 			scoreSize: 20, scoreDy: 10, time: "top", timeInside: false, counters: true, info: false, ratingX: 0.55, ratingY: 0.42, ratingScale: 0.7
 		},
 		{
+			id: "clean", name: "Limpo (Score - Accuracy - Misses)", barW: 560, barH: 12, barImage: false, border: 3, fixedColors: false, bump: 1.2,
+			score: "clean", scoreSize: 20, scoreDy: 12, time: "top", timeInside: false, counters: false, info: false, ratingX: 0.55, ratingY: 0.42,
+			ratingScale: 0.7
+		},
+		{
 			id: "kade", name: "Kade Engine", barW: 593, barH: 11, barImage: true, border: 0, fixedColors: true, bump: 1.2, score: "kade", scoreSize: 16,
 			scoreDy: 30, time: "top", timeInside: false, counters: true, info: true, ratingX: 0.55, ratingY: 0.42, ratingScale: 0.7
 		},

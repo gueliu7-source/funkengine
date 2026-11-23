@@ -128,8 +128,12 @@ class Strumline extends FlxGroup
 		else
 		{
 			body.visible = true;
-			body.scale.y = bodyPx / body.frameHeight;
-			body.updateHitbox();
+			var sy = bodyPx / body.frameHeight;
+			if (Math.abs(sy - body.scale.y) > 0.002) // evita recalcular o hitbox todo frame
+			{
+				body.scale.y = sy;
+				body.updateHitbox();
+			}
 		}
 		body.alpha = tail.alpha = a;
 		body.x = tail.x = r.cx - body.width / 2;
