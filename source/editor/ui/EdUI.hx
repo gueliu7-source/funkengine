@@ -20,7 +20,7 @@ class EdTheme
 	public static inline var ACCENT:FlxColor = 0xFFFFB347;
 	public static inline var CYAN:FlxColor = 0xFF4DD0E1;
 	public static inline var TEXT:FlxColor = 0xFFE6EDF3;
-	public static inline var DIM:FlxColor = 0xFF7D8896;
+	public static inline var DIM:FlxColor = 0xFF9AA6B8;
 	public static inline var GOOD:FlxColor = 0xFF7BE0A4;
 	public static inline var BAD:FlxColor = 0xFFFF6B6B;
 	public static final LANE:Array<FlxColor> = [0xFFC24B99, 0xFF00FFFF, 0xFF12FA05, 0xFFF9393F];
@@ -36,7 +36,8 @@ class EdTheme
 	public static function text(x:Float, y:Float, w:Float, size:Int, s:String = "", color:FlxColor = TEXT, align:FlxTextAlign = FlxTextAlign.LEFT):FlxText
 	{
 		var t = new FlxText(x, y, w, s, size);
-		t.setFormat(Paths.FONT, size, color, align);
+		t.setFormat(Paths.UI_FONT, size, color, align);
+		t.antialiasing = true;
 		t.scrollFactor.set();
 		t.active = false;
 		return t;

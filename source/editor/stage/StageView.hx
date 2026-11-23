@@ -73,6 +73,7 @@ class StageView extends FlxGroup
 	var lastMx:Float = 0;
 	var lastMy:Float = 0;
 	var hover:String = "";
+	var placing:String = ""; // imagem recém-importada: segue o mouse até o clique
 
 	var lines:Array<FlxSprite> = [];
 	var handles:Array<FlxSprite> = [];
@@ -404,6 +405,14 @@ class StageView extends FlxGroup
 		return -1;
 	}
 
+	/** A camada passa a seguir o mouse; o próximo clique no palco a coloca no lugar. */
+	public function startPlacing(id:String):Void
+	{
+		sel = id;
+		placing = id;
+		doc.begin();
+	}
+
 	function mouse(allow:Bool):Void
 	{
 		var mx = FlxG.mouse.screenX;
@@ -411,6 +420,31 @@ class StageView extends FlxGroup
 		var wx = toWx(mx);
 		var wy = toWy(my);
 		var inVp = inside(mx, my) && allow;
+
+		if (placing != "")
+		{
+			var po = doc.byId(placing);
+			var ps = sprites.get(placing);
+			if (po == null || FlxG.keys.justPressed.ESCAPE)
+			{
+				doc.end("posicionar imagem");
+				placing = "";
+			}
+			else
+			{
+				if (ps != null && inside(mx, my))
+				{
+					po.x = Math.round(wx - ps.width / 2);
+					po.y = Math.round(wy - ps.height / 2);
+				}
+				if (inVp && FlxG.mouse.justPressed)
+				{
+					doc.end("posicionar imagem");
+					placing = "";
+				}
+			}
+			return;
+		}
 
 		// pan: botão do meio, direito, ou ESPAÇO + esquerdo
 		var panBtn = FlxG.mouse.pressedMiddle || FlxG.mouse.pressedRight || (FlxG.keys.pressed.SPACE && FlxG.mouse.pressed);

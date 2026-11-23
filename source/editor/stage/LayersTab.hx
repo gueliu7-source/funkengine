@@ -39,8 +39,8 @@ private class Row extends FlxSpriteGroup
 /** Aba CAMADAS: lista da frente para o fundo (com os personagens como marcadores), olho, cadeado, ordem e imagens novas. */
 class LayersTab extends FlxSpriteGroup
 {
-	static inline var ROWS:Int = 13;
-	static inline var LIST_Y:Int = 222;
+	static inline var ROWS:Int = 12;
+	static inline var LIST_Y:Int = 262;
 	static inline var ROW_H:Int = 26;
 
 	static var addChoice:String = "";
@@ -63,16 +63,17 @@ class LayersTab extends FlxSpriteGroup
 		var w = w0;
 
 		var third = Std.int((w - 12) / 3);
-		add(new Btn(x, 124, third, 28, "+ ADICIONAR", addLayer, 1));
-		add(new Btn(x + third + 6, 124, third, 28, "DUPLICAR", dup, 0, hasObj));
-		add(new Btn(x + (third + 6) * 2, 124, third, 28, "EXCLUIR", del, 0, hasObj));
-		add(new Selector(x, 162, w, "Imagem", function() return ed.images(), function() {
+		add(new Btn(x, 124, w, 32, "IMPORTAR IMAGEM DO COMPUTADOR...", function() ed.importImage(), 1));
+		add(new Btn(x, 164, third, 28, "+ ADICIONAR", addLayer, 0));
+		add(new Btn(x + third + 6, 164, third, 28, "DUPLICAR", dup, 0, hasObj));
+		add(new Btn(x + (third + 6) * 2, 164, third, 28, "EXCLUIR", del, 0, hasObj));
+		add(new Selector(x, 202, w, "Do jogo", function() return ed.images(), function() {
 			var l = ed.images();
 			if (addChoice == "" || l.indexOf(addChoice) < 0)
 				addChoice = l.length > 0 ? l[0] : "";
 			return addChoice == "" ? "(nenhuma)" : addChoice;
 		}, function(v) addChoice = v, 62));
-		add(EdTheme.text(x, 204, w, 12, "CAMADAS  (frente → fundo)", EdTheme.DIM));
+		add(EdTheme.text(x, 242, w, 12, "CAMADAS  (frente → fundo)", EdTheme.DIM));
 
 		for (i in 0...ROWS)
 		{
@@ -84,7 +85,7 @@ class LayersTab extends FlxSpriteGroup
 		var by = LIST_Y + ROWS * ROW_H + 8;
 		add(new Btn(x, by, half, 28, "PRA FRENTE", function() ed.doc.move(ed.view.sel, 1), 0, hasObj));
 		add(new Btn(x + half + 8, by, half, 28, "PRA TRÁS", function() ed.doc.move(ed.view.sel, -1), 0, hasObj));
-		add(EdTheme.text(x, by + 36, w, 24, "Olho = mostrar/ocultar, quadrado = travar. Os pontos mostram onde ficam os personagens.", EdTheme.DIM));
+		add(EdTheme.text(x, by + 36, w, 12, "Olho = mostrar/ocultar, quadrado = travar. Os pontos mostram onde ficam os personagens.", EdTheme.DIM));
 	}
 
 	function hasObj():Bool

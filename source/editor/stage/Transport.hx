@@ -43,20 +43,20 @@ class Transport extends FlxSpriteGroup
 		add(playBtn);
 		add(new Btn(bx + 246, y, 58, 30, "BEAT >", function() song.stepBeats(1), 2, ready, 12));
 		add(new Btn(bx + 310, y, 74, 30, "SEÇÃO >", function() song.gotoSection(song.sectionIndex() + 1), 2, ready, 12));
-		timeText = EdTheme.text(bx + 398, y + 8, 220, 13, "", EdTheme.CYAN);
+		timeText = EdTheme.text(bx + 396, y + 8, 190, 13, "", EdTheme.CYAN);
 		add(timeText);
 
-		var lx = bx + 560;
-		add(new Toggle(lx, y + 4, 72, "Loop", function() return song.loopOn, function(v) song.setLoop(v)));
-		add(new Btn(lx + 96, y, 34, 30, "A", function() {
+		var lx = bx + 596;
+		add(new Toggle(lx, y + 4, 90, "Loop", function() return song.loopOn, function(v) song.setLoop(v)));
+		add(new Btn(lx + 100, y, 30, 30, "A", function() {
 			song.loopA = song.ms;
 			if (song.loopB <= song.loopA)
 				song.loopB = Math.min(song.lengthMs, song.loopA + 8000);
 		}, 2, ready));
-		add(new Btn(lx + 134, y, 34, 30, "B", function() {
+		add(new Btn(lx + 134, y, 30, 30, "B", function() {
 			song.loopB = Math.max(song.ms, song.loopA + 100);
 		}, 2, ready));
-		add(new Btn(lx + 172, y, 62, 30, "SEÇÃO", function() song.loopSection(), 2, ready, 12));
+		add(new Btn(lx + 168, y, 66, 30, "SEÇÃO", function() song.loopSection(), 2, ready, 12));
 
 		track = bar(EdTheme.SURFACE2, 1);
 		loopRange = bar(EdTheme.CYAN, 0.35);
@@ -152,7 +152,7 @@ class Transport extends FlxSpriteGroup
 		head.scale.set(3, h + 4);
 
 		playBtn.setText(song.playing ? "PAUSAR" : "PLAY");
-		var t = song.loaded ? clock(song.ms) + " / " + clock(song.lengthMs) + "   seção " + song.sectionIndex() : "nenhuma música (aba MÚSICA)";
+		var t = song.loaded ? clock(song.ms) + " / " + clock(song.lengthMs) + "  S" + song.sectionIndex() : "sem música (aba MÚSICA)";
 		if (t != shownTime)
 		{
 			shownTime = t;

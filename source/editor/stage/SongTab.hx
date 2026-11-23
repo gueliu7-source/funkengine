@@ -44,7 +44,7 @@ class SongTab extends FlxSpriteGroup
 		add(EdTheme.text(x, 382, w, 12, "COMO O PREVIEW USA O CHART", EdTheme.DIM));
 		add(new Toggle(x, 402, w, "Usar os personagens do chart", function() return useChars, function(v) useChars = v));
 		add(new Toggle(x, 430, w, "Câmera segue a seção (Jogador/Oponente)", function() return autoFocus, function(v) autoFocus = v));
-		add(EdTheme.text(x, 470, w, 90, "Ligue \"Testar câmera\" na barra de baixo para ver o parallax e o zoom do jogo enquanto a música toca. As notas fazem os personagens cantarem, o beat faz eles dançarem e o loop (A/B ou SEÇÃO) repete o trecho que você quer conferir.", EdTheme.DIM));
+		add(EdTheme.text(x, 470, w, 12, "Ligue \"Testar câmera\" na barra de baixo para ver o parallax e o zoom do jogo enquanto a música toca. As notas fazem os personagens cantarem, o beat faz eles dançarem e o loop (A/B ou SEÇÃO) repete o trecho que você quer conferir.", EdTheme.DIM));
 	}
 
 	static function songs():Array<String>

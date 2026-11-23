@@ -37,7 +37,7 @@ class CharsTab extends FlxSpriteGroup
 			add(new Btn(x + i * (bw + 6), 364, bw, 28, n, function() pose(n), 2, null, 11));
 		}
 		add(new Toggle(x, 406, w, "Idle em loop (como no jogo)", function() return ed.view.animate, function(v) ed.view.animate = v));
-		add(EdTheme.text(x, 446, w, 60, "Arraste os personagens direto no palco para posicionar. Use as poses para conferir se o enquadramento e os offsets ficam bons quando eles cantam.", EdTheme.DIM));
+		add(EdTheme.text(x, 446, w, 12, "Arraste os personagens direto no palco para posicionar. Use as poses para conferir se o enquadramento e os offsets ficam bons quando eles cantam.", EdTheme.DIM));
 	}
 
 	function swap():Void

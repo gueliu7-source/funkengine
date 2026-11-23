@@ -385,7 +385,7 @@ class StageDoc
 		return b + n;
 	}
 
-	public function add(image:String, animated:Bool, x:Float, y:Float):SObj
+	public function add(image:String, animated:Bool, x:Float, y:Float, group:String = "dad"):SObj
 	{
 		var base = image.substr(image.lastIndexOf("/") + 1);
 		var o:SObj = {
@@ -398,7 +398,7 @@ class StageDoc
 			sy: 1,
 			flipX: false,
 			aa: true,
-			group: "dad",
+			group: group,
 			animated: animated,
 			idle: "",
 			visible: true,

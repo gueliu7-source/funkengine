@@ -33,6 +33,8 @@ typedef Root =
 class Paths
 {
 	public static inline var FONT:String = "assets/fonts/vcr.ttf";
+	/** Fonte limpa e legível usada nos editores (Inter, licença OFL). O jogo continua com a VCR. */
+	public static inline var UI_FONT:String = "assets/fonts/ui.otf";
 	public static inline var PIXEL_FONT:String = "assets/fonts/pixel.otf";
 
 	/** Identifica o conjunto de mods ativo; entra na chave dos caches. */

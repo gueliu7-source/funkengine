@@ -96,7 +96,7 @@ class PropsTab extends FlxSpriteGroup
 			}
 		}));
 		stageG.add(new Stepper(x, 184, w, "Zoom da câmera", function() return ed.doc.zoom, function(v) ed.doc.edit("zoom", function() ed.doc.zoom = v), 0.05, 0.2, 3, 2));
-		stageG.add(EdTheme.text(x, 236, w, 60, "Clique numa peça no palco ou na aba Camadas para editar. Arraste para mover, cantos para redimensionar (SHIFT = encaixa), roda do mouse = zoom, botão do meio/direito (ou ESPAÇO + arrastar) = mover a visão.", EdTheme.DIM));
+		stageG.add(EdTheme.text(x, 236, w, 12, "Clique numa peça no palco ou na aba Camadas para editar. Arraste para mover, cantos para redimensionar (SHIFT = encaixa), roda do mouse = zoom, botão do meio/direito (ou ESPAÇO + arrastar) = mover a visão.", EdTheme.DIM));
 
 		add(objG);
 		add(charG);
@@ -125,9 +125,18 @@ class PropsTab extends FlxSpriteGroup
 		if (m == mode)
 			return;
 		mode = m;
-		objG.visible = objG.active = (m == 0);
-		charG.visible = charG.active = (m == 1);
-		stageG.visible = stageG.active = (m == 2);
+		objG.active = (m == 0);
+		charG.active = (m == 1);
+		stageG.active = (m == 2);
+	}
+
+	/** O grupo pai propaga "visible" a todos os filhos; por isso a escolha de qual subgrupo aparece é refeita a cada desenho. */
+	override public function draw():Void
+	{
+		objG.visible = (mode == 0);
+		charG.visible = (mode == 1);
+		stageG.visible = (mode == 2);
+		super.draw();
 	}
 
 	override public function update(elapsed:Float):Void

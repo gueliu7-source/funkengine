@@ -1,6 +1,8 @@
 package editor;
 
+import core.ModManager;
 import core.Paths;
+import core.Settings;
 import editor.stage.CharsTab;
 import editor.stage.LayersTab;
 import editor.stage.PropsTab;
@@ -52,6 +54,7 @@ class StageEditorState extends FlxState
 	var savedUp:Array<FlxKey>;
 	var savedDown:Array<FlxKey>;
 	var imageCache:Array<String>;
+	var dropCb:String->Void;
 
 	static inline var VX:Int = 16;
 	static inline var VY:Int = EdTheme.TOP_H + 12;
@@ -103,9 +106,13 @@ class StageEditorState extends FlxState
 			"Atalhos do Stage Editor");
 		help.cameras = [uiCam];
 		add(help);
+		#if (lime && !html5)
+		dropCb = function(p:String) importFile(p); // arrastar um .png de uma pasta para a janela também importa
+		lime.app.Application.current.window.onDropFile.add(dropCb);
+		#end
 		if (StageSong.lastId != "")
 			loadSong(StageSong.lastId, StageSong.lastSuffix, true);
-		say("Stage \"" + doc.name + "\" aberto. Clique numa peça para editar. F1 = atalhos.");
+		say("Stage \"" + doc.name + "\" aberto. F1 = atalhos.");
 	}
 
 	// ------------------------------------------------------------------ montagem
@@ -153,17 +160,17 @@ class StageEditorState extends FlxState
 		var y = FlxG.height - BOTTOM_H;
 		add(new Transport(this, VX, y));
 		var cy = y + 62;
-		add(new Toggle(VX + 4, cy + 10, 214, "Testar câmera (parallax)", function() return view.testCam, function(v) view.testCam = v));
-		add(EdTheme.text(VX + 244, cy + 14, 40, 11, "FOCO", EdTheme.DIM));
-		add(new Segments(VX + 282, cy + 10, 230, FOCUS, function() return FOCUS[focusIdx], function(v) {
+		add(new Toggle(VX + 4, cy + 10, 170, "Testar câmera", function() return view.testCam, function(v) view.testCam = v));
+		add(EdTheme.text(VX + 214, cy + 14, 40, 11, "FOCO", EdTheme.DIM));
+		add(new Segments(VX + 252, cy + 10, 250, FOCUS, function() return FOCUS[focusIdx], function(v) {
 			focusIdx = FOCUS.indexOf(v);
 			view.focus = FOCUS_SLOT[focusIdx];
 		}));
-		add(new Slider(VX + 540, cy + 2, 190, "Zoom do stage", function() return doc.zoom, function(v) {
+		add(new Slider(VX + 530, cy + 2, 190, "Zoom do stage", function() return doc.zoom, function(v) {
 			doc.begin();
 			doc.zoom = v;
 		}, 0.2, 2, 2, function(a, b) doc.end("zoom")));
-		add(new Toggle(VX + 752, cy + 10, 100, "Moldura", function() return view.showFrame, function(v) view.showFrame = v));
+		add(new Toggle(VX + 742, cy + 10, 110, "Moldura", function() return view.showFrame, function(v) view.showFrame = v));
 	}
 
 	/** Carrega música e chart; usa os personagens do chart se a opção estiver ligada. */
@@ -224,6 +231,61 @@ class StageEditorState extends FlxState
 		out.sort(function(a, b) return a < b ? -1 : (a > b ? 1 : 0));
 		imageCache = out;
 		return out;
+	}
+
+	// ------------------------------------------------------------------ importar imagens
+
+	/** Abre o seletor de arquivos do sistema para escolher um PNG. */
+	public function importImage():Void
+	{
+		#if (sys && lime)
+		try
+		{
+			var fd = new lime.ui.FileDialog();
+			fd.onSelect.add(function(p:String) importFile(p));
+			fd.browse(lime.ui.FileDialogType.OPEN, "png", null, "Escolha uma imagem PNG");
+		}
+		catch (e:Dynamic)
+		{
+			trace('[StageEditor] seletor de arquivos: $e');
+			say("Não consegui abrir o seletor de arquivos. Arraste o .png para a janela.", false);
+		}
+		#else
+		say("Importar arquivos só funciona na versão para PC.", false);
+		#end
+	}
+
+	/** Copia o PNG para mods/<mod>/images/stages/<stage>/ e cria a camada, que segue o mouse até o clique. */
+	public function importFile(path:String):Void
+	{
+		#if sys
+		if (!path.toLowerCase().endsWith(".png"))
+		{
+			say("Por enquanto só PNG. Converta a imagem para .png e tente de novo.", false);
+			return;
+		}
+		try
+		{
+			var norm = path.replace("\\", "/");
+			var file = norm.substr(norm.lastIndexOf("/") + 1);
+			var base = file.substr(0, file.length - 4).replace(" ", "_");
+			var dir = ModManager.saveRoot() + "/images/stages/" + doc.name;
+			ModManager.mkdirs(dir);
+			sys.io.File.copy(path, dir + "/" + base + ".png");
+			Paths.rebuild(Settings.d.enabledMods);
+			imageCache = null;
+			var c = view.centerOfView();
+			var o = doc.add("stages/" + doc.name + "/" + base, false, c[0], c[1], "front");
+			tabs.select(0);
+			view.startPlacing(o.id);
+			say("Imagem importada! Mova o mouse sobre o palco e clique para posicionar (ESC cancela).");
+		}
+		catch (e:Dynamic)
+		{
+			trace('[StageEditor] importar: $e');
+			say("Não consegui importar a imagem (veja o log).", false);
+		}
+		#end
 	}
 
 	// ------------------------------------------------------------------ ações
@@ -388,6 +450,10 @@ class StageEditorState extends FlxState
 		EdLock.locked = false;
 		TextInput.current = null;
 		song.destroy();
+		#if (lime && !html5)
+		if (dropCb != null)
+			lime.app.Application.current.window.onDropFile.remove(dropCb);
+		#end
 		if (uiCam != null)
 			FlxG.cameras.remove(uiCam);
 		FlxG.sound.muteKeys = savedMute;
