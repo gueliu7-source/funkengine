@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="guardiantinky.png">
+	<!-- Created using the Spritesheet and XML generator -->
+	<!-- https://uncertainprod.github.io/FNF-Spritesheet-XML-generator-Web -->
+	<SubTexture name="anim0000" x="0" y="0" width="345" height="400" frameX="-167" frameY="-7" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0001" x="345" y="0" width="340" height="400" frameX="-175" frameY="-7" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0002" x="0" y="801" width="332" height="401" frameX="-190" frameY="-6" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0003" x="660" y="801" width="326" height="401" frameX="-200" frameY="-6" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0004" x="332" y="801" width="328" height="401" frameX="-197" frameY="-6" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0005" x="1022" y="0" width="333" height="401" frameX="-188" frameY="-6" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0006" x="0" y="400" width="336" height="401" frameX="-182" frameY="-6" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0007" x="685" y="0" width="337" height="400" frameX="-181" frameY="-7" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0008" x="336" y="400" width="335" height="400" frameX="-184" frameY="-7" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0009" x="671" y="400" width="335" height="400" frameX="-185" frameY="-7" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0010" x="671" y="400" width="335" height="400" frameX="-185" frameY="-7" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0011" x="671" y="400" width="335" height="400" frameX="-185" frameY="-7" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0012" x="671" y="400" width="335" height="400" frameX="-185" frameY="-7" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0013" x="671" y="400" width="335" height="400" frameX="-185" frameY="-7" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0014" x="671" y="400" width="335" height="400" frameX="-185" frameY="-7" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0015" x="671" y="400" width="335" height="400" frameX="-185" frameY="-7" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0016" x="671" y="400" width="335" height="400" frameX="-185" frameY="-7" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0017" x="671" y="400" width="335" height="400" frameX="-185" frameY="-7" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="anim0018" x="671" y="400" width="335" height="400" frameX="-185" frameY="-7" frameWidth="719" frameHeight="405"/>
+	<SubTexture name="idle0000" x="671" y="400" width="335" height="400" frameX="-185" frameY="-7" frameWidth="719" frameHeight="405"/>
+</TextureAtlas>

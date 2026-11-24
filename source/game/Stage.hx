@@ -35,6 +35,11 @@ typedef StageDef =
 	var dad:Array<Float>;
 	var gf:Array<Float>;
 	@:optional var objects:Array<StageObject>;
+	@:optional var psych:Bool; // veio de um stage no formato do Psych (as peças são criadas por script Lua)
+	@:optional var hideGf:Bool;
+	@:optional var camDad:Array<Float>;
+	@:optional var camGf:Array<Float>;
+	@:optional var camSpeed:Float;
 	@:optional var camBf:Array<Float>; // deslocamento da câmera ao focar o jogador neste cenário
 	@:optional var timeline:Array<Dynamic>; // eventos que mudam o cenário durante a música (ver StageTimeline)
 	@:optional var charOffsets:Dynamic; // ex.: { "spooky": [100, 300] } substitui a posição por personagem
@@ -64,12 +69,39 @@ class Stage
 			this.name = "stage";
 			text = Paths.getText("data/stages/stage.json");
 		}
-		def = Json.parse(text);
+		def = parseDef(text, this.name);
 
 		if (def.objects != null)
 			for (o in def.objects)
 				build(o);
 		timeline = new StageTimeline(StageTimeline.parse(def.timeline));
+	}
+
+	/** Aceita o JSON do FunkForge e o do Psych (defaultZoom, boyfriend, girlfriend, opponent, camera_*...). */
+	static function parseDef(text:String, name:String):StageDef
+	{
+		var j:Dynamic = Json.parse(text);
+		if (!Reflect.hasField(j, "boyfriend") && !Reflect.hasField(j, "defaultZoom"))
+			return j;
+		function arr(k:String, d:Array<Float>):Array<Float>
+		{
+			var v:Array<Float> = Reflect.field(j, k);
+			return (v != null && v.length >= 2) ? [v[0], v[1]] : d;
+		}
+		var def:StageDef = {
+			name: name,
+			zoom: j.defaultZoom != null ? j.defaultZoom : 0.9,
+			bf: arr("boyfriend", [770.0, 100.0]),
+			dad: arr("opponent", [100.0, 100.0]),
+			gf: arr("girlfriend", [400.0, 130.0]),
+			psych: true,
+			hideGf: j.hide_girlfriend == true,
+			camBf: arr("camera_boyfriend", [0.0, 0.0]),
+			camDad: arr("camera_opponent", [0.0, 0.0]),
+			camGf: arr("camera_girlfriend", [0.0, 0.0]),
+			camSpeed: j.camera_speed != null ? j.camera_speed : 1
+		};
+		return def;
 	}
 
 	/** Chamado todo frame pelo PlayState com o beat decimal da música. */

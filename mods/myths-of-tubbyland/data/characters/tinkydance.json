@@ -1,0 +1,31 @@
+{
+	"animations": [
+		{
+			"loop": false,
+			"offsets": [0, 0],
+			"anim": "idle",
+			"fps": 24,
+			"name": "idle",
+			"indices": []
+		},
+		{
+			"loop": true,
+			"offsets": [0, 0],
+			"anim": "dance",
+			"fps": 24,
+			"name": "dance",
+			"indices": []
+		}
+	],
+	"vocals_file": "",
+	"no_antialiasing": true,
+	"image": "characters/tinkyd",
+	"position": [510, -370],
+	"healthicon": "tinky",
+	"flip_x": false,
+	"healthbar_colors": [98, 0, 183],
+	"camera_position": [-40, -70],
+	"sing_duration": 4,
+	"scale": 2.2,
+	"_editor_isPlayer": false
+}

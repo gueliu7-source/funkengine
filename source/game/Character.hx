@@ -35,6 +35,8 @@ typedef CharDef =
 	@:optional var danceEvery:Int; // em beats
 	@:optional var danceLR:Bool; // alterna danceLeft/danceRight em vez de idle
 	@:optional var camOffset:Array<Float>;
+	@:optional var psych:Bool; // veio de um personagem no formato do Psych Engine (flip e câmera funcionam como lá)
+	@:optional var posOffset:Array<Float>; // Psych: "position", somado à posição do cenário
 }
 
 /** Personagem 100% guiado por data/characters/<id>.json (nada de personagem fixo no código). */
@@ -69,6 +71,68 @@ class Character extends FlxSprite
 		dance();
 	}
 
+	/**
+	 * Lê o JSON de um personagem. Aceita o formato do FunkForge e o do Psych Engine
+	 * (image, animations[{anim, name, ...}], healthicon, position, camera_position...).
+	 */
+	public static function parseDef(text:String, id:String):CharDef
+	{
+		var j:Dynamic = Json.parse(text);
+		if (Reflect.hasField(j, "image") && !Reflect.hasField(j, "asset"))
+			return fromPsych(j, id);
+		return j;
+	}
+
+	static function fromPsych(j:Dynamic, id:String):CharDef
+	{
+		var anims:Array<AnimDef> = [];
+		var hasL = false;
+		var hasR = false;
+		var list:Array<Dynamic> = j.animations;
+		if (list != null)
+			for (a in list)
+			{
+				var d:AnimDef = {
+					name: a.anim,
+					prefix: a.name,
+					fps: a.fps != null ? Std.int(a.fps) : 24,
+					loop: a.loop == true
+				};
+				var ix:Array<Int> = a.indices;
+				if (ix != null && ix.length > 0)
+					d.indices = ix;
+				var of:Array<Float> = a.offsets;
+				d.offsets = (of != null && of.length >= 2) ? [of[0], of[1]] : [0.0, 0.0];
+				anims.push(d);
+				if (d.name == "danceLeft")
+					hasL = true;
+				if (d.name == "danceRight")
+					hasR = true;
+			}
+		var bc:Array<Dynamic> = j.healthbar_colors;
+		var def:CharDef = {
+			name: id,
+			asset: Std.string(j.image),
+			animations: anims,
+			psych: true,
+			danceLR: hasL && hasR,
+			scale: j.scale != null ? j.scale : 1,
+			flipX: j.flip_x == true,
+			antialiasing: j.no_antialiasing != true,
+			singDuration: j.sing_duration != null ? j.sing_duration : 4,
+			icon: j.healthicon != null ? Std.string(j.healthicon) : "face"
+		};
+		if (bc != null && bc.length >= 3)
+			def.barColor = "#" + StringTools.hex(Std.int(bc[0]), 2) + StringTools.hex(Std.int(bc[1]), 2) + StringTools.hex(Std.int(bc[2]), 2);
+		var p:Array<Float> = j.position;
+		if (p != null && p.length >= 2)
+			def.posOffset = [p[0], p[1]];
+		var c:Array<Float> = j.camera_position;
+		if (c != null && c.length >= 2)
+			def.camOffset = [c[0], c[1]]; // por enquanto só o deslocamento do personagem; a base (150/-100) entra no load()
+		return def;
+	}
+
 	function load(fromDef:Null<CharDef>):Void
 	{
 		if (fromDef != null)
@@ -81,7 +145,7 @@ class Character extends FlxSprite
 				trace('[Character] $id.json não encontrado, usando bf');
 				text = Paths.getText("data/characters/bf.json");
 			}
-			def = Json.parse(text);
+			def = parseDef(text, id);
 		}
 
 		frames = (def.packer == true) ? Paths.packer("images/" + def.asset) : Paths.sparrow("images/" + def.asset);
@@ -109,7 +173,11 @@ class Character extends FlxSprite
 		}
 		if (def.icon != null)
 			iconName = def.icon;
-		camOffset = def.camOffset != null ? def.camOffset : (isPlayer ? [-100.0, -100.0] : [150.0, -100.0]);
+		var baseCam = isPlayer ? [-100.0, -100.0] : [150.0, -100.0];
+		if (def.psych == true) // Psych: câmera = meio do personagem + (150,-100) ou (-100,-100) + camera_position
+			camOffset = def.camOffset != null ? [baseCam[0] + def.camOffset[0], baseCam[1] + def.camOffset[1]] : baseCam;
+		else
+			camOffset = def.camOffset != null ? def.camOffset : baseCam;
 
 		antialiasing = (def.antialiasing != false) && Settings.d.antialiasing;
 		flipX = (def.flipX == true);
@@ -119,7 +187,18 @@ class Character extends FlxSprite
 			updateHitbox();
 		}
 
-		if (isPlayer)
+		if (def.psych == true)
+		{
+			// regra do Psych: espelha quando é o jogador; troca esquerda/direita quando o espelhamento difere do desenho original
+			var orig = (def.flipX == true);
+			flipX = isPlayer ? !orig : orig;
+			if (isPlayer != orig)
+			{
+				swapAnims("singLEFT", "singRIGHT");
+				swapAnims("singLEFTmiss", "singRIGHTmiss");
+			}
+		}
+		else if (isPlayer)
 		{
 			flipX = !flipX;
 			if (def.swapSides != false)
@@ -127,6 +206,11 @@ class Character extends FlxSprite
 				swapAnims("singLEFT", "singRIGHT");
 				swapAnims("singLEFTmiss", "singRIGHTmiss");
 			}
+		}
+		if (def.posOffset != null)
+		{
+			x += def.posOffset[0];
+			y += def.posOffset[1];
 		}
 	}
 

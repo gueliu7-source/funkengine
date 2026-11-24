@@ -1,0 +1,31 @@
+{
+	"animations": [
+		{
+			"loop": false,
+			"offsets": [0, 0],
+			"anim": "jump",
+			"fps": 24,
+			"name": "ElSaltoDelPapu",
+			"indices": []
+		},
+		{
+			"loop": false,
+			"offsets": [0, 0],
+			"anim": "idle",
+			"fps": 24,
+			"name": "idle",
+			"indices": []
+		}
+	],
+	"vocals_file": "",
+	"no_antialiasing": true,
+	"image": "characters/thelionsmouth/dipsy_jump",
+	"position": [600, -155],
+	"healthicon": "dipsy",
+	"flip_x": false,
+	"healthbar_colors": [71, 71, 42],
+	"camera_position": [-1360, -135],
+	"sing_duration": 4,
+	"scale": 3.8,
+	"_editor_isPlayer": false
+}

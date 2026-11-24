@@ -3,6 +3,7 @@ package editor.character;
 import core.ModManager;
 import core.Paths;
 import core.Settings;
+import game.Character;
 import game.Character.AnimDef;
 import game.Character.CharDef;
 import haxe.Json;
@@ -52,6 +53,9 @@ class CharDoc
 	public var camX:Float = 150;
 	public var camY:Float = -100;
 	public var anims:Array<EAnim> = [];
+	public var psych:Bool = false; // personagem vindo do Psych: mantém as regras de flip/câmera/posição dele
+	public var posX:Float = 0;
+	public var posY:Float = 0;
 	public var version:Int = 0;
 	public var dirty:Bool = false;
 	public var isNew:Bool = false;
@@ -87,8 +91,15 @@ class CharDoc
 			d.dirty = true;
 			return d;
 		}
-		var j:Dynamic = Json.parse(text);
-		d.raw = j;
+		var def0 = Character.parseDef(text, id); // aceita FunkForge e Psych
+		var j:Dynamic = def0;
+		d.raw = (def0.psych == true) ? {} : Json.parse(text);
+		d.psych = def0.psych == true;
+		if (def0.posOffset != null)
+		{
+			d.posX = def0.posOffset[0];
+			d.posY = def0.posOffset[1];
+		}
 		if (j.asset != null)
 			d.asset = j.asset;
 		d.packer = j.packer == true;
@@ -180,6 +191,11 @@ class CharDoc
 			danceLR: danceLR,
 			camOffset: [camX, camY]
 		};
+		if (psych)
+		{
+			def.psych = true;
+			def.posOffset = [posX, posY];
+		}
 		return def;
 	}
 
@@ -281,6 +297,9 @@ class CharDoc
 			flipX: flipX,
 			swapSides: swapSides,
 			scale: scale,
+			psych: psych,
+			posX: posX,
+			posY: posY,
 			aa: aa,
 			singDuration: singDuration,
 			danceEvery: danceEvery,
@@ -300,6 +319,9 @@ class CharDoc
 		flipX = j.flipX;
 		swapSides = j.swapSides;
 		scale = j.scale;
+		psych = j.psych;
+		posX = j.posX;
+		posY = j.posY;
 		aa = j.aa;
 		singDuration = j.singDuration;
 		danceEvery = j.danceEvery;

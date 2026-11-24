@@ -102,6 +102,9 @@ class Chart
 	public var segments:Array<BpmSegment> = [];
 	public var events:Array<EventData> = [];
 	public var markers:Array<ChartMarker> = [];
+	public var gameOverChar:String = ""; // campos do Psych: personagem/música da tela de game over
+	public var gameOverLoop:String = "";
+	public var gameOverEnd:String = "";
 
 	public function new()
 	{
@@ -256,7 +259,8 @@ class ChartLoader
 				c.segments.push(new BpmSegment(timeMs, beat, curBpm));
 			}
 
-			var steps = Std.int(num(Reflect.field(sec, "lengthInSteps"), 16));
+			var beatsPsych = Reflect.field(sec, "sectionBeats"); // formato do Psych: seção em beats
+			var steps = Std.int(num(Reflect.field(sec, "lengthInSteps"), beatsPsych != null ? num(beatsPsych, 4) * 4 : 16));
 			var mustHit = Reflect.field(sec, "mustHitSection") == true;
 			var alt = Reflect.field(sec, "altAnim") == true;
 			c.sections.push(new SectionData(timeMs, beat, steps, mustHit, alt));
@@ -273,7 +277,8 @@ class ChartLoader
 					var sus:Float = n.length > 2 ? num(n[2], 0) : 0;
 					var type = (n.length > 3 && Std.isOfType(n[3], String)) ? (n[3] : String) : "";
 					var player = raw > 3 ? !mustHit : mustHit; // regra do FNF: lane 4-7 inverte o lado da seção
-					c.notes.push(new NoteData(t, raw % 4, player, sus > 0 ? sus : 0, type, alt && !player, i));
+					var noteAlt = (alt && !player) || type == "Alt Animation"; // tipo "Alt Animation" do Psych
+					c.notes.push(new NoteData(t, raw % 4, player, sus > 0 ? sus : 0, type, noteAlt, i));
 				}
 			}
 
@@ -281,6 +286,22 @@ class ChartLoader
 			timeMs += steps * stepMs;
 			beat += steps / 4;
 		}
+
+		// eventos no formato do Psych: [tempo_ms, [[nome, valor1, valor2], ...]]
+		var evs:Array<Dynamic> = Reflect.field(s, "events");
+		if (evs == null)
+			evs = Reflect.field(json, "events");
+		if (evs != null)
+			for (e in evs)
+			{
+				if (e == null || e.length < 2 || !Std.isOfType(e[1], Array))
+					continue;
+				for (sub in (e[1] : Array<Dynamic>))
+					c.events.push(new EventData(num(e[0], 0), str(sub[0], ""), str(sub[1], ""), str(sub[2], "")));
+			}
+		c.gameOverChar = str(Reflect.field(s, "gameOverChar"), "");
+		c.gameOverLoop = str(Reflect.field(s, "gameOverLoop"), "");
+		c.gameOverEnd = str(Reflect.field(s, "gameOverEnd"), "");
 		return c;
 	}
 

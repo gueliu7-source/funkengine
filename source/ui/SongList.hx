@@ -29,7 +29,7 @@ class SongList
 				for (s in arr)
 				{
 					var id:String = Std.string(s.id);
-					if (seen.exists(id) || !Paths.exists('data/songs/$id/$id.json'))
+					if (seen.exists(id) || !hasAny(id))
 						continue;
 					seen.set(id, true);
 					var w:Dynamic = Reflect.field(s, "week");
@@ -43,12 +43,21 @@ class SongList
 		var extra = Paths.list("data/songs");
 		extra.sort(function(a, b) return a < b ? -1 : (a > b ? 1 : 0));
 		for (id in extra)
-			if (!seen.exists(id) && Paths.exists('data/songs/$id/$id.json'))
+			if (!seen.exists(id) && hasAny(id))
 			{
 				seen.set(id, true);
 				songs.push({id: id, name: id, week: 0});
 			}
 		return songs;
+	}
+
+	/** A música tem chart em alguma dificuldade (alguns mods só trazem o -hard). */
+	public static function hasAny(id:String):Bool
+	{
+		for (s in DIFF_SUFFIX)
+			if (Paths.exists('data/songs/$id/$id$s.json'))
+				return true;
+		return false;
 	}
 
 	public static function hasDiff(id:String, diff:Int):Bool

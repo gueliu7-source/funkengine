@@ -18,6 +18,7 @@ typedef Root =
 	var path:String;
 	var files:Map<String, Bool>; // caminho relativo -> existe
 	var dirs:Map<String, Array<String>>; // pasta relativa ("" = raiz) -> nomes dentro dela
+	var lower:Map<String, String>; // caminho em minúsculas -> caminho real (o Psych roda no Windows, que ignora maiúsculas)
 }
 
 /**
@@ -67,7 +68,7 @@ class Paths
 	{
 		if (!FileSystem.exists(path))
 			return;
-		var r:Root = {path: path, files: new Map(), dirs: new Map()};
+		var r:Root = {path: path, files: new Map(), dirs: new Map(), lower: new Map()};
 		scan(r, "", skipTop);
 		roots.push(r);
 	}
@@ -85,7 +86,10 @@ class Paths
 			if (FileSystem.isDirectory(full + "/" + n))
 				scan(r, rel, null);
 			else
+			{
 				r.files.set(rel, true);
+				r.lower.set(rel.toLowerCase(), rel);
+			}
 		}
 		r.dirs.set(sub, names);
 	}
@@ -97,6 +101,13 @@ class Paths
 		for (r in roots)
 			if (r.files.exists(rel))
 				return r.path + "/" + rel;
+		var low = rel.toLowerCase();
+		for (r in roots)
+		{
+			var real = r.lower.get(low);
+			if (real != null)
+				return r.path + "/" + real;
+		}
 		return null;
 	}
 
@@ -109,6 +120,12 @@ class Paths
 		{
 			if (roots[i].files.exists(rel))
 				out.push(roots[i].path + "/" + rel);
+			else
+			{
+				var real = roots[i].lower.get(rel.toLowerCase());
+				if (real != null)
+					out.push(roots[i].path + "/" + real);
+			}
 			i--;
 		}
 		return out;

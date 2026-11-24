@@ -1,0 +1,31 @@
+{
+	"animations": [
+		{
+			"offsets": [0, 0],
+			"loop": false,
+			"fps": 12,
+			"anim": "idle",
+			"indices": [],
+			"name": "idle"
+		},
+		{
+			"loop": false,
+			"offsets": [0, 0],
+			"anim": "dance",
+			"fps": 13,
+			"name": "idle",
+			"indices": []
+		}
+	],
+	"vocals_file": "",
+	"no_antialiasing": true,
+	"image": "characters/morningpatrol/po_dance",
+	"position": [205, -262],
+	"healthicon": "po",
+	"flip_x": false,
+	"healthbar_colors": [125, 33, 36],
+	"camera_position": [90, -70],
+	"sing_duration": 4,
+	"scale": 2.4,
+	"_editor_isPlayer": false
+}

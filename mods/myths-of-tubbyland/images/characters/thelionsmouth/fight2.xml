@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="fight22.png">
+	<!-- Created using the Spritesheet and XML generator -->
+	<!-- https://uncertainprod.github.io/FNF-Spritesheet-XML-generator-Web -->
+	<SubTexture name="fight20000" x="4824" y="1812" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20001" x="4824" y="604" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20002" x="4020" y="604" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20003" x="804" y="1812" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20004" x="1608" y="3020" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20005" x="4020" y="3020" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20006" x="4020" y="0" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20007" x="0" y="604" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20008" x="3216" y="2416" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20009" x="3216" y="1812" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20010" x="2412" y="3624" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20011" x="4824" y="3624" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20012" x="804" y="3020" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20013" x="3216" y="1208" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20014" x="2412" y="4228" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20015" x="4824" y="1208" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20016" x="3216" y="3020" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20017" x="804" y="1208" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20018" x="804" y="604" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20019" x="1608" y="1812" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20020" x="1608" y="0" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20021" x="1608" y="2416" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20022" x="4824" y="2416" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20023" x="1608" y="604" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20024" x="0" y="1208" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20025" x="804" y="3624" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20026" x="804" y="2416" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20027" x="3216" y="3624" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20028" x="1608" y="1208" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20029" x="4020" y="3624" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20030" x="804" y="4228" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20031" x="0" y="3624" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20032" x="2412" y="3020" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20033" x="3216" y="0" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20034" x="0" y="3020" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20035" x="1608" y="3624" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20036" x="4020" y="1208" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20037" x="4824" y="3020" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20038" x="4020" y="1812" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20039" x="2412" y="0" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20040" x="0" y="4228" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20041" x="2412" y="1208" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20042" x="2412" y="1812" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20043" x="1608" y="4228" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20044" x="2412" y="2416" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20045" x="2412" y="604" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20046" x="3216" y="4228" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20047" x="0" y="1812" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20048" x="0" y="0" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20049" x="4824" y="0" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20050" x="0" y="2416" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20051" x="4020" y="2416" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20052" x="804" y="0" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="fight20053" x="3216" y="604" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+	<SubTexture name="idle0000" x="3216" y="604" width="804" height="604" frameX="2" frameY="2" frameWidth="800" frameHeight="600"/>
+</TextureAtlas>

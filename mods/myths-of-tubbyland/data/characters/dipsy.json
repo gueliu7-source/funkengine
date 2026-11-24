@@ -1,0 +1,95 @@
+{
+	"animations": [
+		{
+			"loop": true,
+			"offsets": [0, 0],
+			"anim": "idle",
+			"fps": 22,
+			"name": "idle",
+			"indices": []
+		},
+		{
+			"loop": false,
+			"offsets": [0, 0],
+			"anim": "ready",
+			"fps": 30,
+			"name": "ready",
+			"indices": []
+		},
+		{
+			"loop": false,
+			"offsets": [0, 0],
+			"anim": "singLEFT",
+			"fps": 24,
+			"name": "left",
+			"indices": []
+		},
+		{
+			"loop": false,
+			"offsets": [0, 0],
+			"anim": "singRIGHT",
+			"fps": 24,
+			"name": "right",
+			"indices": []
+		},
+		{
+			"offsets": [0, 0],
+			"loop": false,
+			"fps": 24,
+			"anim": "singDOWN",
+			"indices": [],
+			"name": "down"
+		},
+		{
+			"loop": false,
+			"offsets": [0, 0],
+			"anim": "singUP",
+			"fps": 24,
+			"name": "up",
+			"indices": []
+		},
+		{
+			"offsets": [0, 0],
+			"indices": [],
+			"fps": 38,
+			"anim": "singLEFT-alt",
+			"loop": false,
+			"name": "altleft"
+		},
+		{
+			"offsets": [0, 0],
+			"indices": [],
+			"fps": 38,
+			"anim": "singDOWN-alt",
+			"loop": false,
+			"name": "altdown"
+		},
+		{
+			"offsets": [0, 0],
+			"indices": [],
+			"fps": 38,
+			"anim": "singRIGHT-alt",
+			"loop": false,
+			"name": "altright"
+		},
+		{
+			"offsets": [0, 0],
+			"indices": [],
+			"fps": 38,
+			"anim": "singUP-alt",
+			"loop": false,
+			"name": "altup"
+		}
+	],
+	"vocals_file": "",
+	"no_antialiasing": true,
+	"image": "characters/thelionsmouth/dipsy",
+	"position": [600, -155],
+	"healthicon": "dipsy",
+	"flip_x": false,
+	"healthbar_colors": [71, 71, 42],
+	"camera_position": [-1360, -135],
+	"sing_duration": 4,
+	"scale": 3.8,
+	"_editor_isPlayer": false
+}

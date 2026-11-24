@@ -67,6 +67,7 @@ class PlayState extends FlxState
 	public var camHUD:FlxCamera;
 	public var inst:FlxSound;
 	public var voices:FlxSound;
+	public var oppVoices:FlxSound; // vocais separados (Voices-Opponent.ogg); vazio quando a música tem uma voz só
 
 	public var boyfriend:Character;
 	public var dad:Character;
@@ -162,6 +163,8 @@ class PlayState extends FlxState
 			dad.setPosition(gp[0], gp[1]);
 			gf.visible = false;
 		}
+		if (stage.def.hideGf == true)
+			gf.visible = false;
 
 		for (k in stage.objects.keys()) // scripts enxergam os objetos do cenário pelo id (ex.: "bg")
 			tagged.set(k, stage.objects.get(k));
@@ -219,10 +222,20 @@ class PlayState extends FlxState
 		if (chart.needsVoices)
 		{
 			var v = Paths.song(chart.id, "Voices");
+			if (v == null)
+				v = Paths.song(chart.id, "Voices-Player"); // formato do Psych: vocais separados
 			if (v != null)
 				voices.loadEmbedded(v);
 		}
 		FlxG.sound.list.add(voices);
+		oppVoices = new FlxSound();
+		if (chart.needsVoices)
+		{
+			var o = Paths.song(chart.id, "Voices-Opponent");
+			if (o != null)
+				oppVoices.loadEmbedded(o);
+		}
+		FlxG.sound.list.add(oppVoices);
 		hud.setSongLength(inst.length);
 	}
 
@@ -251,10 +264,20 @@ class PlayState extends FlxState
 
 	public function focusCamera(who:String):Void
 	{
+		if (camOverride)
+			return;
 		var c = (who == "gf") ? gf : ((who == "dad" || who == "opponent") ? dad : boyfriend);
 		var mp = c.getMidpoint();
 		var off = (c == boyfriend && stage.def.camBf != null) ? stage.def.camBf : c.camOffset;
-		camFollow.setPosition(mp.x + off[0], mp.y + off[1]);
+		var ox = off[0];
+		var oy = off[1];
+		if (stage.def.psych == true) // Psych: deslocamento do personagem + deslocamento do cenário
+		{
+			var sc = (c == boyfriend) ? stage.def.camBf : (c == gf ? stage.def.camGf : stage.def.camDad);
+			ox = c.camOffset[0] + (sc != null ? sc[0] : 0);
+			oy = c.camOffset[1] + (sc != null ? sc[1] : 0);
+		}
+		camFollow.setPosition(mp.x + ox, mp.y + oy);
 		mp.put();
 	}
 
@@ -295,6 +318,8 @@ class PlayState extends FlxState
 	{
 		if (started && voices.playing && Math.abs(voices.time - inst.time) > 40)
 			voices.time = inst.time; // mantém a voz sincronizada
+		if (started && oppVoices.playing && Math.abs(oppVoices.time - inst.time) > 40)
+			oppVoices.time = inst.time;
 		scripts.call("onStepHit", [step]);
 	}
 
@@ -325,10 +350,13 @@ class PlayState extends FlxState
 		started = true;
 		inst.pitch = Conductor.rate;
 		voices.pitch = Conductor.rate;
+		oppVoices.pitch = Conductor.rate;
 		inst.play();
 		voices.play();
+		oppVoices.play();
 		inst.time = 0;
 		voices.time = 0;
+		oppVoices.time = 0;
 		hud.setSongLength(inst.length);
 		scripts.call("onSongStart");
 	}
@@ -446,7 +474,8 @@ class PlayState extends FlxState
 		var rating = judge.registerHit(diff);
 		n.hit = true;
 		voices.volume = 1;
-		boyfriend.sing(n.lane, false);
+		if (n.type != "No Animation")
+			boyfriend.sing(n.lane, n.alt);
 		var r = playerStrum.receptors[n.lane];
 		if (Settings.d.botplay)
 			r.flash(0.12);
@@ -560,8 +589,11 @@ class PlayState extends FlxState
 			if (!n.hit)
 			{
 				n.hit = true;
-				dad.sing(n.lane, n.alt);
-				dad.holdTimer = 0;
+				if (n.type != "No Animation") // tipo do Psych: a nota é acertada mas o personagem não canta
+				{
+					dad.sing(n.lane, n.alt);
+					dad.holdTimer = 0;
+				}
 				voices.volume = 1;
 				opponentStrum.receptors[n.lane].flash(0.15);
 				if (n.sustain > 0)
@@ -615,9 +647,9 @@ class PlayState extends FlxState
 	function characterByName(n:String):Null<Character>
 		return switch (StringTools.trim(n).toLowerCase())
 		{
-			case "bf", "boyfriend", "player": boyfriend;
-			case "dad", "opponent": dad;
-			case "gf", "girlfriend": gf;
+			case "bf", "boyfriend", "player", "1": boyfriend;
+			case "dad", "opponent", "0": dad;
+			case "gf", "girlfriend", "2": gf;
 			default: null;
 		}
 
@@ -629,7 +661,42 @@ class PlayState extends FlxState
 			case "Camera Flash":
 				camHUD.flash(hexColor(v1, FlxColor.WHITE), num(v2, 0.5));
 			case "Screen Shake":
-				camGame.shake(num(v1, 0.01), num(v2, 0.4));
+				if (v1.indexOf(",") >= 0 || v2.indexOf(",") >= 0) // formato do Psych: "duração, intensidade" para a câmera do jogo e do HUD
+				{
+					psychShake(camGame, v1);
+					psychShake(camHUD, v2);
+				}
+				else
+					camGame.shake(num(v1, 0.01), num(v2, 0.4));
+			case "Add Camera Zoom": // Psych
+				if (camGame.zoom < 1.35)
+				{
+					camGame.zoom += num(v1, 0.015);
+					camHUD.zoom += num(v2, 0.03);
+				}
+			case "Change Scroll Speed": // Psych: v1 = multiplicador da velocidade do chart, v2 = duração da transição (s)
+				var target = chart.speed * num(v1, 1);
+				var dur = num(v2, 0);
+				if (Settings.d.scrollSpeed <= 0)
+				{
+					if (dur <= 0)
+						applyScrollSpeed(target);
+					else
+					{
+						var from = scrollSpeed;
+						flixel.tweens.FlxTween.num(from, target, dur, {ease: flixel.tweens.FlxEase.linear}, applyScrollSpeed);
+					}
+				}
+			case "Camera Follow Pos": // Psych: v1 = x, v2 = y (vazio volta ao normal)
+				if (v1 == "" && v2 == "")
+					camOverride = false;
+				else
+				{
+					camOverride = true;
+					camFollow.setPosition(num(v1, camFollow.x), num(v2, camFollow.y));
+				}
+			case "Set GF Speed":
+				gf.danceEvery = Std.int(Math.max(1, num(v1, 1)));
 			case "Camera Zoom":
 				camGame.zoom += num(v1, 0.03);
 				camHUD.zoom += num(v2, 0.05);
@@ -646,6 +713,8 @@ class PlayState extends FlxState
 				changeCharacter(v1, v2);
 			case "Hey!":
 				var who = StringTools.trim(v1).toLowerCase();
+				if (who == "both" || who == "ambos" || who == "")
+					who = "ambos";
 				for (c in [who == "gf" || who == "ambos" ? gf : null, who == "bf" || who == "ambos" ? boyfriend : null])
 					if (c != null)
 					{
@@ -654,6 +723,22 @@ class PlayState extends FlxState
 					}
 			default:
 		}
+	}
+
+	var camOverride:Bool = false; // "Camera Follow Pos" ativo: a câmera ignora o foco automático
+
+	function psychShake(c:FlxCamera, v:String):Void
+	{
+		var p = v.split(",");
+		if (p.length >= 2 && num(p[0], 0) > 0)
+			c.shake(num(p[1], 0.03), num(p[0], 0.5));
+	}
+
+	function applyScrollSpeed(v:Float):Void
+	{
+		scrollSpeed = v;
+		opponentStrum.setSpeed(v, Conductor.rate);
+		playerStrum.setSpeed(v, Conductor.rate);
 	}
 
 	/** Evento "Change Character": recria o personagem de um slot na posição do cenário. */
@@ -692,6 +777,7 @@ class PlayState extends FlxState
 		{
 			inst.pause();
 			voices.pause();
+			oppVoices.pause();
 		}
 		input.releaseAll();
 		openSubState(new PauseSubState());
@@ -706,6 +792,7 @@ class PlayState extends FlxState
 		{
 			inst.resume();
 			voices.resume();
+			oppVoices.resume();
 		}
 		Conductor.touch();
 		scripts.call("onResume");
@@ -720,6 +807,7 @@ class PlayState extends FlxState
 		dying = true;
 		inst.stop();
 		voices.stop();
+		oppVoices.stop();
 		input.enabled = false;
 		persistentUpdate = false;
 		persistentDraw = false;
@@ -734,6 +822,7 @@ class PlayState extends FlxState
 		scripts.call("onSongEnd");
 		inst.stop();
 		voices.stop();
+		oppVoices.stop();
 		if (isStory && storyPlaylist.length > 0)
 		{
 			songId = storyPlaylist.shift(); // próxima música da semana
