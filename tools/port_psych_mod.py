@@ -122,10 +122,7 @@ def main():
         copy(f, os.path.join(MOD, "data", "stages", os.path.basename(f)))
     for f in glob.glob(os.path.join(ASSETS, "data", "*", "*.lua")):
         sid = os.path.basename(os.path.dirname(f))
-        if os.path.basename(f).startswith("PauseMenu"):  # menus de pausa customizados: fase 3
-            copy(f, os.path.join(MOD, "psych_lua", "fase3", sid, os.path.basename(f)))
-        else:
-            copy(f, os.path.join(MOD, "data", "songs", sid, os.path.basename(f)))
+        copy(f, os.path.join(MOD, "data", "songs", sid, os.path.basename(f)))
 
     # ---------------------------------------------------------------- pack.json e lista de músicas
     p = json.load(open(os.path.join(ASSETS, "pack.json"), encoding="utf8"))

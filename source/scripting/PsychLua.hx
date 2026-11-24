@@ -399,7 +399,9 @@ class PsychLua
 					return Settings.d.botplay;
 				case "songLength":
 					return g.inst.length;
-				case "cameraSpeed" | "playbackRate":
+				case "cameraSpeed":
+					return g.camGame.followLerp / 0.04;
+				case "playbackRate":
 					return 1;
 			}
 			var i = path.lastIndexOf(".");
@@ -424,7 +426,10 @@ class PsychLua
 					return;
 				case "cpuControlled" | "botPlay":
 					return;
-				case "showRating" | "showComboNum" | "showCombo" | "cameraSpeed" | "camZooming":
+				case "cameraSpeed":
+					g.camGame.followLerp = 0.04 * v;
+					return;
+				case "showRating" | "showComboNum" | "showCombo" | "camZooming":
 					return;
 			}
 			var i = path.lastIndexOf(".");
@@ -475,6 +480,13 @@ class PsychLua
 			g.stage.back.remove(s, true);
 			g.stage.front.remove(s, true);
 			g.remove(s, true);
+			if (sub != null)
+			{
+				sub.remove(s, true);
+				sub.add(s);
+				added.set(tag, front);
+				return;
+			}
 			var onGame = s.cameras == null || s.cameras.length == 0 || s.cameras[0] == g.camGame;
 			if (onGame)
 			{
@@ -639,6 +651,8 @@ class PsychLua
 			g.stage.gfLayer.remove(s, true);
 			g.stage.dadLayer.remove(s, true);
 			g.remove(s, true);
+			if (sub != null)
+				sub.remove(s, true);
 			added.remove(tag);
 			if (destroy)
 			{
@@ -751,7 +765,13 @@ class PsychLua
 			if (t != null)
 			{
 				g.remove(t, true);
-				g.add(t);
+				if (sub != null)
+				{
+					sub.remove(t, true);
+					sub.add(t);
+				}
+				else
+					g.add(t);
 			}
 		});
 		m.set("removeLuaText", function(tag:String, ?destroy:Bool):Void {
@@ -759,6 +779,8 @@ class PsychLua
 			if (t == null)
 				return;
 			g.remove(t, true);
+			if (sub != null)
+				sub.remove(t, true);
 			if (destroy != false)
 			{
 				texts.remove(tag);
@@ -961,8 +983,23 @@ class PsychLua
 		});
 
 		// telas customizadas (pausa etc.): ainda não existem; a pausa normal do jogo continua valendo
-		m.set("openCustomSubstate", function(?name:String, ?pause:Bool):Void {});
-		m.set("closeCustomSubstate", function():Void {});
+		m.set("openCustomSubstate", function(?name:String, ?pause:Bool):Void {
+			if (sub != null)
+				return;
+			if (pause != false)
+				g.pauseForScript();
+			sub = new CustomSub(name == null ? "" : name);
+			g.openSubState(sub);
+		});
+		m.set("closeCustomSubstate", function():Void {
+			if (sub != null)
+				sub.close();
+		});
+		m.set("setAntialiasing", function(tag:String, v:Bool):Void {
+			var s = sprite(tag);
+			if (s != null)
+				s.antialiasing = v;
+		});
 
 		// ------------------------------------------------------------ teclado
 		function lanePressed(lane:Int):Bool
@@ -977,6 +1014,10 @@ class PsychLua
 				case "note_down": lanePressed(1);
 				case "note_up": lanePressed(2);
 				case "note_right": lanePressed(3);
+				case "left": FlxG.keys.anyJustPressed([LEFT, A]);
+				case "right": FlxG.keys.anyJustPressed([RIGHT, D]);
+				case "up": FlxG.keys.anyJustPressed([UP, W]);
+				case "down": FlxG.keys.anyJustPressed([DOWN, S]);
 				case "ui_left": FlxG.keys.anyJustPressed([LEFT, A]);
 				case "ui_down": FlxG.keys.anyJustPressed([DOWN, S]);
 				case "ui_up": FlxG.keys.anyJustPressed([UP, W]);
@@ -1008,4 +1049,7 @@ class PsychLua
 
 	/** Sprites já postos na cena por addLuaSprite (tag -> estava "front"). */
 	static var added:Map<String, Bool> = new Map();
+
+	/** Tela customizada aberta no momento (os objetos criados enquanto ela existe pertencem a ela). */
+	public static var sub:CustomSub = null;
 }

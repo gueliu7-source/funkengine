@@ -115,6 +115,7 @@ class Chart
 	public var gameOverChar:String = ""; // campos do Psych: personagem/música da tela de game over
 	public var gameOverLoop:String = "";
 	public var gameOverEnd:String = "";
+	public var gameOverSound:String = "";
 
 	public function new()
 	{
@@ -312,6 +313,7 @@ class ChartLoader
 		c.gameOverChar = str(Reflect.field(s, "gameOverChar"), "");
 		c.gameOverLoop = str(Reflect.field(s, "gameOverLoop"), "");
 		c.gameOverEnd = str(Reflect.field(s, "gameOverEnd"), "");
+		c.gameOverSound = str(Reflect.field(s, "gameOverSound"), "");
 		return c;
 	}
 

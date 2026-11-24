@@ -185,7 +185,7 @@ class PlayState extends FlxState
 
 		camFollow = new FlxObject(0, 0, 1, 1);
 		add(camFollow);
-		camGame.follow(camFollow, LOCKON, 0.04);
+		camGame.follow(camFollow, LOCKON, 0.04 * (stage.def.camSpeed > 0 ? stage.def.camSpeed : 1));
 	}
 
 	function buildHud():Void
@@ -796,7 +796,15 @@ class PlayState extends FlxState
 	{
 		if (dying || ended)
 			return;
-		scripts.call("onPause");
+		if (scripts.call("onPause"))
+			return; // o script abriu a própria tela de pausa (Function_Stop)
+		pauseForScript();
+		openSubState(new PauseSubState());
+	}
+
+	/** Pára o jogo e o áudio (pausa padrão e openCustomSubstate com pausa). */
+	public function pauseForScript():Void
+	{
 		persistentUpdate = false;
 		if (started)
 		{
@@ -805,7 +813,6 @@ class PlayState extends FlxState
 			oppVoices.pause();
 		}
 		input.releaseAll();
-		openSubState(new PauseSubState());
 	}
 
 	function onSubClosed(_:FlxSubState):Void

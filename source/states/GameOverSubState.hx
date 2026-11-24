@@ -21,8 +21,11 @@ class GameOverSubState extends FlxSubState
 	{
 		super(0xFF000000);
 		cam = hudCam;
+		var ch = PlayState.instance.chart;
 		var id = PlayState.instance.boyfriend.id;
-		if (Paths.exists('data/characters/$id-dead.json'))
+		if (ch.gameOverChar != "" && Paths.exists('data/characters/${ch.gameOverChar}.json'))
+			id = ch.gameOverChar; // personagem de game over do chart (Psych)
+		else if (Paths.exists('data/characters/$id-dead.json'))
 			id = id + "-dead";
 		bf = new Character(x, y, id, true);
 		add(bf);
@@ -31,7 +34,8 @@ class GameOverSubState extends FlxSubState
 	override public function create():Void
 	{
 		super.create();
-		var s = Paths.sound("sounds/fnf_loss_sfx.ogg");
+		var ch = PlayState.instance.chart;
+		var s = Paths.sound("sounds/" + (ch.gameOverSound != "" ? ch.gameOverSound : "fnf_loss_sfx") + ".ogg");
 		if (s != null)
 			FlxG.sound.play(s);
 		bf.playAnim("firstDeath", true);
@@ -52,7 +56,8 @@ class GameOverSubState extends FlxSubState
 		{
 			looping = true;
 			bf.playAnim("deathLoop", true);
-			var m = Paths.loadSound("music/gameOver.ogg");
+			var lp = PlayState.instance.chart.gameOverLoop;
+			var m = Paths.loadSound("music/" + (lp != "" ? lp : "gameOver") + ".ogg");
 			if (m != null)
 				FlxG.sound.playMusic(m);
 		}
@@ -63,7 +68,8 @@ class GameOverSubState extends FlxSubState
 			bf.playAnim("deathConfirm", true);
 			if (FlxG.sound.music != null)
 				FlxG.sound.music.stop();
-			var m = Paths.sound("music/gameOverEnd.ogg");
+			var en = PlayState.instance.chart.gameOverEnd;
+			var m = Paths.sound("music/" + (en != "" ? en : "gameOverEnd") + ".ogg");
 			if (m != null)
 				FlxG.sound.play(m);
 			new FlxTimer().start(0.7, function(_) {
