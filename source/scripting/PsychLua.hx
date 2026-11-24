@@ -311,8 +311,9 @@ class PsychLua
 			{
 				if (Std.isOfType(cur, Array))
 					return cur[idx];
-				if (Std.isOfType(cur, FlxGroup))
-					return cast(cur, FlxGroup).members[idx];
+				var mem:Dynamic = Reflect.getProperty(cur, "members");
+				if (mem != null && Std.isOfType(mem, Array))
+					return mem[idx];
 			}
 			if (Std.isOfType(cur, Receptor))
 			{
