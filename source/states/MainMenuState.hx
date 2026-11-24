@@ -123,6 +123,13 @@ class MainMenuState extends FlxState
 		if (FlxG.keys.justPressed.DOWN || FlxG.keys.justPressed.S)
 			change(1);
 
+		if (FlxG.keys.justPressed.F5) // atalho para os mods (também em Opções > Mods)
+		{
+			MenuUtil.sfx("confirmMenu");
+			FlxG.switchState(new ModsState());
+			return;
+		}
+
 		if (FlxG.keys.justPressed.SEVEN)
 		{
 			MenuUtil.sfx("confirmMenu");

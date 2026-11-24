@@ -30,6 +30,11 @@
 	<haxelib name="linc_luajit" if="FEATURE_LUA" />
 	<haxedef name="LINC_LUA_RELATIVE_DYNAMIC_LIB" if="FEATURE_LUA" />
 
+	<!-- Vídeo (libVLC via hxvlc). Para compilar sem vídeo use:  lime build windows -DNO_VIDEO -->
+	<set name="FEATURE_VIDEO" if="windows" unless="NO_VIDEO" />
+	<haxedef name="FEATURE_VIDEO" if="FEATURE_VIDEO" />
+	<haxelib name="hxvlc" if="FEATURE_VIDEO" />
+
 	<!-- posição de erro nos scripts HScript -->
 	<haxedef name="hscriptPos" />
 

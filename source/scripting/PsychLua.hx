@@ -629,7 +629,8 @@ class PsychLua
 				place(tag, added.get(tag));
 		});
 		m.set("addLuaSprite", function(tag:String, ?front:Bool):Void place(tag, front == true));
-		m.set("removeLuaSprite", function(tag:String, ?destroy:Bool):Void {
+		function removeSpr(tag:String, destroy:Bool):Void
+		{
 			var s = sprite(tag);
 			if (s == null)
 				return;
@@ -639,12 +640,13 @@ class PsychLua
 			g.stage.dadLayer.remove(s, true);
 			g.remove(s, true);
 			added.remove(tag);
-			if (destroy != false)
+			if (destroy)
 			{
 				g.tagged.remove(tag);
 				s.destroy();
 			}
-		});
+		}
+		m.set("removeLuaSprite", function(tag:String, ?destroy:Bool):Void removeSpr(tag, destroy != false));
 		m.set("luaSpriteExists", function(tag:String):Bool return g.tagged.exists(tag));
 		m.set("getObjectOrder", function(tag:String):Int {
 			var o:Dynamic = lookup(tag);
@@ -699,8 +701,38 @@ class PsychLua
 				trace("[psych] vídeo ainda não é suportado: " + fn);
 			}
 		}
+		#if FEATURE_VIDEO
+		m.set("makeVideoSprite", function(?tag:String, ?file:String, ?x:Float, ?y:Float, ?cam:String, ?loop:Bool):Void {
+			if (tag == null || file == null)
+				return;
+			var old = sprite(tag);
+			if (old != null)
+				removeSpr(tag, true);
+			var real = Paths.find("videos/" + file + ".mp4");
+			if (real == null)
+			{
+				noVideo("arquivo ausente: " + file);
+				return;
+			}
+			var v = new VideoSpr(x == null ? 0 : x, y == null ? 0 : y, real, loop == true);
+			v.cameras = [camByName(cam == null ? "game" : cam)];
+			g.tagged.set(tag, v);
+		});
+		m.set("playVideoSprite", function(?tag:String, ?destroyOnEnd:Bool):Void {
+			var o:Dynamic = lookup(tag);
+			if (o == null || !Std.isOfType(o, VideoSpr))
+				return;
+			var v:VideoSpr = cast o;
+			if (!added.exists(tag))
+				place(tag, true);
+			v.onEnd = function() removeSpr(tag, destroyOnEnd != false);
+			v.start();
+		});
+		m.set("removeVideoSprite", function(?tag:String):Void removeSpr(tag, true));
+		#else
 		m.set("makeVideoSprite", function(?tag:String, ?file:String, ?x:Float, ?y:Float, ?cam:String, ?loop:Bool):Void noVideo("makeVideoSprite"));
 		m.set("playVideoSprite", function(?tag:String):Void noVideo("playVideoSprite"));
+		#end
 		m.set("startVideo", function(?file:String):Void noVideo("startVideo"));
 
 		// ------------------------------------------------------------ textos
