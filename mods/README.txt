@@ -23,3 +23,9 @@ Arquivos soltos direto em mods/ (fora de qualquer pasta de mod) valem para todos
 Scripts de scripts/ e data/songs/<id>/ SOMAM (rodam os do jogo base e de todos os mods ativos).
 Stage, personagem, chart, imagens e sons SUBSTITUEM pelo arquivo do mod de maior prioridade.
 Veja mods/example para um mod pronto. Para criar o seu: copie mods/example e edite o pack.json.
+
+ADICIONAR MÚSICAS AO FREEPLAY
+-----------------------------
+  python3 tools/add_song.py <pasta-ou-zip-da-musica> --mod meu-mod --name "Nome da Música"
+A pasta/zip traz o chart (.json; -easy/-hard viram dificuldades) e Inst.ogg/Voices.ogg (mp3/wav são convertidos
+se houver ffmpeg). Ele cria os arquivos em mods/<mod>/ e registra a música em data/songs.json. Detalhes: --help.
