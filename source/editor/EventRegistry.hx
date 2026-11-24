@@ -112,9 +112,7 @@ class EventRegistry
 
 	public static function parseColor(s:String):FlxColor
 	{
-		var h = s.replace("#", "").replace("0x", "");
-		var v = Std.parseInt("0xFF" + h);
-		return v == null ? 0xFFAAAAAA : v;
+		return core.Hex.color(s, 0xFFAAAAAA);
 	}
 
 	public static function abbr(name:String):String

@@ -461,9 +461,7 @@ class CharPreview extends FlxGroup
 
 	static function hexColor(s:String, def:FlxColor):FlxColor
 	{
-		var h = s.trim().replace("#", "").replace("0x", "");
-		var v = Std.parseInt("0xFF" + h);
-		return v == null ? def : v;
+		return core.Hex.color(s, def);
 	}
 
 	static function num(s:String, def:Float):Float

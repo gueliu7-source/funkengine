@@ -226,8 +226,14 @@ class PsychLua
 		s = s.replace("#", "").replace("0x", "").replace("0X", "");
 		if (s.length == 6)
 			s = "FF" + s;
-		var n = Std.parseInt("0x" + s);
-		return n == null ? def : (n : FlxColor);
+		// não usar parseInt("0xFFxxxxxx"): no Windows ele satura em 0x7FFFFFFF (branco meio transparente)
+		if (s.length != 8 || !~/^[0-9a-fA-F]{8}$/.match(s))
+			return def;
+		var al = Std.parseInt("0x" + s.substr(0, 2));
+		var r = Std.parseInt("0x" + s.substr(2, 2));
+		var g = Std.parseInt("0x" + s.substr(4, 2));
+		var b = Std.parseInt("0x" + s.substr(6, 2));
+		return FlxColor.fromRGB(r, g, b, al);
 	}
 
 	static function ease(name:String):Float->Float

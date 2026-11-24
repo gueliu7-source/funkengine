@@ -651,9 +651,7 @@ class PlayState extends FlxState
 
 	static function hexColor(s:String, def:FlxColor):FlxColor
 	{
-		var h = StringTools.replace(StringTools.replace(StringTools.trim(s), "#", ""), "0x", "");
-		var v = Std.parseInt("0xFF" + h);
-		return v == null ? def : v;
+		return core.Hex.color(s, def);
 	}
 
 	static function num(s:String, def:Float):Float

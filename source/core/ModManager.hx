@@ -89,10 +89,7 @@ class ModManager
 					info.version = Std.string(j.version);
 				if (j.color != null)
 				{
-					var c = StringTools.replace(Std.string(j.color), "#", "");
-					var v = Std.parseInt("0xFF" + c);
-					if (v != null)
-						info.color = v;
+					info.color = core.Hex.color(Std.string(j.color), info.color);
 				}
 			}
 			catch (e:Dynamic)
