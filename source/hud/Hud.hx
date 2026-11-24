@@ -362,9 +362,10 @@ class Hud extends FlxGroup
 		switch (style.score)
 		{
 			case "clean":
-				// Score: 0000 - Accuracy: 00% - Misses: 0
-				scoreText.text = "Score: " + pad(Std.int(Math.round(shownScore)), 4) + " - Accuracy: " + pad(none ? 0 : Std.int(judge.accuracy), 2) + "% - Misses: "
-					+ judge.misses;
+				// Score (0000) - Accuracy (00%) - Misses (0)   [+ " - FC" só quando o jogador está sem erros]
+				var fcTag = (judge.fc == "MFC" || judge.fc == "GFC" || judge.fc == "FC") ? " - FC" : "";
+				scoreText.text = "Score (" + pad(Std.int(Math.round(shownScore)), 4) + ") - Accuracy (" + pad(none ? 0 : Std.int(judge.accuracy), 2) + "%) - Misses ("
+					+ judge.misses + ")" + fcTag;
 				scoreText.color = none ? FlxColor.WHITE : (judge.misses == 0 ? 0xFF9EF0FF : (judge.accuracy < 70 ? 0xFFFFB0B0 : FlxColor.WHITE));
 			case "kade":
 				scoreText.text = "Score:" + sc + " | Combo Breaks:" + judge.misses + " | Accuracy:" + (none ? "0" : acc) + "% | " + judge.rank;

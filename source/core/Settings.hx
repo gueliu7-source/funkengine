@@ -16,6 +16,7 @@ typedef SettingsData =
 	var hudJudgementCounter:Bool;
 	var hudMsDisplay:Bool;
 	var hudSongBar:Bool;
+	var noteSplashes:Bool; // brilho ao acertar Sick
 	var camBeatZoom:Bool;
 	var sickMs:Float;
 	var goodMs:Float;
@@ -49,6 +50,7 @@ class Settings
 			hudJudgementCounter: true,
 			hudMsDisplay: true,
 			hudSongBar: true,
+			noteSplashes: true,
 			camBeatZoom: true,
 			sickMs: 45,
 			goodMs: 90,

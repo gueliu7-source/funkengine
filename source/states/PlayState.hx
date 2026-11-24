@@ -18,6 +18,7 @@ import flixel.util.FlxColor;
 import game.Character;
 import game.InputManager;
 import game.Judge;
+import game.NoteSplashes;
 import game.NoteSkin;
 import game.Receptor;
 import game.Stage;
@@ -71,6 +72,7 @@ class PlayState extends FlxState
 	public var dad:Character;
 	public var gf:Character;
 	public var playerStrum:Strumline;
+	public var splashes:NoteSplashes;
 	public var opponentStrum:Strumline;
 
 	public var defaultZoom:Float = 0.9;
@@ -200,6 +202,8 @@ class PlayState extends FlxState
 		playerStrum = new Strumline(true, plr, mid ? 640 : 960, y, scrollSpeed, Conductor.rate, false, camHUD);
 		add(opponentStrum);
 		add(playerStrum);
+		splashes = new NoteSplashes(camHUD);
+		add(splashes);
 	}
 
 	function buildAudio():Void
@@ -457,6 +461,8 @@ class PlayState extends FlxState
 		else
 			n.done = true;
 
+		if (rating == "sick" && Settings.d.noteSplashes)
+			splashes.spawn(n.lane, r.cx, r.cy);
 		hud.popRating(rating, judge.combo, diff);
 		hud.refresh();
 		scripts.call("goodNoteHit", [n.lane, rating, n.sustain > 0, n.type]);

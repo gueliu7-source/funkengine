@@ -14,7 +14,7 @@ class OptionsState extends FlxState
 {
 	static final NAMES:Array<String> = [
 		"Downscroll", "Middlescroll", "Ghost tapping", "Botplay", "Antialiasing", "Zoom da câmera na batida", "Barra da música",
-		"Contador de julgamentos", "Ms nos acertos", "Velocidade das notas", "Offset", "Estilo do HUD", "Precisão", "Controles", "Mods"
+		"Contador de julgamentos", "Ms nos acertos", "Velocidade das notas", "Offset", "Estilo do HUD", "Precisão", "Splashes das notas", "Controles", "Mods"
 	];
 
 	var rows:Array<FlxText> = [];
@@ -65,7 +65,8 @@ class OptionsState extends FlxState
 			case 10: d.offsetMs + " ms";
 			case 11: HudStyles.get(d.hudStyle).name;
 			case 12: d.accuracyMode == "wife3" ? "Wife3 (Kade, rígida)" : "Simples (sick 100%, good 75%)";
-			case 13: "ENTER para trocar teclas";
+			case 13: onOff(d.noteSplashes);
+			case 14: "ENTER para trocar teclas";
 			default: "(" + d.enabledMods.length + " ativos)";
 		}
 	}
@@ -90,7 +91,8 @@ class OptionsState extends FlxState
 			case 10: d.offsetMs += 5 * dir;
 			case 11: d.hudStyle = HudStyles.next(d.hudStyle, dir);
 			case 12: d.accuracyMode = d.accuracyMode == "wife3" ? "simple" : "wife3";
-			case 13:
+			case 13: d.noteSplashes = !d.noteSplashes;
+			case 14:
 				Settings.flush();
 				FlxG.switchState(new ControlsState());
 			default:
