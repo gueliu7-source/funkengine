@@ -599,6 +599,8 @@ class Hud extends FlxGroup
 		var shown = shownHealth / 2; // 0..1
 		barPlr.scale.x = shown;
 		var edge = fillX + fillW * (1 - shown); // onde o jogador e o oponente se encontram
+		if (bar != null && bar.custom)
+			bar.layout(shown);
 		iconP1.setPosition(edge - 26, fillY + fillH / 2 - iconP1.height / 2);
 		iconP2.setPosition(edge - (iconP2.width - 26), fillY + fillH / 2 - iconP2.height / 2);
 
