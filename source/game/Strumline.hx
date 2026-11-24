@@ -19,6 +19,7 @@ class Strumline extends FlxGroup
 	public var hidden:Bool;
 	public var downscroll:Bool;
 	public var cam:FlxCamera;
+	public var onSpawn:NoteData->Void; // chamado quando a nota entra na tela (onSpawnNote dos scripts Psych)
 
 	var pending:Array<NoteData>;
 	var pendingIdx:Int = 0;
@@ -85,9 +86,23 @@ class Strumline extends FlxGroup
 	function spawn(n:NoteData):Void
 	{
 		n.spawned = true;
+		if (onSpawn != null)
+			onSpawn(n);
 		if (!hidden)
 		{
-			n.head = acquire(0, n.lane, headLayer);
+			n.head = null;
+			if (n.texture != "")
+			{
+				var cs = NoteSprite.withTexture(n.texture, n.lane, n.scaleX, n.scaleY);
+				if (cs != null)
+				{
+					cs.cameras = [cam];
+					headLayer.add(cs);
+					n.head = cs;
+				}
+			}
+			if (n.head == null)
+				n.head = acquire(0, n.lane, headLayer);
 			if (n.sustain > 0)
 			{
 				n.body = acquire(1, n.lane, sustainLayer);
@@ -107,8 +122,9 @@ class Strumline extends FlxGroup
 
 		if (n.head != null)
 		{
-			n.head.alpha = n.missed ? 0.3 : 1;
-			n.head.setPosition(r.cx - n.head.width / 2, cy - n.head.height / 2);
+			n.head.alpha = (n.missed ? 0.3 : 1) * n.nAlpha;
+			n.head.visible = n.nVisible;
+			n.head.setPosition(r.cx - n.head.width / 2, cy + n.yOff - n.head.height / 2);
 		}
 		if (n.body == null)
 			return;
@@ -155,7 +171,10 @@ class Strumline extends FlxGroup
 	{
 		if (n.head != null)
 		{
-			recycleSprite(n.head);
+			if (n.head.custom)
+				n.head.kill();
+			else
+				recycleSprite(n.head);
 			n.head = null;
 		}
 	}

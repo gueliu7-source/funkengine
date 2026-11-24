@@ -36,6 +36,32 @@ class ScriptManager
 	public var classes:Map<String, Dynamic>;
 	public var runners:Array<ScriptRunner> = [];
 	public var errors:Array<String> = [];
+	public var curNote:core.Chart.NoteData; // nota do callback em andamento (PsychLua.translate)
+	public var hasPsych:Bool = false;
+	var psychMap:Map<String, Dynamic>;
+
+	public function psychApi():Map<String, Dynamic>
+	{
+		if (psychMap == null)
+			psychMap = PsychLua.build(game, this);
+		return psychMap;
+	}
+
+	/** Script Psych: mods com psych.txt na raiz e as pastas custom_events/ e custom_notetypes/. */
+	static function isPsychPath(real:String):Bool
+	{
+		var p = real.replace("\\", "/");
+		if (p.indexOf("/custom_events/") >= 0 || p.indexOf("/custom_notetypes/") >= 0)
+			return true;
+		var i = p.indexOf("mods/");
+		if (i < 0)
+			return false;
+		var rest = p.substr(i + 5);
+		var slash = rest.indexOf("/");
+		if (slash < 0)
+			return false;
+		return sys.FileSystem.exists(p.substr(0, i + 5 + slash) + "/psych.txt");
+	}
 
 	// nomes antigos da Kade Engine, chamados também em scripts Lua
 	static var legacy:Map<String, String> = [
@@ -67,6 +93,20 @@ class ScriptManager
 	{
 		loadDir("scripts");
 		loadDir("data/songs/" + chart.id);
+		// eventos e tipos de nota customizados do Psych: só carrega os que a música usa
+		var seen = new Map<String, Bool>();
+		for (e in chart.events)
+			if (!seen.exists("e" + e.name))
+			{
+				seen.set("e" + e.name, true);
+				loadNamed("custom_events/" + e.name);
+			}
+		for (n in chart.notes)
+			if (n.type != null && n.type != "" && !seen.exists("n" + n.type))
+			{
+				seen.set("n" + n.type, true);
+				loadNamed("custom_notetypes/" + n.type);
+			}
 		loadNamed("data/stages/" + chart.stage);
 		for (c in [chart.player1, chart.player2, chart.gf])
 			loadNamed("data/characters/" + c);
@@ -108,7 +148,10 @@ class ScriptManager
 		else
 		{
 			#if FEATURE_LUA
-			runners.push(new LuaRunner(this, real));
+			var ps = isPsychPath(real);
+			if (ps)
+				hasPsych = true;
+			runners.push(new LuaRunner(this, real, ps));
 			#else
 			reportError('[$rel] Lua desativado nesta build (compilada com -DNO_LUA)');
 			#end
@@ -128,6 +171,7 @@ class ScriptManager
 			r.set("middlescroll", Settings.d.middlescroll);
 			r.set("botplay", Settings.d.botplay);
 			r.set("difficulty", PlayState.difficulty);
+			r.set("stepCrochet", Conductor.crochet / 4);
 		}
 	}
 
@@ -143,6 +187,23 @@ class ScriptManager
 		{
 			if (r.closed)
 				continue;
+			if (r.psych)
+			{
+				if (!r.hasFn(fn))
+					continue;
+				var pa = PsychLua.translate(this, fn, args);
+				if (pa == null)
+					continue;
+				if (r.syncStep != Conductor.curStep)
+				{
+					r.syncStep = Conductor.curStep;
+					PsychLua.sync(r);
+				}
+				var pv = r.call(fn, pa);
+				if (pv != null && Std.string(pv) == "stop")
+					stop = true;
+				continue;
+			}
 			if (!r.hasFn(fn) && !(r.isLua && legacy.exists(fn)))
 				continue;
 			var v = r.call(fn, args);

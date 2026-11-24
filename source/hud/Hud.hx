@@ -42,12 +42,14 @@ class Hud extends FlxGroup
 	var songTitle:String;
 	var diffName:String;
 	var down:Bool;
+	public var barParts:Array<FlxSprite> = []; // moldura + as duas cores da barra (scripts Psych: healthBar)
+	public var bar:BarProxy;
 
 	var barBg:FlxSprite;
-	var barOpp:FlxSprite;
-	var barPlr:FlxSprite;
-	var iconP1:HealthIcon;
-	var iconP2:HealthIcon;
+	public var barOpp:FlxSprite;
+	public var barPlr:FlxSprite;
+	public var iconP1:HealthIcon;
+	public var iconP2:HealthIcon;
 	var fillX:Float; // área interna da barra (onde as cores aparecem)
 	var fillY:Float;
 	var fillW:Int;
@@ -58,14 +60,14 @@ class Hud extends FlxGroup
 	var lastScoreInt:Int = -1;
 	var lowT:Float = 0; // relógio do aviso de vida baixa
 
-	var scoreText:FlxText;
+	public var scoreText:FlxText;
 	var scoreL:FlxText; // usados só no layout "codename" (esquerda / meio / direita)
 	var scoreM:FlxText;
 	var scoreR:FlxText;
-	var timeTxt:FlxText;
+	public var timeTxt:FlxText;
 	var infoText:FlxText;
 	var counters:Array<FlxText> = [];
-	var botplayText:FlxText;
+	public var botplayText:FlxText;
 
 	var progBg:FlxSprite;
 	var progFill:FlxSprite;
@@ -119,17 +121,29 @@ class Hud extends FlxGroup
 				bgImg.scrollFactor.set();
 				bgImg.moves = false;
 				add(bgImg);
+				barParts.push(bgImg);
 			}
 			else
-				add(rect(frameX, frameY, frameW, frameH, 0xFF000000));
+			{
+				var bgr = rect(frameX, frameY, frameW, frameH, 0xFF000000);
+				add(bgr);
+				barParts.push(bgr);
+			}
 		}
 		else if (inset > 0)
-			add(rect(frameX, frameY, frameW, frameH, 0xFF101018));
+		{
+			var bgr = rect(frameX, frameY, frameW, frameH, 0xFF101018);
+			add(bgr);
+			barParts.push(bgr);
+		}
 		barOpp = rect(fillX, fillY, fillW, fillH, p2Color);
 		barPlr = rect(fillX, fillY, fillW, fillH, p1Color);
 		barPlr.origin.set(fillW, 0); // a barra do jogador encolhe a partir da direita
 		add(barOpp);
 		add(barPlr);
+		barParts.push(barOpp);
+		barParts.push(barPlr);
+		bar = new BarProxy(this, fillX, fillY, fillW, fillH);
 
 		iconP1 = new HealthIcon(p1Icon, true);
 		iconP2 = new HealthIcon(p2Icon, false);
@@ -574,6 +588,10 @@ class Hud extends FlxGroup
 		lastScoreInt = shownInt;
 		writeScore();
 	}
+
+	/** Parte da barra que é do jogador (0..1). */
+	public function healthPct():Float
+		return judge.health / 2;
 
 	/** Posiciona barra e ícones com a vida desenhada; o quadro do ícone usa a vida real. */
 	function applyBar():Void

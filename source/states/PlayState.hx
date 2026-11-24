@@ -65,6 +65,7 @@ class PlayState extends FlxState
 
 	public var camGame:FlxCamera;
 	public var camHUD:FlxCamera;
+	public var camOther:FlxCamera; // acima do HUD (câmera "other" dos scripts Psych)
 	public var inst:FlxSound;
 	public var voices:FlxSound;
 	public var oppVoices:FlxSound; // vocais separados (Voices-Opponent.ogg); vazio quando a música tem uma voz só
@@ -109,6 +110,11 @@ class PlayState extends FlxState
 		camHUD = new FlxCamera();
 		camHUD.bgColor = 0x00000000;
 		FlxG.cameras.add(camHUD, false);
+		camOther = new FlxCamera();
+		camOther.bgColor = 0x00000000;
+		FlxG.cameras.add(camOther, false);
+		for (i in 0...chart.notes.length)
+			chart.notes[i].id = i;
 
 		Conductor.clearSignals();
 		Conductor.rate = 1;
@@ -203,6 +209,13 @@ class PlayState extends FlxState
 
 		opponentStrum = new Strumline(false, opp, 320, y, scrollSpeed, Conductor.rate, mid, camHUD);
 		playerStrum = new Strumline(true, plr, mid ? 640 : 960, y, scrollSpeed, Conductor.rate, false, camHUD);
+		opponentStrum.onSpawn = playerStrum.onSpawn = function(n:NoteData) {
+			if (scripts != null && scripts.hasPsych)
+			{
+				scripts.curNote = n;
+				scripts.call("onSpawnNote", [n.lane, n.type, n.sustain > 0]);
+			}
+		};
 		add(opponentStrum);
 		add(playerStrum);
 		splashes = new NoteSplashes(camHUD);
@@ -256,6 +269,9 @@ class PlayState extends FlxState
 				stage.dadLayer.add(obj);
 			case "hud":
 				obj.cameras = [camHUD];
+				add(obj);
+			case "other":
+				obj.cameras = [camOther];
 				add(obj);
 			default:
 				stage.front.add(obj);
@@ -474,7 +490,7 @@ class PlayState extends FlxState
 		var rating = judge.registerHit(diff);
 		n.hit = true;
 		voices.volume = 1;
-		if (n.type != "No Animation")
+		if (n.type != "No Animation" && !n.noAnim)
 			boyfriend.sing(n.lane, n.alt);
 		var r = playerStrum.receptors[n.lane];
 		if (Settings.d.botplay)
@@ -494,6 +510,7 @@ class PlayState extends FlxState
 			splashes.spawn(n.lane, r.cx, r.cy);
 		hud.popRating(rating, judge.combo, diff);
 		hud.refresh();
+		scripts.curNote = n;
 		scripts.call("goodNoteHit", [n.lane, rating, n.sustain > 0, n.type]);
 	}
 
@@ -508,6 +525,7 @@ class PlayState extends FlxState
 		missSound();
 		hud.onMiss();
 		hud.refresh();
+		scripts.curNote = n;
 		scripts.call("noteMiss", [n.lane, n.type]);
 	}
 
@@ -589,7 +607,7 @@ class PlayState extends FlxState
 			if (!n.hit)
 			{
 				n.hit = true;
-				if (n.type != "No Animation") // tipo do Psych: a nota é acertada mas o personagem não canta
+				if (n.type != "No Animation" && !n.noAnim) // tipo do Psych: a nota é acertada mas o personagem não canta
 				{
 					dad.sing(n.lane, n.alt);
 					dad.holdTimer = 0;
@@ -603,6 +621,7 @@ class PlayState extends FlxState
 				}
 				else
 					n.done = true;
+				scripts.curNote = n;
 				scripts.call("opponentNoteHit", [n.lane, n.sustain > 0, n.type]);
 			}
 			else if (n.holding)
@@ -626,8 +645,7 @@ class PlayState extends FlxState
 		while (eventIdx < chart.events.length && chart.events[eventIdx].time <= pos)
 		{
 			var e = chart.events[eventIdx++];
-			builtinEvent(e.name, e.v1, e.v2);
-			scripts.call("onEvent", [e.name, e.v1, e.v2]);
+			runEvent(e.name, e.v1, e.v2);
 		}
 	}
 
@@ -654,6 +672,13 @@ class PlayState extends FlxState
 		}
 
 	/** Eventos que vêm com a engine (definidos em data/events/*.json). Os outros ficam por conta dos scripts. */
+	/** Dispara um evento: o que vem com a engine e depois o onEvent dos scripts (também usado por triggerEvent). */
+	public function runEvent(name:String, v1:String, v2:String):Void
+	{
+		builtinEvent(name, v1, v2);
+		scripts.call("onEvent", [name, v1, v2]);
+	}
+
 	function builtinEvent(name:String, v1:String, v2:String):Void
 	{
 		switch (name)

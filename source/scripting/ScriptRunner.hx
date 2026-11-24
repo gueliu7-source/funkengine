@@ -7,6 +7,8 @@ class ScriptRunner
 	public var manager:ScriptManager;
 	public var closed:Bool = false;
 	public var isLua:Bool = false;
+	public var psych:Bool = false; // script na API do Psych (PsychLua)
+	public var syncStep:Int = -999999;
 
 	public function new(manager:ScriptManager, path:String)
 	{

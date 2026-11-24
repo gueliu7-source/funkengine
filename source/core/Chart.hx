@@ -25,6 +25,16 @@ class NoteData
 	public var alt:Bool; // usa animação alternativa
 	public var section:Int;
 
+	// ajustes feitos por scripts Psych (setPropertyFromGroup('notes'/'unspawnNotes', i, ...))
+	public var id:Int = 0; // posição em chart.notes
+	public var yOff:Float = 0;
+	public var nAlpha:Float = 1;
+	public var nVisible:Bool = true;
+	public var texture:String = "";
+	public var scaleX:Float = 1;
+	public var scaleY:Float = 1;
+	public var noAnim:Bool = false;
+
 	// estado de jogo
 	public var spawned:Bool = false;
 	public var hit:Bool = false;

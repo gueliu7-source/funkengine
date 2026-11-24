@@ -11,6 +11,25 @@ class NoteSprite extends FlxSprite
 	public var kind:Int; // 0 cabeça, 1 corpo, 2 ponta
 	public var lane:Int;
 
+	public var custom:Bool = false; // textura própria de um script: não entra no pool
+
+	/** Nota com atlas próprio (ex.: texture = "custard" num script Psych). Prefixos: purple0, blue0, green0, red0. */
+	public static function withTexture(tex:String, lane:Int, sx:Float, sy:Float):Null<NoteSprite>
+	{
+		var f = core.Paths.sparrow("images/" + tex);
+		if (f == null)
+			return null;
+		var s = new NoteSprite(0, lane);
+		s.frames = f;
+		s.animation.addByPrefix("a", NoteSkin.colors[lane] + "0", 24, true);
+		s.animation.play("a");
+		s.scale.set(sx, sy);
+		s.updateHitbox();
+		s.antialiasing = core.Settings.d.antialiasing;
+		s.custom = true;
+		return s;
+	}
+
 	public function new(kind:Int, lane:Int)
 	{
 		super();

@@ -14,10 +14,13 @@ class LuaRunner extends ScriptRunner
 {
 	var lua:State;
 
-	public function new(manager:ScriptManager, path:String)
+	var fnCache:Map<String, Bool> = new Map();
+
+	public function new(manager:ScriptManager, path:String, psych:Bool = false)
 	{
 		super(manager, path);
 		isLua = true;
+		this.psych = psych;
 
 		lua = LuaL.newstate();
 		LuaL.openlibs(lua);
@@ -26,6 +29,18 @@ class LuaRunner extends ScriptRunner
 		// registra a API antes de rodar o arquivo, para o código no topo do script já poder usá-la
 		for (k in manager.api.keys())
 			Lua_helper.add_callback(lua, k, manager.api.get(k));
+		if (psych) // a API do Psych sobrescreve as funções de mesmo nome
+		{
+			var pa = manager.psychApi();
+			for (k in pa.keys())
+				Lua_helper.add_callback(lua, k, pa.get(k));
+			var gl = PsychLua.globals();
+			for (k in gl.keys())
+			{
+				Convert.toLua(lua, gl.get(k));
+				Lua.setglobal(lua, k);
+			}
+		}
 
 		var status:Int = LuaL.dofile(lua, path);
 		if (status != 0)
@@ -38,6 +53,21 @@ class LuaRunner extends ScriptRunner
 
 	inline function pop():Void
 		Lua.settop(lua, -2);
+
+	override public function hasFn(fn:String):Bool
+	{
+		if (!psych)
+			return true;
+		var c = fnCache.get(fn);
+		if (c == null)
+		{
+			Lua.getglobal(lua, fn);
+			c = Lua.type(lua, -1) == 6; // LUA_TFUNCTION
+			pop();
+			fnCache.set(fn, c);
+		}
+		return c;
+	}
 
 	override public function call(fn:String, args:Array<Dynamic>):Dynamic
 	{

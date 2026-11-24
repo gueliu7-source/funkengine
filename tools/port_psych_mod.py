@@ -108,16 +108,24 @@ def main():
             if os.path.basename(f).lower() not in SKIP:
                 copy(f, os.path.join(MOD, sub, os.path.basename(f)))
 
-    # ---------------------------------------------------------------- Lua do Psych: guardado até a camada de compatibilidade
-    pend = os.path.join(MOD, "psych_lua")
+    # ---------------------------------------------------------------- Lua do Psych (rodam pela camada PsychLua)
+    open(os.path.join(MOD, "psych.txt"), "w").write("scripts desta pasta usam a API Lua do Psych\n")
     for sub in ("custom_events", "custom_notetypes", "scripts"):
         for f in glob.glob(os.path.join(ASSETS, sub, "*")):
-            if os.path.basename(f).lower() not in SKIP:
-                copy(f, os.path.join(pend, sub, os.path.basename(f)))
+            if os.path.basename(f).lower() in SKIP:
+                continue
+            dest = os.path.join(MOD, sub, os.path.basename(f))
+            if f.endswith(".hx"):
+                dest = os.path.join(MOD, "psych_lua", sub, os.path.basename(f))  # HScript do Psych: ainda não suportado
+            copy(f, dest)
     for f in glob.glob(os.path.join(ASSETS, "stages", "*.lua")):
-        copy(f, os.path.join(pend, "stages", os.path.basename(f)))
+        copy(f, os.path.join(MOD, "data", "stages", os.path.basename(f)))
     for f in glob.glob(os.path.join(ASSETS, "data", "*", "*.lua")):
-        copy(f, os.path.join(pend, "data", os.path.basename(os.path.dirname(f)), os.path.basename(f)))
+        sid = os.path.basename(os.path.dirname(f))
+        if os.path.basename(f).startswith("PauseMenu"):  # menus de pausa customizados: fase 3
+            copy(f, os.path.join(MOD, "psych_lua", "fase3", sid, os.path.basename(f)))
+        else:
+            copy(f, os.path.join(MOD, "data", "songs", sid, os.path.basename(f)))
 
     # ---------------------------------------------------------------- pack.json e lista de músicas
     p = json.load(open(os.path.join(ASSETS, "pack.json"), encoding="utf8"))
