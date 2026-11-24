@@ -189,7 +189,7 @@ class ScriptManager
 				continue;
 			if (r.psych)
 			{
-				if (!r.hasFn(fn))
+				if (!r.hasFn(fn) && !(fn == "onSongEnd" && r.hasFn("onEndSong")))
 					continue;
 				var pa = PsychLua.translate(this, fn, args);
 				if (pa == null)
@@ -199,7 +199,10 @@ class ScriptManager
 					r.syncStep = Conductor.curStep;
 					PsychLua.sync(r);
 				}
-				var pv = r.call(fn, pa);
+				var fn2 = fn == "onSongEnd" ? "onEndSong" : fn; // nome do Psych
+				if (fn2 != fn && !r.hasFn(fn2))
+					continue;
+				var pv = r.call(fn2, pa);
 				if (pv != null && Std.string(pv) == "stop")
 					stop = true;
 				continue;

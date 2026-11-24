@@ -181,6 +181,8 @@ class PsychLua
 				return [n.id, n.lane, n.type == null ? "" : n.type, false]; // id, direction, noteType, isSustainNote
 			case "onKeyPress" | "onCountdown":
 				return null;
+			case "onSongEnd":
+				return args;
 			default:
 				return args;
 		}
@@ -393,7 +395,7 @@ class PsychLua
 			Reflect.setProperty(owner, name, v);
 		}
 
-		function getProp(path:String):Dynamic
+		function getProp0(path:String):Dynamic
 		{
 			switch (path)
 			{
@@ -420,7 +422,7 @@ class PsychLua
 			return getOn(resolve(path.substr(0, i)), path.substr(i + 1));
 		}
 
-		function setProp(path:String, v:Dynamic):Void
+		function setProp0(path:String, v:Dynamic):Void
 		{
 			switch (path)
 			{
@@ -447,6 +449,25 @@ class PsychLua
 				return;
 			}
 			setOn(resolve(path.substr(0, i)), path.substr(i + 1), v);
+		}
+
+		function getProp(path:String):Dynamic
+		{
+			try
+				return getProp0(path)
+			catch (e:Dynamic)
+			{
+				trace("[psych] getProperty " + path + ": " + e);
+				return null;
+			}
+		}
+
+		function setProp(path:String, v:Dynamic):Void
+		{
+			try
+				setProp0(path, v)
+			catch (e:Dynamic)
+				trace("[psych] setProperty " + path + ": " + e);
 		}
 
 		function groupItem(group:String, i:Int):Dynamic
@@ -662,6 +683,14 @@ class PsychLua
 			added.remove(tag);
 			if (destroy)
 			{
+				for (k in tweens.keys())
+					if (k == tag || StringTools.startsWith(k, tag + "."))
+					{
+						var tw = tweens.get(k);
+						if (tw != null)
+							tw.cancel();
+						tweens.remove(k);
+					}
 				g.tagged.remove(tag);
 				s.destroy();
 			}
@@ -737,6 +766,7 @@ class PsychLua
 			var v = new VideoSpr(x == null ? 0 : x, y == null ? 0 : y, real, loop == true);
 			v.cameras = [camByName(cam == null ? "game" : cam)];
 			g.tagged.set(tag, v);
+			v.preload();
 		});
 		m.set("playVideoSprite", function(?tag:String, ?destroyOnEnd:Bool):Void {
 			var o:Dynamic = lookup(tag);

@@ -811,6 +811,9 @@ class PlayState extends FlxState
 			oppVoices.pause();
 		}
 		input.releaseAll();
+		#if FEATURE_VIDEO
+		scripting.VideoSpr.pauseAll();
+		#end
 	}
 
 	function onSubClosed(_:FlxSubState):Void
@@ -825,6 +828,9 @@ class PlayState extends FlxState
 			oppVoices.resume();
 		}
 		Conductor.touch();
+		#if FEATURE_VIDEO
+		scripting.VideoSpr.resumeAll();
+		#end
 		scripts.call("onResume");
 	}
 

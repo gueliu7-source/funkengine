@@ -10,8 +10,11 @@ class VideoSpr extends FlxVideoSprite
 	public var loops:Bool;
 	public var onEnd:Void->Void;
 
+	/** Vídeos vivos (para pausar junto com o jogo). */
+	public static var all:Array<VideoSpr> = [];
+
 	var started:Bool = false;
-	var lastW:Int = 0;
+	var loaded:Bool = false;
 
 	public function new(x:Float, y:Float, file:String, loops:Bool)
 	{
@@ -23,6 +26,18 @@ class VideoSpr extends FlxVideoSprite
 			if (!this.loops && onEnd != null)
 				onEnd();
 		});
+		all.push(this);
+	}
+
+	/** Abre o arquivo já na criação (sem tocar), para o play() depois não atrasar. */
+	public function preload():Void
+	{
+		if (loaded)
+			return;
+		var abs = sys.FileSystem.fullPath(file);
+		loaded = load(abs, loops ? [":input-repeat=65535"] : []);
+		if (!loaded)
+			trace("[video] não abriu: " + abs);
 	}
 
 	/** Começa a tocar (uma vez). */
@@ -31,22 +46,29 @@ class VideoSpr extends FlxVideoSprite
 		if (started)
 			return;
 		started = true;
-		var abs = sys.FileSystem.fullPath(file);
-		if (load(abs, loops ? [":input-repeat=65535"] : []))
+		preload();
+		if (loaded)
 			play();
-		else
-			trace("[video] não abriu: " + abs);
 	}
 
-	override public function update(elapsed:Float):Void
+	public static function pauseAll():Void
 	{
-		super.update(elapsed);
-		// o tamanho do quadro só é conhecido depois que o vídeo abre: refaz a hitbox (scaleObject já foi aplicado)
-		if (frameWidth != lastW && frameWidth > 0)
-		{
-			lastW = frameWidth;
-			updateHitbox();
-		}
+		for (v in all)
+			if (v.started && v.alive)
+				v.pause();
+	}
+
+	public static function resumeAll():Void
+	{
+		for (v in all)
+			if (v.started && v.alive)
+				v.resume();
+	}
+
+	override public function destroy():Void
+	{
+		all.remove(this);
+		super.destroy();
 	}
 }
 #end
