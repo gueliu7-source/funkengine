@@ -149,7 +149,7 @@ class PlayState extends FlxState
 		scripts.call("onCreatePost");
 
 		// aviso de 4 s com a velocidade em uso (para conferir o modo escolhido nas Opções)
-		var tip = new FlxText(0, FlxG.height - 54, FlxG.width, "Velocidade das notas: " + core.Scroll.fmt(scrollSpeed) + "  (" + core.Scroll.describe() + ", chart " + core.Scroll.fmt(chart.speed) + ")", 18);
+		var tip = new FlxText(0, FlxG.height - 120, FlxG.width, "Velocidade das notas: " + core.Scroll.fmt(scrollSpeed) + "  (" + core.Scroll.describe() + ", chart " + core.Scroll.fmt(chart.speed) + ")", 18);
 		tip.setFormat(Paths.FONT, 18, FlxColor.WHITE, CENTER, OUTLINE, FlxColor.BLACK);
 		tip.cameras = [camHUD];
 		tip.scrollFactor.set();
