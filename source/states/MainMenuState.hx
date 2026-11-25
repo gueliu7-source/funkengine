@@ -19,7 +19,7 @@ import ui.MenuUtil;
 @:keep
 class MainMenuState extends FlxState
 {
-	var menuScripts:scripting.MenuScripts = scripting.MenuScripts.make(this, "mainmenu");
+	var menuScripts:scripting.MenuScripts;
 
 	static var lastSel:Int = 0;
 	/** Itens padrão; um mod troca a lista em data/menus/mainmenu.json (ver mods/README.txt). */
@@ -157,6 +157,8 @@ class MainMenuState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		if (menuScripts == null)
+			menuScripts = scripting.MenuScripts.make(this, "mainmenu");
 		menuScripts.update(elapsed);
 		if (selected)
 			return;
@@ -216,7 +218,8 @@ class MainMenuState extends FlxState
 
 	override public function destroy():Void
 	{
-		menuScripts.destroy();
+		if (menuScripts != null)
+			menuScripts.destroy();
 		super.destroy();
 	}
 }

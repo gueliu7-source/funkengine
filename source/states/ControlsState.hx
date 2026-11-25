@@ -16,7 +16,7 @@ import ui.MenuUtil;
 @:keep
 class ControlsState extends FlxState
 {
-	var menuScripts:scripting.MenuScripts = scripting.MenuScripts.make(this, "controls");
+	var menuScripts:scripting.MenuScripts;
 
 	static final LANES:Array<String> = ["ESQUERDA", "BAIXO", "CIMA", "DIREITA"];
 	static final RESERVED:Array<FlxKey> = [FlxKey.ENTER, FlxKey.ESCAPE, FlxKey.BACKSPACE, FlxKey.NONE];
@@ -85,6 +85,8 @@ class ControlsState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		if (menuScripts == null)
+			menuScripts = scripting.MenuScripts.make(this, "controls");
 		menuScripts.update(elapsed);
 
 		if (waiting)
@@ -161,7 +163,8 @@ class ControlsState extends FlxState
 
 	override public function destroy():Void
 	{
-		menuScripts.destroy();
+		if (menuScripts != null)
+			menuScripts.destroy();
 		super.destroy();
 	}
 }

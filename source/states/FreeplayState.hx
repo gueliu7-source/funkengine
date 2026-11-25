@@ -13,7 +13,7 @@ import ui.SongList;
 @:keep
 class FreeplayState extends FlxState
 {
-	var menuScripts:scripting.MenuScripts = scripting.MenuScripts.make(this, "freeplay");
+	var menuScripts:scripting.MenuScripts;
 
 	static inline var VISIBLE:Int = 11;
 	static var lastSong:Int = 0;
@@ -102,6 +102,8 @@ class FreeplayState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		if (menuScripts == null)
+			menuScripts = scripting.MenuScripts.make(this, "freeplay");
 		menuScripts.update(elapsed);
 		if (starting)
 			return;
@@ -165,7 +167,8 @@ class FreeplayState extends FlxState
 
 	override public function destroy():Void
 	{
-		menuScripts.destroy();
+		if (menuScripts != null)
+			menuScripts.destroy();
 		super.destroy();
 	}
 }

@@ -13,7 +13,7 @@ import ui.MenuUtil;
 @:keep
 class OptionsState extends FlxState
 {
-	var menuScripts:scripting.MenuScripts = scripting.MenuScripts.make(this, "options");
+	var menuScripts:scripting.MenuScripts;
 
 	static final NAMES:Array<String> = [
 		"Downscroll", "Middlescroll", "Ghost tapping", "Botplay", "Antialiasing", "Zoom da câmera na batida", "Barra da música",
@@ -117,6 +117,8 @@ class OptionsState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		if (menuScripts == null)
+			menuScripts = scripting.MenuScripts.make(this, "options");
 		menuScripts.update(elapsed);
 
 		if (FlxG.keys.justPressed.ESCAPE)
@@ -153,7 +155,8 @@ class OptionsState extends FlxState
 
 	override public function destroy():Void
 	{
-		menuScripts.destroy();
+		if (menuScripts != null)
+			menuScripts.destroy();
 		super.destroy();
 	}
 }

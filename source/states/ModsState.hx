@@ -12,7 +12,7 @@ import flixel.util.FlxColor;
 @:keep
 class ModsState extends FlxState
 {
-	var menuScripts:scripting.MenuScripts = scripting.MenuScripts.make(this, "mods");
+	var menuScripts:scripting.MenuScripts;
 
 	static inline var VISIBLE:Int = 9;
 
@@ -82,6 +82,8 @@ class ModsState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		if (menuScripts == null)
+			menuScripts = scripting.MenuScripts.make(this, "mods");
 		menuScripts.update(elapsed);
 		var n = ModManager.mods.length;
 		if (n > 0)
@@ -120,7 +122,8 @@ class ModsState extends FlxState
 
 	override public function destroy():Void
 	{
-		menuScripts.destroy();
+		if (menuScripts != null)
+			menuScripts.destroy();
 		super.destroy();
 	}
 }

@@ -17,7 +17,7 @@ import ui.MenuUtil;
 @:keep
 class TitleState extends FlxState
 {
-	var menuScripts:scripting.MenuScripts = scripting.MenuScripts.make(this, "title");
+	var menuScripts:scripting.MenuScripts;
 
 	static var introDone:Bool = false;
 	static inline var BPM:Float = 102;
@@ -193,6 +193,8 @@ class TitleState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		if (menuScripts == null)
+			menuScripts = scripting.MenuScripts.make(this, "title");
 		menuScripts.update(elapsed);
 
 		if (FlxG.sound.music != null && FlxG.sound.music.playing)
@@ -222,7 +224,8 @@ class TitleState extends FlxState
 
 	override public function destroy():Void
 	{
-		menuScripts.destroy();
+		if (menuScripts != null)
+			menuScripts.destroy();
 		super.destroy();
 	}
 }

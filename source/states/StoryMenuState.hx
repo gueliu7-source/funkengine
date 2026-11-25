@@ -25,7 +25,7 @@ typedef WeekEntry =
 @:keep
 class StoryMenuState extends FlxState
 {
-	var menuScripts:scripting.MenuScripts = scripting.MenuScripts.make(this, "story");
+	var menuScripts:scripting.MenuScripts;
 
 	static var lastWeek:Int = 0;
 	static var lastDiff:Int = 1;
@@ -164,6 +164,8 @@ class StoryMenuState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		if (menuScripts == null)
+			menuScripts = scripting.MenuScripts.make(this, "story");
 		menuScripts.update(elapsed);
 		if (starting)
 			return;
@@ -231,7 +233,8 @@ class StoryMenuState extends FlxState
 
 	override public function destroy():Void
 	{
-		menuScripts.destroy();
+		if (menuScripts != null)
+			menuScripts.destroy();
 		super.destroy();
 	}
 }

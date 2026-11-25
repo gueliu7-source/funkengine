@@ -21,12 +21,12 @@ class ScriptedState extends FlxState
 	{
 		super();
 		stateName = name;
-		ms = MenuScripts.makeFor(this, "mod:" + name, ["states/" + name + ".hx"]);
 	}
 
 	override public function create():Void
 	{
 		super.create();
+		ms = MenuScripts.makeFor(this, "mod:" + stateName, ["states/" + stateName + ".hx"]);
 		FlxG.mouse.visible = true;
 		MenuUtil.ensureMenuMusic();
 		if (Paths.find("states/" + stateName + ".hx") == null)
