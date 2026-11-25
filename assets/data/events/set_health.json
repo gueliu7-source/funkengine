@@ -1,0 +1,2 @@
+{ "name": "Set Health", "description": "Define a vida do jogador (0 a 100%).", "color": "#E05050",
+  "params": [ { "label": "Vida (%)", "kind": "number", "default": "50" }, { "label": "—", "kind": "text", "default": "" } ] }

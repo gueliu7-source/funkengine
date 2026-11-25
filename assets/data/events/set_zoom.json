@@ -1,0 +1,2 @@
+{ "name": "Set Zoom", "description": "Muda o zoom base da câmera do jogo (com transição opcional).", "color": "#70A8F0",
+  "params": [ { "label": "Zoom", "kind": "number", "default": "1" }, { "label": "Duração (s)", "kind": "number", "default": "1" } ] }

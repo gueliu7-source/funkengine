@@ -13,8 +13,11 @@ import ui.MenuUtil;
  * Controles: cada uma das 4 setas tem 2 teclas. ENTER escolhe a tecla a trocar, depois aperte a nova
  * (ESC cancela, BACKSPACE apaga). Se a tecla já estiver em outro lugar, ela troca de lugar.
  */
+@:keep
 class ControlsState extends FlxState
 {
+	var menuScripts:scripting.MenuScripts = scripting.MenuScripts.make(this, "controls");
+
 	static final LANES:Array<String> = ["ESQUERDA", "BAIXO", "CIMA", "DIREITA"];
 	static final RESERVED:Array<FlxKey> = [FlxKey.ENTER, FlxKey.ESCAPE, FlxKey.BACKSPACE, FlxKey.NONE];
 
@@ -82,6 +85,7 @@ class ControlsState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		menuScripts.update(elapsed);
 
 		if (waiting)
 		{
@@ -153,5 +157,11 @@ class ControlsState extends FlxState
 		Settings.flush();
 		MenuUtil.sfx("scrollMenu");
 		paint();
+	}
+
+	override public function destroy():Void
+	{
+		menuScripts.destroy();
+		super.destroy();
 	}
 }

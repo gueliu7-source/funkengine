@@ -22,8 +22,11 @@ typedef WeekEntry =
  * Story Mode no estilo do original: faixa amarela, lista de semanas embaixo à direita,
  * "TRACKS" à esquerda e escolha de dificuldade. As músicas da semana tocam em sequência.
  */
+@:keep
 class StoryMenuState extends FlxState
 {
+	var menuScripts:scripting.MenuScripts = scripting.MenuScripts.make(this, "story");
+
 	static var lastWeek:Int = 0;
 	static var lastDiff:Int = 1;
 
@@ -161,6 +164,7 @@ class StoryMenuState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		menuScripts.update(elapsed);
 		if (starting)
 			return;
 
@@ -223,5 +227,11 @@ class StoryMenuState extends FlxState
 		if (FlxG.sound.music != null)
 			FlxG.sound.music.fadeOut(0.9, 0);
 		new FlxTimer().start(1, function(_) FlxG.switchState(new PlayState()));
+	}
+
+	override public function destroy():Void
+	{
+		menuScripts.destroy();
+		super.destroy();
 	}
 }

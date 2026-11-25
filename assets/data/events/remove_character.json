@@ -1,0 +1,2 @@
+{ "name": "Remove Character", "description": "Tira do palco um personagem criado com Add Character.", "color": "#E07C7C",
+  "params": [ { "label": "Nome (tag)", "kind": "text", "default": "pico" } ] }

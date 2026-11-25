@@ -1,1 +1,0 @@
-scripts desta pasta usam a API Lua do Psych

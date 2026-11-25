@@ -1,0 +1,2 @@
+{ "name": "Camera Angle", "description": "Inclina a câmera do jogo (graus) com transição opcional.", "color": "#70A8F0",
+  "params": [ { "label": "Ângulo", "kind": "number", "default": "10" }, { "label": "Duração (s)", "kind": "number", "default": "1" } ] }

@@ -1,0 +1,2 @@
+{ "name": "Add Character", "description": "Coloca mais um personagem no palco. Ele canta junto com o slot que acompanha (dad/bf) e dança no ritmo. Use 'id:nome' para dar um nome (e poder ter dois iguais).", "color": "#7CE08A",
+  "params": [ { "label": "Personagem (id ou id:nome)", "kind": "text", "default": "pico" }, { "label": "Seguir, dx, dy", "kind": "text", "default": "dad,-300,0" } ] }

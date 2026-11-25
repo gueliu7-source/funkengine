@@ -16,10 +16,16 @@ import ui.MenuUtil;
  * Menu principal no estilo do FNF original: fundo amarelo com parallax, botões do atlas
  * FNF_main_menu_assets, câmera que segue o item selecionado e piscada magenta ao confirmar.
  */
+@:keep
 class MainMenuState extends FlxState
 {
+	var menuScripts:scripting.MenuScripts = scripting.MenuScripts.make(this, "mainmenu");
+
 	static var lastSel:Int = 0;
-	static final NAMES:Array<String> = ["story mode", "freeplay", "options"];
+	/** Itens padrão; um mod troca a lista em data/menus/mainmenu.json (ver mods/README.txt). */
+	static final DEFAULT_ITEMS:String = '{"items":[{"id":"story","anim":"story mode","state":"story"},{"id":"freeplay","anim":"freeplay","state":"freeplay"},{"id":"options","anim":"options","state":"options"}]}';
+
+	var defs:Array<Dynamic> = [];
 
 	var items:FlxTypedGroup<FlxSprite>;
 	var magenta:FlxSprite;
@@ -54,19 +60,36 @@ class MainMenuState extends FlxState
 		items = new FlxTypedGroup<FlxSprite>();
 		add(items);
 
+		defs = loadDefs();
+		var n = defs.length;
+		var step:Float = n <= 3 ? 180 : 560 / n;
+		var y0:Float = n <= 3 ? 90 : 50;
 		var frames = Paths.sparrow("images/FNF_main_menu_assets");
-		for (i in 0...NAMES.length)
+		for (i in 0...n)
 		{
-			var it = new FlxSprite(0, 90 + i * 180);
-			if (frames != null)
+			var d = defs[i];
+			var it:FlxSprite;
+			var anim:String = d.anim != null ? d.anim : "";
+			var useAtlas = frames != null && anim != "" && d.image == null;
+			if (d.image != null && Paths.graphic(d.image) != null)
 			{
+				it = new FlxSprite(0, y0 + i * step);
+				it.loadGraphic(Paths.graphic(d.image));
+			}
+			else if (useAtlas)
+			{
+				it = new FlxSprite(0, y0 + i * step);
 				it.frames = frames;
-				it.animation.addByPrefix("idle", NAMES[i] + " basic", 24);
-				it.animation.addByPrefix("selected", NAMES[i] + " white", 24);
+				it.animation.addByPrefix("idle", anim + " basic", 24);
+				it.animation.addByPrefix("selected", anim + " white", 24);
 				it.animation.play("idle");
 			}
 			else
-				it.makeGraphic(400, 100, 0xFFFFFFFF);
+			{
+				var label:String = d.label != null ? d.label : (d.id != null ? d.id : "?");
+				var tx = MenuUtil.text(0, y0 + i * step, FlxG.width, 64, FlxTextAlign.CENTER, label.toUpperCase());
+				it = tx;
+			}
 			it.ID = i;
 			it.scrollFactor.set();
 			it.antialiasing = true;
@@ -85,9 +108,24 @@ class MainMenuState extends FlxState
 		change(0, true);
 	}
 
+	function loadDefs():Array<Dynamic>
+	{
+		var txt = Paths.getText("data/menus/mainmenu.json");
+		try
+		{
+			var j:Dynamic = haxe.Json.parse(txt != null ? txt : DEFAULT_ITEMS);
+			var arr:Array<Dynamic> = j.items;
+			if (arr != null && arr.length > 0)
+				return arr;
+		}
+		catch (e:Dynamic)
+			trace("[menu] mainmenu.json inválido: " + e);
+		return haxe.Json.parse(DEFAULT_ITEMS).items;
+	}
+
 	function change(dir:Int, silent:Bool = false):Void
 	{
-		cur = (cur + dir + NAMES.length) % NAMES.length;
+		cur = (cur + dir + defs.length) % defs.length;
 		lastSel = cur;
 		if (!silent)
 			MenuUtil.sfx("scrollMenu");
@@ -96,6 +134,8 @@ class MainMenuState extends FlxState
 		{
 			if (spr.animation.getByName("idle") != null)
 				spr.animation.play("idle");
+			if (Std.isOfType(spr, FlxText))
+				cast(spr, FlxText).color = 0xFFFFFFFF;
 			spr.updateHitbox();
 			spr.screenCenter(X);
 
@@ -103,6 +143,8 @@ class MainMenuState extends FlxState
 			{
 				if (spr.animation.getByName("selected") != null)
 					spr.animation.play("selected");
+				if (Std.isOfType(spr, FlxText))
+					cast(spr, FlxText).color = 0xFFFFE066;
 				var mp = spr.getGraphicMidpoint();
 				camFollow.setPosition(mp.x, mp.y);
 				mp.put();
@@ -115,6 +157,7 @@ class MainMenuState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		menuScripts.update(elapsed);
 		if (selected)
 			return;
 
@@ -146,6 +189,8 @@ class MainMenuState extends FlxState
 
 		if (FlxG.keys.justPressed.ENTER)
 		{
+			if (menuScripts.call("onSelect", [defs[cur].id])) // o script tratou o item
+				return;
 			selected = true;
 			MenuUtil.sfx("confirmMenu");
 			FlxFlicker.flicker(magenta, 1.1, 0.15, false);
@@ -165,14 +210,13 @@ class MainMenuState extends FlxState
 
 	function openSelected():Void
 	{
-		switch (cur)
-		{
-			case 0:
-				FlxG.switchState(new StoryMenuState());
-			case 1:
-				FlxG.switchState(new FreeplayState());
-			default:
-				FlxG.switchState(new OptionsState());
-		}
+		var d = defs[cur];
+		core.Nav.go(d.state != null ? d.state : "mainmenu");
+	}
+
+	override public function destroy():Void
+	{
+		menuScripts.destroy();
+		super.destroy();
 	}
 }

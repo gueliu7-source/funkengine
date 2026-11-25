@@ -9,8 +9,11 @@ import flixel.text.FlxText;
 import flixel.util.FlxColor;
 
 /** Tela de mods: ENTER liga/desliga, SHIFT+↑/↓ muda a prioridade (de cima para baixo), ESC aplica e volta. */
+@:keep
 class ModsState extends FlxState
 {
+	var menuScripts:scripting.MenuScripts = scripting.MenuScripts.make(this, "mods");
+
 	static inline var VISIBLE:Int = 9;
 
 	var cur:Int = 0;
@@ -79,6 +82,7 @@ class ModsState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		menuScripts.update(elapsed);
 		var n = ModManager.mods.length;
 		if (n > 0)
 		{
@@ -112,5 +116,11 @@ class ModsState extends FlxState
 			ModManager.apply();
 			FlxG.switchState(new OptionsState());
 		}
+	}
+
+	override public function destroy():Void
+	{
+		menuScripts.destroy();
+		super.destroy();
 	}
 }

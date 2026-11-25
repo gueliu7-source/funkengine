@@ -18,6 +18,8 @@ class Main extends Sprite
 		var fps:Int = Settings.d.fps;
 		addChild(new FlxGame(1280, 720, TitleState, fps, fps, true, false));
 
+		addChild(new ui.DebugOverlay());
+
 		FlxG.autoPause = false;
 		FlxG.mouse.visible = false;
 		FlxG.fixedTimestep = false;

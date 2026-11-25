@@ -1,0 +1,2 @@
+{ "name": "Character Visible", "description": "Mostra ou esconde um personagem.", "color": "#B0B0B0",
+  "params": [ { "label": "Personagem", "kind": "text", "default": "gf" }, { "label": "Visível", "kind": "choice", "default": "true", "options": ["true", "false"] } ] }

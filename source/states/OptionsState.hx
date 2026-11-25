@@ -10,8 +10,11 @@ import hud.HudStyles;
 import ui.MenuUtil;
 
 /** Opções: tudo que antes ficava nos atalhos F1–F5 do menu. ESC salva e volta. */
+@:keep
 class OptionsState extends FlxState
 {
+	var menuScripts:scripting.MenuScripts = scripting.MenuScripts.make(this, "options");
+
 	static final NAMES:Array<String> = [
 		"Downscroll", "Middlescroll", "Ghost tapping", "Botplay", "Antialiasing", "Zoom da câmera na batida", "Barra da música",
 		"Contador de julgamentos", "Ms nos acertos", "Velocidade das notas", "Offset", "Estilo do HUD", "Precisão", "Splashes das notas", "Controles", "Mods"
@@ -114,6 +117,7 @@ class OptionsState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		menuScripts.update(elapsed);
 
 		if (FlxG.keys.justPressed.ESCAPE)
 		{
@@ -145,5 +149,11 @@ class OptionsState extends FlxState
 			MenuUtil.sfx("scrollMenu");
 			paint();
 		}
+	}
+
+	override public function destroy():Void
+	{
+		menuScripts.destroy();
+		super.destroy();
 	}
 }

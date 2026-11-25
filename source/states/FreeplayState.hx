@@ -10,8 +10,11 @@ import ui.MenuUtil;
 import ui.SongList;
 
 /** Freeplay: lista de músicas (assets + mods) com escolha de dificuldade. ESC volta ao menu principal. */
+@:keep
 class FreeplayState extends FlxState
 {
+	var menuScripts:scripting.MenuScripts = scripting.MenuScripts.make(this, "freeplay");
+
 	static inline var VISIBLE:Int = 11;
 	static var lastSong:Int = 0;
 	static var lastDiff:Int = 1;
@@ -99,6 +102,7 @@ class FreeplayState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		menuScripts.update(elapsed);
 		if (starting)
 			return;
 
@@ -157,5 +161,11 @@ class FreeplayState extends FlxState
 		if (FlxG.sound.music != null)
 			FlxG.sound.music.stop();
 		FlxG.switchState(new PlayState());
+	}
+
+	override public function destroy():Void
+	{
+		menuScripts.destroy();
+		super.destroy();
 	}
 }

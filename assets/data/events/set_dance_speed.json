@@ -1,0 +1,2 @@
+{ "name": "Set Dance Speed", "description": "A cada quantos beats o personagem dança (bf, dad, gf ou extra).", "color": "#F0C070",
+  "params": [ { "label": "Personagem", "kind": "text", "default": "gf" }, { "label": "Beats", "kind": "number", "default": "2" } ] }

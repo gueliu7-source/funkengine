@@ -1,0 +1,2 @@
+{ "name": "Move Character", "description": "Move um personagem (bf, dad, gf ou nome de um extra) para x, y em segundos.", "color": "#7CC8E0",
+  "params": [ { "label": "Personagem", "kind": "text", "default": "dad" }, { "label": "x, y, segundos", "kind": "text", "default": "500,300,1" } ] }

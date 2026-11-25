@@ -6,6 +6,7 @@ import flixel.util.FlxSave;
 typedef SettingsData =
 {
 	var fps:Int;
+	var debugOverlay:Int; // F3: 0 = oculto, 1 = FPS e memória, 2 = completo
 	var downscroll:Bool;
 	var middlescroll:Bool;
 	var ghostTapping:Bool;
@@ -40,6 +41,7 @@ class Settings
 	{
 		return {
 			fps: 120,
+			debugOverlay: 1,
 			downscroll: false,
 			middlescroll: false,
 			ghostTapping: true,

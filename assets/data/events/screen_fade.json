@@ -1,0 +1,2 @@
+{ "name": "Screen Fade", "description": "Escurece/colore a tela inteira (acima do HUD). Cor vazia ou 'none' volta ao normal.", "color": "#555555",
+  "params": [ { "label": "Cor (ou none)", "kind": "color", "default": "000000" }, { "label": "Duração (s)", "kind": "number", "default": "1" } ] }

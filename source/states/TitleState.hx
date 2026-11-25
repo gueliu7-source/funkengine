@@ -14,8 +14,11 @@ import ui.MenuUtil;
  * flash branco, logo pulsando, GF dançando e "Press Enter to Begin".
  * A intro só toca uma vez por execução (ao voltar do menu vai direto para o título).
  */
+@:keep
 class TitleState extends FlxState
 {
+	var menuScripts:scripting.MenuScripts = scripting.MenuScripts.make(this, "title");
+
 	static var introDone:Bool = false;
 	static inline var BPM:Float = 102;
 
@@ -190,6 +193,7 @@ class TitleState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		menuScripts.update(elapsed);
 
 		if (FlxG.sound.music != null && FlxG.sound.music.playing)
 		{
@@ -214,5 +218,11 @@ class TitleState extends FlxState
 				new FlxTimer().start(2, function(_) FlxG.switchState(new MainMenuState()));
 			}
 		}
+	}
+
+	override public function destroy():Void
+	{
+		menuScripts.destroy();
+		super.destroy();
 	}
 }

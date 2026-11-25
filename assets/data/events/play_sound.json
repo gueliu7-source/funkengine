@@ -1,0 +1,2 @@
+{ "name": "Play Sound", "description": "Toca um som de sounds/<nome>.ogg (do jogo ou de um mod).", "color": "#C0C0FF",
+  "params": [ { "label": "Nome do som", "kind": "text", "default": "confirmMenu" }, { "label": "Volume", "kind": "number", "default": "1" } ] }

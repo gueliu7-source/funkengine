@@ -326,6 +326,9 @@ class PlayState extends FlxState
 			boyfriend.dance();
 		if (beat % dad.danceEvery == 0 && !dad.isSinging())
 			dad.dance();
+		for (c in extras)
+			if (beat % c.danceEvery == 0 && !c.isSinging())
+				c.dance();
 
 		scripts.call("onBeatHit", [beat]);
 	}
@@ -424,6 +427,8 @@ class PlayState extends FlxState
 		else if (FlxG.keys.justPressed.ENTER || FlxG.keys.justPressed.ESCAPE)
 			pause();
 
+		for (tag => c in extras)
+			c.holdingKeys = extraFollow.get(tag) == "bf" && boyfriend.holdingKeys;
 		super.update(elapsed);
 		scripts.call("onUpdatePost", [elapsed]);
 	}
@@ -477,6 +482,7 @@ class PlayState extends FlxState
 				judge.registerWrongKey();
 				voices.volume = 0;
 				boyfriend.sing(lane, false, true);
+				mirrorSing("bf", lane, false, true);
 				missSound();
 				hud.onMiss();
 				hud.refresh();
@@ -491,7 +497,10 @@ class PlayState extends FlxState
 		n.hit = true;
 		voices.volume = 1;
 		if (n.type != "No Animation" && !n.noAnim)
+		{
 			boyfriend.sing(n.lane, n.alt);
+			mirrorSing("bf", n.lane, n.alt, false);
+		}
 		var r = playerStrum.receptors[n.lane];
 		if (Settings.d.botplay)
 			r.flash(0.12);
@@ -522,6 +531,7 @@ class PlayState extends FlxState
 		judge.registerMiss(Judge.MISS_HEALTH);
 		voices.volume = 0;
 		boyfriend.sing(n.lane, false, true);
+		mirrorSing("bf", n.lane, false, true);
 		missSound();
 		hud.onMiss();
 		hud.refresh();
@@ -611,6 +621,7 @@ class PlayState extends FlxState
 				{
 					dad.sing(n.lane, n.alt);
 					dad.holdTimer = 0;
+					mirrorSing("dad", n.lane, n.alt, false);
 				}
 				voices.volume = 1;
 				opponentStrum.receptors[n.lane].flash(0.15);
@@ -666,7 +677,7 @@ class PlayState extends FlxState
 			case "bf", "boyfriend", "player", "1": boyfriend;
 			case "dad", "opponent", "0": dad;
 			case "gf", "girlfriend", "2": gf;
-			default: null;
+			default: extras.get(StringTools.trim(n));
 		}
 
 	/** Eventos que vêm com a engine (definidos em data/events/*.json). Os outros ficam por conta dos scripts. */
@@ -734,6 +745,52 @@ class PlayState extends FlxState
 				focusCamera(StringTools.trim(v1).toLowerCase());
 			case "Change Character":
 				changeCharacter(v1, v2);
+			case "Add Character":
+				addExtra(v1, v2);
+			case "Remove Character":
+				removeExtra(v1);
+			case "Move Character":
+				var mc = characterByName(v1);
+				var mp = v2.split(",");
+				if (mc != null)
+				{
+					var tx = num(mp[0], mc.x);
+					var ty = mp.length > 1 ? num(mp[1], mc.y) : mc.y;
+					var dur = mp.length > 2 ? num(mp[2], 0) : 0;
+					if (dur <= 0)
+						mc.setPosition(tx, ty);
+					else
+						flixel.tweens.FlxTween.tween(mc, {x: tx, y: ty}, dur, {ease: flixel.tweens.FlxEase.quadInOut});
+				}
+			case "Character Visible":
+				var vc = characterByName(v1);
+				if (vc != null)
+					vc.visible = StringTools.trim(v2).toLowerCase() != "false" && v2 != "0" && v2 != "não";
+			case "Set Dance Speed":
+				var dc = characterByName(v1);
+				if (dc != null)
+					dc.danceEvery = Std.int(Math.max(1, num(v2, 2)));
+			case "Set Zoom":
+				var z = num(v1, defaultZoom);
+				var zd = num(v2, 0);
+				if (zd <= 0)
+					defaultZoom = z;
+				else
+					flixel.tweens.FlxTween.num(defaultZoom, z, zd, {ease: flixel.tweens.FlxEase.quadInOut}, function(f) defaultZoom = f);
+			case "Camera Angle":
+				var ad = num(v2, 0);
+				if (ad <= 0)
+					camGame.angle = num(v1, 0);
+				else
+					flixel.tweens.FlxTween.tween(camGame, {angle: num(v1, 0)}, ad, {ease: flixel.tweens.FlxEase.quadInOut});
+			case "Screen Fade":
+				screenFade(v1, num(v2, 0.5));
+			case "Set Health":
+				judge.health = Math.max(0, Math.min(2, num(v1, 50) / 50));
+			case "Play Sound":
+				var snd = Paths.sound("sounds/" + StringTools.trim(v1) + ".ogg");
+				if (snd != null)
+					FlxG.sound.play(snd, num(v2, 1));
 			case "Hey!":
 				var who = StringTools.trim(v1).toLowerCase();
 				if (who == "both" || who == "ambos" || who == "")
@@ -746,6 +803,84 @@ class PlayState extends FlxState
 					}
 			default:
 		}
+	}
+
+	/** Personagens extras (evento "Add Character"): tag → personagem, e quem eles acompanham ao cantar. */
+	var extras:Map<String, Character> = new Map();
+	var extraFollow:Map<String, String> = new Map();
+	var fadeSpr:FlxSprite;
+
+	/** v1 = "id" ou "id:tag"; v2 = "seguir,dx,dy" (seguir: dad, bf, gf ou none; dx/dy = deslocamento do slot). */
+	function addExtra(v1:String, v2:String):Void
+	{
+		var spec = StringTools.trim(v1).split(":");
+		var id = spec[0];
+		var tag = spec.length > 1 ? StringTools.trim(spec[1]) : id;
+		if (id == "")
+			return;
+		if (extras.exists(tag))
+			removeExtra(tag);
+		var p = v2.split(",");
+		var follow = p.length > 0 && StringTools.trim(p[0]) != "" ? StringTools.trim(p[0]).toLowerCase() : "dad";
+		var slot = (follow == "bf" || follow == "gf") ? follow : "dad";
+		var base = stage.positionFor(slot, id);
+		var c = new Character(base[0] + (p.length > 1 ? num(p[1], 0) : 0), base[1] + (p.length > 2 ? num(p[2], 0) : 0), id, follow == "bf");
+		extras.set(tag, c);
+		extraFollow.set(tag, follow);
+		var anchor:Character = slot == "bf" ? boyfriend : (slot == "gf" ? gf : dad);
+		var i = members.indexOf(anchor);
+		if (i >= 0)
+			insert(i, c); // atrás do personagem do slot
+		else
+			add(c);
+		c.dance();
+	}
+
+	function removeExtra(tag:String):Void
+	{
+		var t = StringTools.trim(tag);
+		var c = extras.get(t);
+		if (c == null)
+			return;
+		extras.remove(t);
+		extraFollow.remove(t);
+		remove(c, true);
+		c.destroy();
+	}
+
+	/** Os extras que acompanham o slot cantam junto. */
+	function mirrorSing(slot:String, lane:Int, alt:Bool, miss:Bool):Void
+	{
+		for (tag => c in extras)
+			if (extraFollow.get(tag) == slot)
+			{
+				c.sing(lane, alt, miss);
+				c.holdTimer = 0;
+			}
+	}
+
+	function screenFade(color:String, dur:Float):Void
+	{
+		if (fadeSpr == null)
+		{
+			fadeSpr = new FlxSprite();
+			fadeSpr.makeGraphic(FlxG.width, FlxG.height, 0xFFFFFFFF);
+			fadeSpr.alpha = 0;
+			fadeSpr.scrollFactor.set();
+			fadeSpr.cameras = [camOther];
+			add(fadeSpr);
+		}
+		var c = StringTools.trim(color).toLowerCase();
+		var target:Float = 1;
+		if (c == "" || c == "none" || c == "clear" || c == "nenhuma")
+			target = 0;
+		else
+			fadeSpr.color = hexColor(color, FlxColor.BLACK);
+		flixel.tweens.FlxTween.cancelTweensOf(fadeSpr);
+		if (dur <= 0)
+			fadeSpr.alpha = target;
+		else
+			flixel.tweens.FlxTween.tween(fadeSpr, {alpha: target}, dur);
 	}
 
 	var camOverride:Bool = false; // "Camera Follow Pos" ativo: a câmera ignora o foco automático
