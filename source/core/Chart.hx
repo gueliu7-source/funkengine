@@ -143,7 +143,12 @@ class ChartLoader
 			trace('[Chart] chart não encontrado: $id$suffix');
 			return null;
 		}
+		return parseText(id, text, week);
+	}
 
+	/** Monta o chart a partir do texto JSON (usado também para recuperar autosaves). */
+	public static function parseText(id:String, text:String, week:Int = 0):Chart
+	{
 		var meta:Dynamic = null;
 		var metaText = Paths.getText('data/songs/$id/_meta.json');
 		if (metaText != null)

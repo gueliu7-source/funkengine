@@ -13,8 +13,8 @@ class HelpOverlay extends FlxSpriteGroup
 	var a:Float = 0;
 	var skip:Bool = false;
 
-	static final KEYS:String = "ESPAÇO\n↑ ↓  /  roda\nSHIFT + roda\n← →  /  PgUp PgDn\nHOME / END\n\nClique na grade\nArrastar para baixo\nBotão direito / DEL\nSHIFT + arrastar\nSHIFT + clique\nCTRL + arrastar nota\nCtrl+A / C / X / V\nQ / E\nCtrl+Z / Ctrl+Y\nCtrl+S\nENTER\nTAB\nESC\n\nColuna da esquerda\nArrastar evento\nF1";
-	static final DESC:String = "tocar / pausar\nmover pela música\nmover 4x mais rápido\nseção anterior / próxima\nir ao início / ao fim\n\ncolocar ou selecionar nota\ncriar sustain\napagar (grupo, se selecionado)\nselecionar com caixa (CTRL soma)\nsomar / tirar uma nota da seleção\nmover as selecionadas (grade)\nselecionar tudo / copiar / recortar / colar\ntrocar a divisão (1/16, 1/32...)\ndesfazer / refazer\nsalvar o chart\nsalvar e testar no jogo\ntrocar de aba\nsair (pede confirmação se não salvou)\n\ncolocar / selecionar evento\nmover o evento\nabrir/fechar esta ajuda";
+	static final KEYS:String = "ESPAÇO\n↑ ↓  /  roda\nSHIFT + roda\n← →  /  PgUp PgDn\nHOME / END\n\nClique na grade\nArrastar para baixo\nBotão direito / DEL\nSHIFT + arrastar\nSHIFT + clique\nCTRL + arrastar nota\nCtrl+A / C / X / V\nM  /  ,  .\nQ / E\nCtrl+Z / Ctrl+Y\nCtrl+S\nENTER\nTAB\nESC\n\nColuna da esquerda\nArrastar evento\nF1";
+	static final DESC:String = "tocar / pausar\nmover pela música\nmover 4x mais rápido\nseção anterior / próxima\nir ao início / ao fim\n\ncolocar ou selecionar nota\ncriar sustain\napagar (grupo, se selecionado)\nselecionar com caixa (CTRL soma)\nsomar / tirar uma nota da seleção\nmover as selecionadas (grade)\nselecionar tudo / copiar / recortar / colar\nmarcar aqui / marcador anterior / próximo\ntrocar a divisão (1/16, 1/32...)\ndesfazer / refazer\nsalvar o chart\nsalvar e testar no jogo\ntrocar de aba\nsair (pede confirmação se não salvou)\n\ncolocar / selecionar evento\nmover o evento\nabrir/fechar esta ajuda";
 
 	public function new(?keys:String, ?desc:String, title:String = "Atalhos")
 	{

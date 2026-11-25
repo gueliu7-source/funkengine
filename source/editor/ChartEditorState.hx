@@ -32,6 +32,9 @@ class ChartEditorState extends FlxState
 	public static var songId:String = "bopeebo";
 	public static var suffix:String = "";
 	static var tabIndex:Int = 0;
+	static var recoverNext:Bool = false; // reabre o chart a partir do autosave
+	var autoTimer:Float = 0;
+	var autoVersion:Int = -1;
 	static var clip:Array<ClipNote> = [];
 	static var selClip:Array<ClipNote> = []; // cópia da seleção (Ctrl+C / Ctrl+X)
 
@@ -114,7 +117,9 @@ class ChartEditorState extends FlxState
 		FlxG.sound.list.add(voices);
 		lengthMs = inst.length;
 
-		doc = ChartIO.open(songId, suffix, lengthMs);
+		var fromAuto = recoverNext;
+		recoverNext = false;
+		doc = ChartIO.open(songId, suffix, lengthMs, fromAuto);
 		if (s == null)
 			lengthMs = doc.tempo.msAt(doc.totalBeats());
 
@@ -147,6 +152,11 @@ class ChartEditorState extends FlxState
 		add(toast);
 		help = new HelpOverlay();
 		add(help);
+		if (fromAuto)
+			say("Autosave recuperado. Salve (Ctrl+S) para manter, ou saia sem salvar para descartar.", true);
+		else if (ChartIO.hasNewerAutosave(songId, suffix))
+			say("Há um autosave mais novo que o chart salvo. ARQUIVO > Recuperar autosave.", false);
+		else
 		say(s == null ? "Sem Inst.ogg em songs/" + songId + "/ - só edição, sem áudio." : "Pronto. ESPAÇO toca; clique na grade para colocar notas. F1 = atalhos.", s != null);
 	}
 
@@ -181,6 +191,7 @@ class ChartEditorState extends FlxState
 				entries: [
 					{label: "Salvar", hint: "Ctrl+S", fn: save},
 					{label: "Testar no jogo", hint: "Enter", fn: testPlay},
+					{label: "Recuperar autosave", fn: recoverAutosave, enabled: function() return ChartIO.hasNewerAutosave(songId, suffix)},
 					{label: "Sair para o menu dos editores", hint: "Esc", fn: leave, sep: true}
 				]
 			},
@@ -205,7 +216,15 @@ class ChartEditorState extends FlxState
 					}
 				]
 			},
-			{title: "VER", entries: [{label: "Atalhos e ajuda", hint: "F1", fn: function() help.toggle()}]},
+			{
+				title: "VER",
+				entries: [
+					{label: "Marcar aqui", hint: "M", fn: markHere},
+					{label: "Marcador anterior", hint: ",", fn: function() jumpMarker(-1)},
+					{label: "Próximo marcador", hint: ".", fn: function() jumpMarker(1)},
+					{label: "Atalhos e ajuda", hint: "F1", fn: function() help.toggle(), sep: true}
+				]
+			},
 			{
 				title: "EDITORES",
 				entries: [
@@ -484,6 +503,47 @@ class ChartEditorState extends FlxState
 		seek(doc.tempo.msAt(Math.max(0, idx * u)));
 	}
 
+	function recoverAutosave():Void
+	{
+		if (!ChartIO.hasNewerAutosave(songId, suffix))
+		{
+			say("Não há autosave mais novo para este chart.", false);
+			return;
+		}
+		go(function() {
+			recoverNext = true;
+			FlxG.switchState(new ChartEditorState());
+		});
+	}
+
+	/** Marcadores (bookmarks): M marca aqui; , e . pulam para o anterior / próximo. */
+	function markHere():Void
+	{
+		var beat = Math.max(0, Math.round(doc.tempo.beatAt(songTime) * 4) / 4);
+		doc.addMarker(beat, "Marcador", "#FFD166");
+		say("Marcador no beat " + beat + ". As , e . pulam entre marcadores.");
+	}
+
+	function jumpMarker(dir:Int):Void
+	{
+		var cur = doc.tempo.beatAt(songTime);
+		var best:Null<core.Chart.ChartMarker> = null;
+		for (m in doc.chart.markers)
+		{
+			if (dir > 0 && m.beat > cur + 0.01 && (best == null || m.beat < best.beat))
+				best = m;
+			if (dir < 0 && m.beat < cur - 0.01 && (best == null || m.beat > best.beat))
+				best = m;
+		}
+		if (best == null)
+		{
+			say(dir > 0 ? "Nenhum marcador depois daqui." : "Nenhum marcador antes daqui.", false);
+			return;
+		}
+		seek(doc.tempo.msAt(best.beat));
+		say("Marcador \"" + best.name + "\" (beat " + best.beat + ")");
+	}
+
 	function save():Void
 	{
 		var p = ChartIO.save(doc);
@@ -544,6 +604,18 @@ class ChartEditorState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+
+		autoTimer += elapsed;
+		if (autoTimer >= 120)
+		{
+			autoTimer = 0;
+			if (doc.dirty && doc.version != autoVersion)
+			{
+				autoVersion = doc.version;
+				if (ChartIO.autosave(doc))
+					say("Autosave feito.", true);
+			}
+		}
 
 		if (playing)
 		{
@@ -650,6 +722,12 @@ class ChartEditorState extends FlxState
 			doUndo();
 		if (ctrl && k.justPressed.Y)
 			doRedo();
+		if (!ctrl && k.justPressed.M)
+			markHere();
+		if (k.justPressed.COMMA)
+			jumpMarker(-1);
+		if (k.justPressed.PERIOD)
+			jumpMarker(1);
 		if (ctrl && k.justPressed.A)
 			grid.selectAll();
 		if (ctrl && k.justPressed.C)

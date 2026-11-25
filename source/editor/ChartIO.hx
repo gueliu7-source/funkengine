@@ -14,9 +14,21 @@ import sys.io.File;
 class ChartIO
 {
 	/** Abre o chart (ou cria um vazio se ainda não existir). lengthMs = duração do Inst. */
-	public static function open(id:String, suffix:String, lengthMs:Float):ChartDoc
+	public static function open(id:String, suffix:String, lengthMs:Float, fromAutosave:Bool = false):ChartDoc
 	{
-		var c = ChartLoader.load(id, suffix, 0);
+		var c:Chart = null;
+		#if sys
+		if (fromAutosave)
+		{
+			try
+				c = ChartLoader.parseText(id, File.getContent(autosavePathFor(id, suffix)), 0)
+			catch (e:Dynamic)
+				trace('[ChartIO] autosave ilegível: $e');
+		}
+		#end
+		var recovered = c != null;
+		if (c == null)
+			c = ChartLoader.load(id, suffix, 0);
 		var isNew = (c == null) || !Paths.exists('data/songs/$id/$id$suffix.json');
 		if (c == null)
 		{
@@ -26,8 +38,51 @@ class ChartIO
 			c.segments = [new BpmSegment(0, 0, 100)];
 		}
 		var doc = new ChartDoc(c, id, suffix, lengthMs);
-		doc.dirty = isNew;
+		doc.dirty = isNew || recovered;
 		return doc;
+	}
+
+	static function autosavePathFor(id:String, suffix:String):String
+		return ModManager.saveRoot() + '/data/songs/$id/$id$suffix.autosave';
+
+	/** Cópia de segurança (não mexe no chart salvo nem no estado "alterado"). */
+	public static function autosave(doc:ChartDoc):Bool
+	{
+		#if sys
+		try
+		{
+			var path = autosavePathFor(doc.songId, doc.suffix);
+			ModManager.mkdirs(path.substr(0, path.lastIndexOf("/")));
+			File.saveContent(path, Json.stringify(toJson(doc.chart)));
+			return true;
+		}
+		catch (e:Dynamic)
+			trace('[ChartIO] erro no autosave: $e');
+		#end
+		return false;
+	}
+
+	/** Existe autosave mais novo que o chart salvo? */
+	public static function hasNewerAutosave(id:String, suffix:String):Bool
+	{
+		#if sys
+		var a = autosavePathFor(id, suffix);
+		if (!sys.FileSystem.exists(a))
+			return false;
+		var c = ModManager.saveRoot() + '/data/songs/$id/$id$suffix.json';
+		return !sys.FileSystem.exists(c) || sys.FileSystem.stat(a).mtime.getTime() > sys.FileSystem.stat(c).mtime.getTime();
+		#else
+		return false;
+		#end
+	}
+
+	public static function clearAutosave(id:String, suffix:String):Void
+	{
+		#if sys
+		var a = autosavePathFor(id, suffix);
+		if (sys.FileSystem.exists(a))
+			sys.FileSystem.deleteFile(a);
+		#end
 	}
 
 	public static function pathFor(doc:ChartDoc):String
@@ -44,6 +99,7 @@ class ChartIO
 			File.saveContent(path, Json.stringify(toJson(doc.chart)));
 			Paths.rebuild(Settings.d.enabledMods);
 			doc.dirty = false;
+			clearAutosave(doc.songId, doc.suffix);
 			return path;
 		}
 		catch (e:Dynamic)
