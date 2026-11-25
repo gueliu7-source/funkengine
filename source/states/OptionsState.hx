@@ -64,7 +64,7 @@ class OptionsState extends FlxState
 			case 6: onOff(d.hudSongBar);
 			case 7: onOff(d.hudJudgementCounter);
 			case 8: onOff(d.hudMsDisplay);
-			case 9: d.scrollSpeed <= 0 ? "do chart" : Std.string(d.scrollSpeed);
+			case 9: core.Scroll.describe() + "   (ENTER troca o modo, ←→ valor)";
 			case 10: d.offsetMs + " ms";
 			case 11: HudStyles.get(d.hudStyle).name;
 			case 12: d.accuracyMode == "wife3" ? "Wife3 (Kade, rígida)" : "Simples (sick 100%, good 75%)";
@@ -89,8 +89,10 @@ class OptionsState extends FlxState
 			case 7: d.hudJudgementCounter = !d.hudJudgementCounter;
 			case 8: d.hudMsDisplay = !d.hudMsDisplay;
 			case 9:
-				var v = d.scrollSpeed + 0.1 * dir;
-				d.scrollSpeed = Math.min(5, Math.max(0, Math.round(v * 10) / 10));
+				if (d.scrollMode == 1)
+					d.scrollSpeed = Math.min(10, Math.max(0.5, Math.round((d.scrollSpeed + 0.1 * dir) * 10) / 10));
+				else if (d.scrollMode == 2)
+					d.scrollMult = Math.min(4, Math.max(0.25, Math.round((d.scrollMult + 0.05 * dir) * 100) / 100));
 			case 10: d.offsetMs += 5 * dir;
 			case 11: d.hudStyle = HudStyles.next(d.hudStyle, dir);
 			case 12: d.accuracyMode = d.accuracyMode == "wife3" ? "simple" : "wife3";
@@ -143,8 +145,19 @@ class OptionsState extends FlxState
 		var dir = 0;
 		if (FlxG.keys.justPressed.LEFT || FlxG.keys.justPressed.A)
 			dir = -1;
-		if (FlxG.keys.justPressed.RIGHT || FlxG.keys.justPressed.D || FlxG.keys.justPressed.ENTER)
+		if (FlxG.keys.justPressed.RIGHT || FlxG.keys.justPressed.D)
 			dir = 1;
+		if (FlxG.keys.justPressed.ENTER)
+		{
+			if (cur == 9) // troca o modo de velocidade: chart → fixa → multiplicador
+			{
+				Settings.d.scrollMode = (Settings.d.scrollMode + 1) % 3;
+				MenuUtil.sfx("scrollMenu");
+				paint();
+			}
+			else
+				dir = 1;
+		}
 		if (dir != 0)
 		{
 			change(cur, dir);

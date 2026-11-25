@@ -10,7 +10,9 @@ typedef SettingsData =
 	var downscroll:Bool;
 	var middlescroll:Bool;
 	var ghostTapping:Bool;
-	var scrollSpeed:Float; // 0 = usa a velocidade do chart
+	var scrollMode:Int; // 0 = velocidade do chart, 1 = fixa (scrollSpeed, ignora chart e eventos), 2 = chart × scrollMult
+	var scrollSpeed:Float; // velocidade do modo fixo
+	var scrollMult:Float; // multiplicador do modo 2
 	var offsetMs:Float;
 	var botplay:Bool;
 	var antialiasing:Bool;
@@ -45,7 +47,9 @@ class Settings
 			downscroll: false,
 			middlescroll: false,
 			ghostTapping: true,
-			scrollSpeed: 0,
+			scrollMode: 0,
+			scrollSpeed: 2,
+			scrollMult: 1,
 			offsetMs: 0,
 			botplay: false,
 			antialiasing: true,
@@ -76,6 +80,14 @@ class Settings
 		for (f in Reflect.fields(saved))
 			if (Reflect.hasField(d, f))
 				Reflect.setField(d, f, Reflect.field(saved, f));
+		// save antigo: scrollSpeed > 0 significava velocidade fixa
+		if (!Reflect.hasField(saved, "scrollMode"))
+		{
+			var old:Float = Reflect.hasField(saved, "scrollSpeed") ? Reflect.field(saved, "scrollSpeed") : 0;
+			d.scrollMode = old > 0 ? 1 : 0;
+			if (old <= 0)
+				d.scrollSpeed = 2;
+		}
 	}
 
 	public static function flush():Void

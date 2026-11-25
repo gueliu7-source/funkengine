@@ -117,6 +117,8 @@ class DebugOverlay extends Sprite
 		{
 			t += "\n" + (Math.round(ms * 10) / 10) + " ms/quadro (pior " + Math.round(worst) + " ms)   pico " + mb(peak) + " MB";
 			var st = FlxG.state;
+			if (states.PlayState.instance != null && Std.isOfType(FlxG.state, states.PlayState))
+				t += "\nvelocidade das notas " + core.Scroll.fmt(states.PlayState.instance.scrollSpeed);
 			t += "\n" + stateName() + "   objetos " + (st != null ? st.members.length : 0) + "   F3: ocultar";
 		}
 		tf.textColor = fps > 0 && fps < Settings.d.fps * 0.6 ? 0xFF6666 : 0xFFFFFF;

@@ -103,7 +103,7 @@ class PlayState extends FlxState
 			FlxG.switchState(leave());
 			return;
 		}
-		scrollSpeed = Settings.d.scrollSpeed > 0 ? Settings.d.scrollSpeed : chart.speed;
+		scrollSpeed = core.Scroll.effective(chart.speed);
 		NoteSkin.load(chart.noteStyle);
 
 		camGame = FlxG.camera;
@@ -147,6 +147,17 @@ class PlayState extends FlxState
 		focusCamera(chart.sections[0].mustHit ? "bf" : "dad");
 		camGame.focusOn(camFollow.getPosition());
 		scripts.call("onCreatePost");
+
+		// aviso de 4 s com a velocidade em uso (para conferir o modo escolhido nas Opções)
+		var tip = new FlxText(0, FlxG.height - 54, FlxG.width, "Velocidade das notas: " + core.Scroll.fmt(scrollSpeed) + "  (" + core.Scroll.describe() + ", chart " + core.Scroll.fmt(chart.speed) + ")", 18);
+		tip.setFormat(Paths.FONT, 18, FlxColor.WHITE, CENTER, OUTLINE, FlxColor.BLACK);
+		tip.cameras = [camHUD];
+		tip.scrollFactor.set();
+		add(tip);
+		flixel.tweens.FlxTween.tween(tip, {alpha: 0}, 1, {startDelay: 4, onComplete: function(_) {
+			remove(tip, true);
+			tip.destroy();
+		}});
 	}
 
 	// ------------------------------------------------------------------ montagem
@@ -709,9 +720,9 @@ class PlayState extends FlxState
 					camHUD.zoom += num(v2, 0.03);
 				}
 			case "Change Scroll Speed": // Psych: v1 = multiplicador da velocidade do chart, v2 = duração da transição (s)
-				var target = chart.speed * num(v1, 1);
+				var target = core.Scroll.effective(chart.speed * num(v1, 1));
 				var dur = num(v2, 0);
-				if (Settings.d.scrollSpeed <= 0)
+				if (core.Scroll.eventsApply())
 				{
 					if (dur <= 0)
 						applyScrollSpeed(target);
@@ -890,6 +901,13 @@ class PlayState extends FlxState
 		var p = v.split(",");
 		if (p.length >= 2 && num(p[0], 0) > 0)
 			c.shake(num(p[1], 0.03), num(p[0], 0.5));
+	}
+
+	/** Scripts: define a velocidade das notas (ignorado no modo de velocidade fixa). */
+	public function setScrollSpeed(v:Float):Void
+	{
+		if (core.Scroll.eventsApply())
+			applyScrollSpeed(core.Scroll.effective(v));
 	}
 
 	function applyScrollSpeed(v:Float):Void
