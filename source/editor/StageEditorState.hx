@@ -13,6 +13,8 @@ import editor.stage.StageSong;
 import editor.stage.Transport;
 import editor.stage.StageView;
 import editor.ui.EdUI;
+import editor.ui.MenuBar;
+import editor.ui.MenuBar.MenuDef;
 import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.FlxState;
@@ -128,14 +130,59 @@ class StageEditorState extends FlxState
 
 		add(new Selector(280, 10, 220, "Stage", function() return stageNames(), function() return doc.name, openStage, 56));
 		add(new Btn(506, 10, 66, 32, "NOVO", newStage, 1));
-		add(new Btn(580, 10, 80, 32, "DESFAZER", doUndo, 2, function() return doc.canUndo));
-		add(new Btn(666, 10, 80, 32, "REFAZER", doRedo, 2, function() return doc.canRedo));
-		add(new Btn(766, 10, 84, 32, "SALVAR", save, 1));
-		add(new Btn(856, 10, 34, 32, "?", function() help.toggle(), 2));
-		add(new Btn(900, 10, 90, 32, "PAINEL", togglePanel, 2));
-		hintText = EdTheme.text(1000, 19, 170, 11, "", EdTheme.DIM);
+		add(new Btn(946, 10, 70, 32, "SALVAR", save, 1));
+		hintText = EdTheme.text(1024, 19, 150, 11, "", EdTheme.DIM);
 		add(hintText);
 		add(new Btn(1180, 10, 84, 32, "SAIR", leave, 2));
+		add(new MenuBar(580, 10, 90, 32, menus()));
+	}
+
+	function menus():Array<MenuDef>
+	{
+		return [
+			{
+				title: "ARQUIVO",
+				entries: [
+					{label: "Novo stage", fn: newStage},
+					{label: "Salvar", hint: "Ctrl+S", fn: save},
+					{label: "Sair para o menu dos editores", hint: "Esc", fn: leave, sep: true}
+				]
+			},
+			{
+				title: "EDITAR",
+				entries: [
+					{label: "Desfazer", hint: "Ctrl+Z", fn: doUndo, enabled: function() return doc.canUndo},
+					{label: "Refazer", hint: "Ctrl+Y", fn: doRedo, enabled: function() return doc.canRedo}
+				]
+			},
+			{
+				title: "VER",
+				entries: [
+					{label: "Atalhos e ajuda", hint: "F1", fn: function() help.toggle()},
+					{label: "Mostrar/ocultar painel", fn: togglePanel}
+				]
+			},
+			{
+				title: "EDITORES",
+				entries: [
+					{label: "Chart Editor: " + ChartEditorState.songId, fn: function() go(function() EditorNav.toChart(ChartEditorState.songId, ChartEditorState.suffix))},
+					{label: "Character Editor: " + CharEditorState.charId, fn: function() go(function() EditorNav.toChar(CharEditorState.charId))},
+					{label: "Menu dos editores", fn: leave, sep: true}
+				]
+			}
+		];
+	}
+
+	/** Vai para outro editor, avisando se há alterações não salvas (escolha de novo para confirmar). */
+	function go(next:Void->Void):Void
+	{
+		if (doc.dirty && !exitArmed)
+		{
+			exitArmed = true;
+			say("Há alterações não salvas! Escolha de novo para sair sem salvar.", false);
+			return;
+		}
+		next();
 	}
 
 	function buildSidebar():Void
@@ -434,7 +481,7 @@ class StageEditorState extends FlxState
 			help.toggle();
 		if (EdLock.locked)
 		{
-			if (k.justPressed.ESCAPE)
+			if (k.justPressed.ESCAPE && !MenuBar.isOpen())
 				help.toggle();
 			return;
 		}

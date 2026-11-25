@@ -10,6 +10,8 @@ import editor.panels.GuideTab;
 import editor.panels.PreviewTab;
 import editor.panels.SectionTab;
 import editor.ui.EdUI;
+import editor.ui.MenuBar;
+import editor.ui.MenuBar.MenuDef;
 import flixel.FlxG;
 import flixel.FlxState;
 import flixel.input.keyboard.FlxKey;
@@ -163,12 +165,65 @@ class ChartEditorState extends FlxState
 		timeText = EdTheme.text(534, 16, 200, 16, "", EdTheme.CYAN);
 		add(timeText);
 
-		add(new Btn(716, 10, 80, 32, "DESFAZER", doUndo, 2, function() return doc.canUndo));
-		add(new Btn(802, 10, 80, 32, "REFAZER", doRedo, 2, function() return doc.canRedo));
-		add(new Btn(900, 10, 84, 32, "SALVAR", save, 0));
-		add(new Btn(990, 10, 100, 32, "TESTAR", testPlay, 0));
-		add(new Btn(1100, 10, 34, 32, "?", function() help.toggle(), 2));
+		add(new Btn(1090, 10, 84, 32, "SALVAR", save, 0));
 		add(new Btn(1180, 10, 84, 32, "SAIR", leave, 2));
+		add(new MenuBar(716, 10, 92, 32, menus()));
+	}
+
+	function menus():Array<MenuDef>
+	{
+		var c = doc.chart;
+		return [
+			{
+				title: "ARQUIVO",
+				entries: [
+					{label: "Salvar", hint: "Ctrl+S", fn: save},
+					{label: "Testar no jogo", hint: "Enter", fn: testPlay},
+					{label: "Sair para o menu dos editores", hint: "Esc", fn: leave, sep: true}
+				]
+			},
+			{
+				title: "EDITAR",
+				entries: [
+					{label: "Desfazer", hint: "Ctrl+Z", fn: doUndo, enabled: function() return doc.canUndo},
+					{label: "Refazer", hint: "Ctrl+Y", fn: doRedo, enabled: function() return doc.canRedo},
+					{
+						label: "Apagar seleção",
+						hint: "Del",
+						fn: function() {
+							if (lane.sel != null && grid.sel == null)
+								lane.deleteSelected();
+							else
+								grid.deleteSelected();
+						},
+						sep: true
+					}
+				]
+			},
+			{title: "VER", entries: [{label: "Atalhos e ajuda", hint: "F1", fn: function() help.toggle()}]},
+			{
+				title: "EDITORES",
+				entries: [
+					{label: "Character Editor: " + c.player2 + " (oponente)", fn: function() go(function() EditorNav.toChar(c.player2))},
+					{label: "Character Editor: " + c.player1 + " (jogador)", fn: function() go(function() EditorNav.toChar(c.player1))},
+					{label: "Character Editor: " + c.gf + " (namorada)", fn: function() go(function() EditorNav.toChar(c.gf))},
+					{label: "Stage Editor: " + c.stage, fn: function() go(function() EditorNav.toStage(c.stage)), sep: true},
+					{label: "Menu dos editores", fn: leave, sep: true}
+				]
+			}
+		];
+	}
+
+	/** Vai para outro editor, avisando se há alterações não salvas (escolha de novo para confirmar). */
+	function go(next:Void->Void):Void
+	{
+		if (doc.dirty && !exitArmed)
+		{
+			exitArmed = true;
+			say("Há alterações não salvas! Escolha de novo para sair sem salvar.", false);
+			return;
+		}
+		next();
 	}
 
 	function buildInfoCard():Void
@@ -545,7 +600,7 @@ class ChartEditorState extends FlxState
 			help.toggle();
 		if (EdLock.locked)
 		{
-			if (k.justPressed.ESCAPE)
+			if (k.justPressed.ESCAPE && !MenuBar.isOpen())
 				help.toggle();
 			return;
 		}
