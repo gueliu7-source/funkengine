@@ -28,7 +28,9 @@ class GridView extends FlxGroup
 
 	public var doc:ChartDoc;
 	public var quant:Int = 16; // 4, 8, 12, 16, 24, 32, 48, 64...
-	public var sel:Null<NoteData>;
+	public var sel:Null<NoteData>; // nota "principal" (a última clicada); os painéis usam esta
+	public var sels:Array<NoteData> = []; // todas as selecionadas (SHIFT + clique / caixa)
+	public var onMessage:String->Void;
 	public var curStep:Float = 0;
 
 	var tiles:Array<FlxSprite> = [];
@@ -56,6 +58,18 @@ class GridView extends FlxGroup
 
 	var dragNote:Null<NoteData>;
 	var dragOld:Float = 0;
+
+	var selBoxes:Array<FlxSprite> = [];
+	var boxSpr:FlxSprite;
+	var boxing:Bool = false;
+	var boxC0:Float = 0;
+	var boxS0:Float = 0;
+	var moving:Bool = false;
+	var moveC0:Int = 0;
+	var moveB0:Float = 0;
+	var moveDC:Int = 0;
+	var moveDB:Float = 0;
+	var lastVer:Int = -1;
 
 	public function new(doc:ChartDoc)
 	{
@@ -118,6 +132,12 @@ class GridView extends FlxGroup
 		selBox.scrollFactor.set();
 		selBox.visible = false;
 		add(selBox);
+		boxSpr = new FlxSprite();
+		boxSpr.makeGraphic(1, 1, 0x44FFFFFF);
+		boxSpr.scrollFactor.set();
+		boxSpr.visible = false;
+		boxSpr.origin.set(0, 0);
+		add(boxSpr);
 
 		rowGlow = EdTheme.rect(GX, PLAY_Y, CELL * COLS, CELL, EdTheme.CYAN);
 		rowGlow.alpha = 0.07;
@@ -242,14 +262,63 @@ class GridView extends FlxGroup
 			}
 		}
 
-		if (sel != null)
+		if (doc.version != lastVer)
 		{
-			var y = stepY(doc.beatOf(sel) * 4);
-			selBox.visible = doc.chart.notes.indexOf(sel) >= 0 && y > -CELL && y < H;
-			selBox.setPosition(GX + col(sel) * CELL - 1, y - 1);
+			lastVer = doc.version;
+			var inChart = new haxe.ds.ObjectMap<NoteData, Bool>();
+			for (n in doc.chart.notes)
+				inChart.set(n, true);
+			var alive = [for (n in sels) if (inChart.exists(n)) n];
+			if (alive.length != sels.length)
+			{
+				sels = alive;
+				if (sel != null && sels.indexOf(sel) < 0)
+					sel = sels.length > 0 ? sels[sels.length - 1] : null;
+			}
 		}
-		else
-			selBox.visible = false;
+		selBox.visible = false;
+		var used = 0;
+		var offS = moving ? moveDB * 4 : 0;
+		var offC = moving ? moveDC : 0;
+		for (n in sels)
+		{
+			var y = stepY(doc.beatOf(n) * 4 + offS);
+			if (y > -CELL && y < H)
+			{
+				var bx = selBoxAt(used++);
+				bx.visible = true;
+				bx.setPosition(GX + (col(n) + offC) * CELL - 1, y - 1);
+				bx.color = moving ? 0xFFFFE066 : 0xFFFFFFFF;
+			}
+		}
+		for (k in used...selBoxes.length)
+			selBoxes[k].visible = false;
+	}
+
+	function selBoxAt(i:Int):FlxSprite
+	{
+		while (selBoxes.length <= i)
+		{
+			var b = new FlxSprite();
+			b.loadGraphicFromSprite(selBox);
+			b.scrollFactor.set();
+			add(b);
+			selBoxes.push(b);
+		}
+		return selBoxes[i];
+	}
+
+	/** Troca a seleção. */
+	public function setSelection(list:Array<NoteData>):Void
+	{
+		sels = list.copy();
+		sel = sels.length > 0 ? sels[sels.length - 1] : null;
+	}
+
+	function say(s:String):Void
+	{
+		if (onMessage != null)
+			onMessage(s);
 	}
 
 	inline function col(n:NoteData):Int
@@ -353,6 +422,8 @@ class GridView extends FlxGroup
 		var snapped = Math.floor(mBeat / u + 0.000001) * u;
 		var total = doc.totalBeats();
 		var inSong = mBeat >= 0 && mBeat < total;
+		var shift = FlxG.keys.pressed.SHIFT;
+		var ctrl = FlxG.keys.pressed.CONTROL;
 
 		hoverBand.alpha = EdTheme.lerpf(hoverBand.alpha, over ? 0.045 : 0, FlxG.elapsed, 20);
 		if (over)
@@ -363,13 +434,24 @@ class GridView extends FlxGroup
 			hoverLine.y = stepY(snapped * 4);
 			hoverLine.alpha = 0.25;
 		}
-		ghost.visible = over && inSong && dragNote == null;
+		ghost.visible = over && inSong && dragNote == null && !shift && !ctrl && !boxing && !moving;
 		if (ghost.visible)
 		{
 			ghost.setPosition(GX + c * CELL, stepY(snapped * 4));
 			ghost.scale.set(1, Math.max(4, u * 4 * CELL) / CELL);
 			ghost.origin.set(0, 0);
 			ghost.color = EdTheme.LANE[c % 4];
+		}
+
+		if (boxing)
+		{
+			updateBox(mx, my);
+			return;
+		}
+		if (moving)
+		{
+			updateMove(c, snapped);
+			return;
 		}
 
 		if (over && inSong)
@@ -379,9 +461,30 @@ class GridView extends FlxGroup
 			if (FlxG.mouse.justPressed)
 			{
 				var ex = doc.noteCovering(mBeat, lane, player);
-				if (ex != null)
+				if (shift)
 				{
-					sel = ex;
+					if (ex != null)
+						toggle(ex);
+					else
+					{
+						boxing = true;
+						boxC0 = (mx - GX) / CELL;
+						boxS0 = curStep + (my - PLAY_Y) / CELL;
+					}
+				}
+				else if (ctrl && ex != null)
+				{
+					if (sels.indexOf(ex) < 0)
+						setSelection([ex]);
+					moving = true;
+					moveC0 = c;
+					moveB0 = snapped;
+					moveDC = 0;
+					moveDB = 0;
+				}
+				else if (ex != null)
+				{
+					setSelection([ex]);
 					if (mBeat < doc.beatOf(ex) + 0.25)
 					{
 						dragNote = ex;
@@ -391,7 +494,7 @@ class GridView extends FlxGroup
 				else
 				{
 					var n = doc.addNote(snapped, lane, player);
-					sel = n;
+					setSelection([n]);
 					dragNote = n;
 					dragOld = 0;
 				}
@@ -401,9 +504,15 @@ class GridView extends FlxGroup
 				var ex = doc.noteCovering(mBeat, lane, player);
 				if (ex != null)
 				{
-					if (sel == ex)
-						sel = null;
-					doc.removeNote(ex);
+					if (sels.indexOf(ex) >= 0 && sels.length > 1)
+						deleteSelected(); // botão direito numa nota selecionada apaga o grupo
+					else
+					{
+						sels.remove(ex);
+						if (sel == ex)
+							sel = sels.length > 0 ? sels[sels.length - 1] : null;
+						doc.removeNote(ex);
+					}
 				}
 			}
 		}
@@ -425,11 +534,87 @@ class GridView extends FlxGroup
 		}
 	}
 
+	function toggle(n:NoteData):Void
+	{
+		if (sels.indexOf(n) >= 0)
+		{
+			sels.remove(n);
+			if (sel == n)
+				sel = sels.length > 0 ? sels[sels.length - 1] : null;
+		}
+		else
+		{
+			sels.push(n);
+			sel = n;
+		}
+		say(sels.length + (sels.length == 1 ? " nota selecionada" : " notas selecionadas"));
+	}
+
+	function updateBox(mx:Float, my:Float):Void
+	{
+		var c1 = (mx - GX) / CELL;
+		var s1 = curStep + (my - PLAY_Y) / CELL;
+		var minC = Math.min(boxC0, c1);
+		var maxC = Math.max(boxC0, c1);
+		var minS = Math.min(boxS0, s1);
+		var maxS = Math.max(boxS0, s1);
+		boxSpr.visible = true;
+		boxSpr.setPosition(GX + minC * CELL, stepY(minS));
+		boxSpr.scale.set(Math.max(1, (maxC - minC) * CELL), Math.max(1, (maxS - minS) * CELL));
+		if (FlxG.mouse.pressed)
+			return;
+		boxing = false;
+		boxSpr.visible = false;
+		var hits:Array<NoteData> = [];
+		var a = doc.lowerBound(doc.tempo.msAt(minS / 4) - 1);
+		var notes = doc.chart.notes;
+		var endMs = doc.tempo.msAt(maxS / 4);
+		while (a < notes.length && notes[a].time <= endMs)
+		{
+			var n = notes[a++];
+			var cc = col(n) + 0.5;
+			var ss = doc.beatOf(n) * 4 + 0.5;
+			if (cc >= minC && cc <= maxC && ss >= minS && ss <= maxS)
+				hits.push(n);
+		}
+		if (FlxG.keys.pressed.CONTROL)
+			for (n in sels)
+				if (hits.indexOf(n) < 0)
+					hits.push(n);
+		setSelection(hits);
+		say(hits.length + (hits.length == 1 ? " nota selecionada" : " notas selecionadas") + (hits.length > 0 ? " - CTRL + arrastar move, DEL apaga" : ""));
+	}
+
+	function updateMove(c:Int, snapped:Float):Void
+	{
+		moveDC = Std.int(Math.max(0, Math.min(COLS - 1, c))) - moveC0;
+		moveDB = snapped - moveB0;
+		if (FlxG.mouse.pressed)
+			return;
+		moving = false;
+		var dc = moveDC;
+		var db = moveDB;
+		moveDC = 0;
+		moveDB = 0;
+		if (doc.moveNotes(sels, db, dc))
+			say(sels.length == 1 ? "Nota movida." : sels.length + " notas movidas.");
+	}
+
+	/** Seleciona todas as notas do chart. */
+	public function selectAll():Void
+	{
+		setSelection(doc.chart.notes.copy());
+		say(sels.length + " notas selecionadas");
+	}
+
 	public function deleteSelected():Void
 	{
-		if (sel == null)
+		if (sels.length == 0 && sel != null)
+			sels = [sel];
+		if (sels.length == 0)
 			return;
-		doc.removeNote(sel);
+		doc.removeNotes(sels);
+		sels = [];
 		sel = null;
 	}
 }

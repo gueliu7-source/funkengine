@@ -33,6 +33,7 @@ class ChartEditorState extends FlxState
 	public static var suffix:String = "";
 	static var tabIndex:Int = 0;
 	static var clip:Array<ClipNote> = [];
+	static var selClip:Array<ClipNote> = []; // cópia da seleção (Ctrl+C / Ctrl+X)
 
 	static final QUANTS:Array<Int> = [4, 8, 12, 16, 24, 32, 48, 64];
 
@@ -119,6 +120,7 @@ class ChartEditorState extends FlxState
 
 		add(EdTheme.rect(0, 0, FlxG.width, FlxG.height, EdTheme.BG));
 		grid = new GridView(doc);
+		grid.onMessage = function(m) say(m);
 		add(grid);
 		lane = new EventLane(doc, grid);
 		lane.onSelect = function(e) {
@@ -187,6 +189,10 @@ class ChartEditorState extends FlxState
 				entries: [
 					{label: "Desfazer", hint: "Ctrl+Z", fn: doUndo, enabled: function() return doc.canUndo},
 					{label: "Refazer", hint: "Ctrl+Y", fn: doRedo, enabled: function() return doc.canRedo},
+					{label: "Selecionar tudo", hint: "Ctrl+A", fn: function() grid.selectAll(), sep: true},
+					{label: "Copiar seleção", hint: "Ctrl+C", fn: function() copySel(false)},
+					{label: "Recortar seleção", hint: "Ctrl+X", fn: function() copySel(true)},
+					{label: "Colar no cursor", hint: "Ctrl+V", fn: pasteSel},
 					{
 						label: "Apagar seleção",
 						hint: "Del",
@@ -195,8 +201,7 @@ class ChartEditorState extends FlxState
 								lane.deleteSelected();
 							else
 								grid.deleteSelected();
-						},
-						sep: true
+						}
 					}
 				]
 			},
@@ -389,6 +394,33 @@ class ChartEditorState extends FlxState
 	{
 		clip = doc.copyNotes(doc.chart.sections[curSection].startBeat, doc.sectionEndBeat(curSection));
 		say("Copiadas " + clip.length + " notas da seção " + curSection);
+	}
+
+	function copySel(cut:Bool):Void
+	{
+		if (grid.sels.length == 0)
+		{
+			say("Nenhuma nota selecionada. SHIFT + clique ou SHIFT + arrastar seleciona.", false);
+			return;
+		}
+		selClip = doc.copyList(grid.sels);
+		say((cut ? "Recortadas " : "Copiadas ") + selClip.length + " notas.");
+		if (cut)
+			grid.deleteSelected();
+	}
+
+	function pasteSel():Void
+	{
+		if (selClip.length == 0)
+		{
+			say("Nada copiado. Selecione notas e use Ctrl+C.", false);
+			return;
+		}
+		var u = grid.unit();
+		var at = Math.round(doc.tempo.beatAt(songTime) / u) * u;
+		var made = doc.pasteNotes(selClip, at);
+		grid.setSelection(made);
+		say("Coladas " + made.length + " notas no cursor.");
 	}
 
 	public function paste(replace:Bool):Void
@@ -618,6 +650,14 @@ class ChartEditorState extends FlxState
 			doUndo();
 		if (ctrl && k.justPressed.Y)
 			doRedo();
+		if (ctrl && k.justPressed.A)
+			grid.selectAll();
+		if (ctrl && k.justPressed.C)
+			copySel(false);
+		if (ctrl && k.justPressed.X)
+			copySel(true);
+		if (ctrl && k.justPressed.V)
+			pasteSel();
 		if (k.justPressed.DELETE || k.justPressed.BACKSPACE)
 		{
 			if (lane.sel != null && grid.sel == null)
@@ -637,9 +677,9 @@ class ChartEditorState extends FlxState
 			seek(0);
 		if (k.justPressed.END)
 			seek(lengthMs - 1);
-		if (k.justPressed.LEFT || k.justPressed.A || k.justPressed.PAGEUP)
+		if (k.justPressed.LEFT || (k.justPressed.A && !ctrl) || k.justPressed.PAGEUP)
 			gotoSection(doc.tempo.beatAt(songTime) > doc.chart.sections[curSection].startBeat + 0.1 && !playing ? curSection : curSection - 1);
-		if (k.justPressed.RIGHT || k.justPressed.D || k.justPressed.PAGEDOWN)
+		if (k.justPressed.RIGHT || (k.justPressed.D && !ctrl) || k.justPressed.PAGEDOWN)
 			gotoSection(curSection + 1);
 
 		var dir = 0;

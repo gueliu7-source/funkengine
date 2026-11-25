@@ -338,6 +338,135 @@ class ChartDoc
 	public function removeNote(n:NoteData):Void
 		run(new Cmd("remover nota", function() chart.notes.remove(n), function() chart.notes.push(n)));
 
+	public function removeNotes(list:Array<NoteData>):Void
+	{
+		if (list.length == 0)
+			return;
+		var l = list.copy();
+		run(new Cmd(l.length == 1 ? "remover nota" : "remover " + l.length + " notas", function() {
+			for (n in l)
+				chart.notes.remove(n);
+		}, function() {
+			for (n in l)
+				chart.notes.push(n);
+		}));
+	}
+
+	/** Coluna de uma nota na grade: 0-3 oponente, 4-7 jogador. */
+	public static inline function colOf(n:NoteData):Int
+		return n.lane + (n.player ? 4 : 0);
+
+	/** Move várias notas de uma vez (um único passo no histórico). Devolve false se não houve movimento. */
+	public function moveNotes(list:Array<NoteData>, dBeat:Float, dCol:Int):Bool
+	{
+		if (list.length == 0)
+			return false;
+		var minB = 1e9;
+		var minC = 99;
+		var maxC = -99;
+		for (n in list)
+		{
+			minB = Math.min(minB, beatOf(n));
+			minC = Std.int(Math.min(minC, colOf(n)));
+			maxC = Std.int(Math.max(maxC, colOf(n)));
+		}
+		dBeat = Math.max(dBeat, -minB);
+		dCol = Std.int(Math.max(dCol, -minC));
+		dCol = Std.int(Math.min(dCol, 7 - maxC));
+		if (Math.abs(dBeat) < 0.0001 && dCol == 0)
+			return false;
+		var l = list.copy();
+		var oT:Array<Float> = [];
+		var oS:Array<Float> = [];
+		var oL:Array<Int> = [];
+		var oP:Array<Bool> = [];
+		var nT:Array<Float> = [];
+		var nS:Array<Float> = [];
+		var nL:Array<Int> = [];
+		var nP:Array<Bool> = [];
+		for (n in l)
+		{
+			var b = beatOf(n);
+			var sb = n.sustain > 0 ? tempo.beatAt(n.time + n.sustain) - b : 0;
+			var t = tempo.msAt(b + dBeat);
+			var c = colOf(n) + dCol;
+			oT.push(n.time);
+			oS.push(n.sustain);
+			oL.push(n.lane);
+			oP.push(n.player);
+			nT.push(t);
+			nS.push(sb > 0 ? tempo.msAt(b + dBeat + sb) - t : 0);
+			nL.push(c % 4);
+			nP.push(c >= 4);
+		}
+		run(new Cmd(l.length == 1 ? "mover nota" : "mover " + l.length + " notas", function() {
+			for (i in 0...l.length)
+			{
+				l[i].time = nT[i];
+				l[i].sustain = nS[i];
+				l[i].lane = nL[i];
+				l[i].player = nP[i];
+			}
+		}, function() {
+			for (i in 0...l.length)
+			{
+				l[i].time = oT[i];
+				l[i].sustain = oS[i];
+				l[i].lane = oL[i];
+				l[i].player = oP[i];
+			}
+		}));
+		return true;
+	}
+
+	/** Copia uma lista de notas; as posições ficam relativas à primeira. */
+	public function copyList(list:Array<NoteData>):Array<ClipNote>
+	{
+		var first = 1e9;
+		for (n in list)
+			first = Math.min(first, beatOf(n));
+		var out:Array<ClipNote> = [];
+		for (n in list)
+		{
+			var b = beatOf(n);
+			out.push({
+				beat: b - first,
+				lane: n.lane,
+				player: n.player,
+				sustain: n.sustain > 0 ? tempo.beatAt(n.time + n.sustain) - b : 0,
+				type: n.type,
+				alt: n.alt
+			});
+		}
+		return out;
+	}
+
+	/** Cola notas copiadas com copyList a partir de atBeat. Devolve as notas criadas. */
+	public function pasteNotes(clip:Array<ClipNote>, atBeat:Float):Array<NoteData>
+	{
+		var made:Array<NoteData> = [];
+		var end = totalBeats();
+		for (c in clip)
+		{
+			var b = atBeat + c.beat;
+			if (b >= end)
+				continue;
+			var t = tempo.msAt(b);
+			var sus = c.sustain > 0 ? tempo.msAt(b + c.sustain) - t : 0;
+			made.push(new NoteData(t, c.lane, c.player, sus, c.type, c.alt, 0));
+		}
+		if (made.length == 0)
+			return made;
+		run(new Cmd(made.length == 1 ? "colar nota" : "colar " + made.length + " notas", function() {
+			for (n in made)
+				chart.notes.push(n);
+		}, function() {
+			for (n in made)
+				chart.notes.remove(n);
+		}));
+		return made;
+	}
+
 	/** Ajusta o sustain sem registrar no histórico (usado durante o arrasto). */
 	public function setSustainLive(n:NoteData, lenBeats:Float):Void
 	{
