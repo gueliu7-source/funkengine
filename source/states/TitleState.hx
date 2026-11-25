@@ -26,7 +26,7 @@ class TitleState extends FlxState
 	var gf:FlxSprite;
 	var titleText:FlxSprite;
 	var ngLogo:FlxSprite;
-	var lines:Array<FlxText> = [];
+	var lines:Array<ui.Alphabet> = [];
 	var skipped:Bool = false;
 	var transitioning:Bool = false;
 	var lastBeat:Int = -1;
@@ -115,7 +115,8 @@ class TitleState extends FlxState
 
 	function say(s:String):Void
 	{
-		var t = MenuUtil.text(0, 200 + lines.length * 64, FlxG.width, 52, FlxTextAlign.CENTER, s);
+		var t = new ui.Alphabet(0, 180 + lines.length * 80, s, 1);
+		t.x = (FlxG.width - t.width) / 2;
 		lines.push(t);
 		add(t);
 	}

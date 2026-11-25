@@ -6,7 +6,10 @@ import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
+import hud.HealthIcon;
+import ui.Alphabet;
 import ui.MenuUtil;
+import ui.SongInfo;
 import ui.SongList;
 
 /** Freeplay: lista de músicas (assets + mods) com escolha de dificuldade. ESC volta ao menu principal. */
@@ -20,7 +23,10 @@ class FreeplayState extends FlxState
 	static var lastDiff:Int = 1;
 
 	var songs:Array<SongEntry> = [];
-	var items:Array<FlxText> = [];
+	var names:Array<Alphabet> = [];
+	var icons:Array<HealthIcon> = [];
+	var panel:FlxText;
+	var panelBox:FlxSprite;
 	var cur:Int = 0;
 	var diff:Int = 1;
 	var diffText:FlxText;
@@ -38,19 +44,14 @@ class FreeplayState extends FlxState
 		shade.makeGraphic(FlxG.width, FlxG.height, 0x66000000);
 		add(shade);
 
-		var title = MenuUtil.text(0, 24, FlxG.width, 44, FlxTextAlign.CENTER, "FREEPLAY");
-		add(title);
-
 		songs = SongList.load();
 
-		for (i in 0...VISIBLE)
-		{
-			var t = MenuUtil.text(0, 0, FlxG.width, 32, FlxTextAlign.CENTER);
-			items.push(t);
-			add(t);
-		}
-
-		diffText = MenuUtil.text(0, 100, FlxG.width, 22, FlxTextAlign.CENTER);
+		panelBox = new FlxSprite(FlxG.width - 380, 12);
+		panelBox.makeGraphic(368, 300, 0xAA000000);
+		add(panelBox);
+		panel = MenuUtil.text(FlxG.width - 368, 20, 346, 20, FlxTextAlign.LEFT);
+		add(panel);
+		diffText = MenuUtil.text(FlxG.width - 380, 20, 368, 26, FlxTextAlign.CENTER);
 		add(diffText);
 
 		var help = MenuUtil.text(20, FlxG.height - 40, FlxG.width - 40, 16, FlxTextAlign.CENTER,
@@ -81,22 +82,52 @@ class FreeplayState extends FlxState
 
 	function refresh():Void
 	{
+		for (n in names)
+		{
+			remove(n, true);
+			n.destroy();
+		}
+		for (i in icons)
+		{
+			remove(i, true);
+			i.destroy();
+		}
+		names = [];
+		icons = [];
+		var mid = Std.int(VISIBLE / 2);
 		for (i in 0...VISIBLE)
 		{
-			var idx = cur + i - Std.int(VISIBLE / 2);
-			var t = items[i];
-			t.y = 150 + i * 42;
+			var idx = cur + i - mid;
 			if (idx < 0 || idx >= songs.length)
-			{
-				t.text = "";
 				continue;
-			}
-			t.text = songs[idx].name;
-			var d = Math.abs(i - Std.int(VISIBLE / 2));
-			t.alpha = d == 0 ? 1 : Math.max(0.25, 0.75 - d * 0.12);
-			t.color = d == 0 ? 0xFFFFE066 : FlxColor.WHITE;
+			var d = Math.abs(i - mid);
+			var a = new Alphabet(d == 0 ? 80 : 50, 18 + i * 62, songs[idx].name, 0.7);
+			var al = d == 0 ? 1 : Math.max(0.25, 0.7 - d * 0.1);
+			for (m in a.members)
+				m.alpha = al;
+			add(a);
+			names.push(a);
+			var ic = new HealthIcon(SongInfo.opponentIcon(songs[idx].id), false);
+			ic.setGraphicSize(Std.int(ic.frameWidth * 0.6));
+			ic.updateHitbox();
+			ic.setPosition(a.x + a.width + 12, 18 + i * 62 + 25 - ic.height / 2);
+			ic.alpha = al;
+			add(ic);
+			icons.push(ic);
 		}
-		diffText.text = songs.length == 0 ? "Nenhuma música encontrada (rode tools/import_assets.py)" : "< " + SongList.DIFF_NAME[diff] + " >";
+		if (songs.length == 0)
+		{
+			diffText.text = "";
+			panel.text = "Nenhuma música encontrada";
+			return;
+		}
+		diffText.text = "< " + SongList.DIFF_NAME[diff] + " >";
+		var b = core.Scores.best(songs[cur].id, SongList.DIFF_SUFFIX[diff]);
+		if (b == null)
+			panel.text = "\n\n" + songs[cur].name + "\n\nainda não jogada nesta dificuldade";
+		else
+			panel.text = "\n\n" + songs[cur].name + "\n\nMELHOR RESULTADO\nPontos:  " + b.score + "\nPrecisão:  " + (Math.round(b.accuracy * 100) / 100) + "%\nRank:  " + b.rank
+				+ "\nCombo máximo:  " + b.maxCombo + "\nSick " + b.sicks + "  Good " + b.goods + "  Bad " + b.bads + "  Shit " + b.shits + "\nErros:  " + b.misses;
 	}
 
 	override public function update(elapsed:Float):Void

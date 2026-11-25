@@ -990,6 +990,8 @@ class PlayState extends FlxState
 		if (ended)
 			return;
 		ended = true;
+		if (!fromEditor && !Settings.d.botplay)
+			core.Scores.submit(songId, difficulty, judge);
 		scripts.call("onSongEnd");
 		inst.stop();
 		voices.stop();
