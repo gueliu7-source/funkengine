@@ -228,6 +228,19 @@ class Strumline extends FlxGroup
 		list.push(s);
 	}
 
+	/** Diagnóstico (F3): px/s em uso e a nota ativa mais próxima da seta. */
+	public function debugInfo(songPos:Float):String
+	{
+		var best:NoteData = null;
+		for (n in activeNotes)
+			if (!n.hit && n.head != null && (best == null || n.time < best.time))
+				best = n;
+		var t = "px/s " + Math.round(pxPerMs * 1000);
+		if (best != null)
+			t += "  nota: dt " + Math.round(best.time - songPos) + " ms, y " + Math.round(best.head.y + best.head.height / 2) + " (seta " + Math.round(receptors[best.lane].cy) + ")";
+		return t;
+	}
+
 	public function receptorFor(lane:Int):Receptor
 		return receptors[lane];
 }
