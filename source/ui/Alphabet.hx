@@ -23,7 +23,7 @@ class Alphabet extends FlxSpriteGroup
 
 	public static inline var LINE_H:Float = 70;
 
-	var frames:FlxAtlasFrames;
+	var atlas:FlxAtlasFrames;
 	public var textValue(default, null):String = "";
 	public var letterScale:Float = 1;
 
@@ -31,7 +31,7 @@ class Alphabet extends FlxSpriteGroup
 	{
 		super(x, y);
 		letterScale = scale;
-		frames = Paths.sparrow("images/alphabet");
+		atlas = Paths.sparrow("images/alphabet");
 		setText(text);
 	}
 
@@ -43,7 +43,7 @@ class Alphabet extends FlxSpriteGroup
 			remove(m, true);
 			m.destroy();
 		}
-		if (frames == null)
+		if (atlas == null)
 			return;
 		var cx:Float = 0;
 		var line:Float = 0;
@@ -89,7 +89,7 @@ class Alphabet extends FlxSpriteGroup
 		if (prefix == null)
 			return null;
 		var s = new FlxSprite();
-		s.frames = frames;
+		s.frames = atlas;
 		s.animation.addByPrefix("g", prefix, 24, true);
 		if (s.animation.getByName("g") == null)
 		{
