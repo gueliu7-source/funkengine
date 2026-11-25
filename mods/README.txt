@@ -29,3 +29,20 @@ ADICIONAR MÚSICAS AO FREEPLAY
   python3 tools/add_song.py <pasta-ou-zip-da-musica> --mod meu-mod --name "Nome da Música"
 A pasta/zip traz o chart (.json; -easy/-hard viram dificuldades) e Inst.ogg/Voices.ogg (mp3/wav são convertidos
 se houver ffmpeg). Ele cria os arquivos em mods/<mod>/ e registra a música em data/songs.json. Detalhes: --help.
+
+
+=== MENUS POR MOD ===
+- data/menus/mainmenu.json : troca os botões do menu principal.
+  {"items":[{"id":"story","anim":"story mode","state":"story"},
+            {"id":"extra","label":"Extras","state":"mod:extras"}]}
+  Cada item: anim (nome no atlas FNF_main_menu_assets) OU image (images/...) OU label (texto);
+  state: title, mainmenu, story, freeplay, options, mods, controls, editors ou mod:<nome>.
+- scripts/menus/<tela>.hx (title, mainmenu, story, freeplay, options, mods, controls) e scripts/menus/all.hx:
+  onCreate, onCreatePost, onUpdate(elapsed), onSelect(id) (devolva true para cancelar o padrão), onDestroy.
+  Funções: add, remove, insert, makeSprite, makeText, color, sound, music, go, get, set, readText, readJson; variável `state`.
+- states/<nome>.hx : tela inteira feita por mod (abra com go("mod:<nome>")); ESC volta ao menu (onBack devolvendo true cancela).
+
+=== EVENTOS NOVOS ===
+Add Character (v1 "id" ou "id:tag"; v2 "seguir,dx,dy"), Remove Character, Move Character, Character Visible,
+Set Dance Speed, Set Zoom, Camera Angle, Screen Fade, Set Health, Play Sound. Play Animation também aceita a tag de extras.
+F3 no jogo: painel de FPS/RAM (oculto, simples, completo).
