@@ -328,6 +328,7 @@ class ScriptApi
 		m.set("getCurStep", function():Int return Conductor.curStep);
 		m.set("getCurBeat", function():Int return Conductor.curBeat);
 		m.set("getCurSection", function():Int return Conductor.curSection);
+		m.set("setStrumSpeed", function(player:Bool, lane:Int, ?v:Float):Void (player ? g.playerStrum : g.opponentStrum).setLaneSpeed(lane, v));
 		m.set("setScrollSpeed", function(v:Float):Void g.setScrollSpeed(v));
 		m.set("getScrollSpeed", function():Float return g.scrollSpeed);
 		m.set("endSong", function():Void g.endSong());

@@ -10,6 +10,7 @@ class Receptor extends FlxSprite
 	public var cx:Float;
 	public var cy:Float;
 	public var glowTimer:Float = 0;
+	public var scrollSpeed:Null<Float> = null; // velocidade das notas desta lane (estilo Codename); null = a do jogo
 
 	public function new(lane:Int, cx:Float, cy:Float)
 	{

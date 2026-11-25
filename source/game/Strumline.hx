@@ -28,7 +28,8 @@ class Strumline extends FlxGroup
 	var headLayer:FlxGroup = new FlxGroup();
 	var free:Map<Int, Array<NoteSprite>> = new Map();
 
-	var pxPerMs:Float;
+	var baseSpeed:Float = 1;
+	var rate:Float = 1;
 	var spawnMs:Float;
 	var strumY:Float;
 
@@ -57,8 +58,45 @@ class Strumline extends FlxGroup
 
 	public function setSpeed(speed:Float, rate:Float):Void
 	{
-		pxPerMs = 0.45 * speed / rate;
-		spawnMs = (FlxG.height + 160) / pxPerMs;
+		baseSpeed = speed;
+		this.rate = rate;
+		recalc();
+	}
+
+	/** Velocidade (do chart) de uma nota: a da nota, senão a da lane, senão a do jogo. O modo "fixa" vale para todas. */
+	public function speedOf(n:NoteData):Float
+	{
+		if (Settings.d.scrollMode != 1)
+		{
+			if (n.scrollSpeed != null)
+				return n.scrollSpeed;
+			if (receptors.length > n.lane && receptors[n.lane].scrollSpeed != null)
+				return receptors[n.lane].scrollSpeed;
+		}
+		return baseSpeed;
+	}
+
+	/** px por ms de uma nota (0,45 × velocidade, como no Codename/Kade). */
+	public inline function pxOf(n:NoteData):Float
+		return 0.45 * speedOf(n) / rate;
+
+	/** Define a velocidade de uma lane (null volta à do jogo). */
+	public function setLaneSpeed(lane:Int, v:Null<Float>):Void
+	{
+		if (lane >= 0 && lane < receptors.length)
+			receptors[lane].scrollSpeed = v;
+		recalc();
+	}
+
+	/** Janela de spawn: a mais lenta das velocidades em uso decide quanto tempo antes a nota precisa existir. */
+	function recalc():Void
+	{
+		var slow = baseSpeed;
+		if (Settings.d.scrollMode != 1)
+			for (r in receptors)
+				if (r.scrollSpeed != null && r.scrollSpeed < slow)
+					slow = r.scrollSpeed;
+		spawnMs = (FlxG.height + 160) / (0.45 * Math.max(0.05, slow) / rate);
 	}
 
 	/** Cria os sprites das notas que entram na janela de tela e posiciona todas. */
@@ -118,7 +156,8 @@ class Strumline extends FlxGroup
 		var r = receptors[n.lane];
 		var dt = n.time - songPos;
 		// usa o centro atual do receptor: scripts podem mover receptores e as notas acompanham
-		var cy = n.holding ? r.cy : r.cy + (downscroll ? -dt : dt) * pxPerMs;
+		var px = pxOf(n);
+		var cy = n.holding ? r.cy : r.cy + (downscroll ? -dt : dt) * px;
 
 		if (n.head != null)
 		{
@@ -135,7 +174,7 @@ class Strumline extends FlxGroup
 		var a = (n.missed || n.dropped) ? 0.3 : 0.6;
 		var tail = n.tail;
 		var body = n.body;
-		var bodyPx = remaining * pxPerMs - tail.height;
+		var bodyPx = remaining * px - tail.height;
 		if (bodyPx < 1)
 		{
 			body.visible = false;
@@ -235,7 +274,7 @@ class Strumline extends FlxGroup
 		for (n in activeNotes)
 			if (!n.hit && n.head != null && (best == null || n.time < best.time))
 				best = n;
-		var t = "px/s " + Math.round(pxPerMs * 1000);
+		var t = "px/s " + Math.round(0.45 * baseSpeed / rate * 1000);
 		if (best != null)
 			t += "  nota: dt " + Math.round(best.time - songPos) + " ms, y " + Math.round(best.head.y + best.head.height / 2) + " (seta " + Math.round(receptors[best.lane].cy) + ")";
 		return t;
