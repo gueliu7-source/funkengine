@@ -1,5 +1,6 @@
 package ui;
 
+import core.ChartFiles;
 import core.Paths;
 import haxe.Json;
 
@@ -55,11 +56,11 @@ class SongList
 	public static function hasAny(id:String):Bool
 	{
 		for (s in DIFF_SUFFIX)
-			if (Paths.exists('data/songs/$id/$id$s.json'))
+			if (ChartFiles.exists(id, s))
 				return true;
 		return false;
 	}
 
 	public static function hasDiff(id:String, diff:Int):Bool
-		return Paths.exists('data/songs/$id/$id${DIFF_SUFFIX[diff]}.json');
+		return ChartFiles.exists(id, DIFF_SUFFIX[diff]);
 }

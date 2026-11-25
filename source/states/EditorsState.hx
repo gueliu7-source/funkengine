@@ -81,7 +81,7 @@ class EditorsState extends FlxState
 			if (idx >= songs.length)
 				break;
 			var id = songs[idx];
-			var has = Paths.exists('data/songs/$id/$id${DIFFS[diff]}.json');
+			var has = core.ChartFiles.exists(id, DIFFS[diff]);
 			style(rows[i], id + (has ? "" : "   (novo chart)"), idx == cur, has);
 		}
 		hint.text = "↑↓ música   ←→ dificuldade: " + DIFF_NAMES[diff].toUpperCase() + "   ENTER abrir   ESC voltar";

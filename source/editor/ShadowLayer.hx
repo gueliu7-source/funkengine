@@ -59,10 +59,10 @@ class ShadowLayer extends FlxGroup
 		for (n in ["normal", "easy", "hard"])
 		{
 			var suf = suffixOf(n);
-			if (suf != ChartEditorState.suffix && Paths.exists('data/songs/${doc.songId}/${doc.songId}$suf.json'))
+			if (suf != ChartEditorState.suffix && core.ChartFiles.exists(doc.songId, suf))
 				out.push(n);
 		}
-		if (Paths.exists('data/songs/${doc.songId}/${doc.songId}${ChartEditorState.suffix}.json'))
+		if (core.ChartFiles.exists(doc.songId, ChartEditorState.suffix))
 			out.push(SAVED);
 		return out;
 	}

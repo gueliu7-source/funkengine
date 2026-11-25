@@ -1,6 +1,7 @@
 package editor;
 
 import core.Chart;
+import core.ChartFormat;
 import core.Conductor.BpmSegment;
 import core.ModManager;
 import core.Paths;
@@ -29,7 +30,7 @@ class ChartIO
 		var recovered = c != null;
 		if (c == null)
 			c = ChartLoader.load(id, suffix, 0);
-		var isNew = (c == null) || !Paths.exists('data/songs/$id/$id$suffix.json');
+		var isNew = (c == null) || !core.ChartFiles.exists(id, suffix);
 		if (c == null)
 		{
 			c = new Chart();
@@ -53,7 +54,7 @@ class ChartIO
 		{
 			var path = autosavePathFor(doc.songId, doc.suffix);
 			ModManager.mkdirs(path.substr(0, path.lastIndexOf("/")));
-			File.saveContent(path, Json.stringify(toJson(doc.chart)));
+			File.saveContent(path, ChartFormat.write(doc.chart));
 			return true;
 		}
 		catch (e:Dynamic)
@@ -69,7 +70,7 @@ class ChartIO
 		var a = autosavePathFor(id, suffix);
 		if (!sys.FileSystem.exists(a))
 			return false;
-		var c = ModManager.saveRoot() + '/data/songs/$id/$id$suffix.json';
+		var c = ModManager.saveRoot() + '/data/songs/$id/$id$suffix.ffc';
 		return !sys.FileSystem.exists(c) || sys.FileSystem.stat(a).mtime.getTime() > sys.FileSystem.stat(c).mtime.getTime();
 		#else
 		return false;
@@ -86,7 +87,7 @@ class ChartIO
 	}
 
 	public static function pathFor(doc:ChartDoc):String
-		return ModManager.saveRoot() + '/data/songs/${doc.songId}/${doc.songId}${doc.suffix}.json';
+		return ModManager.saveRoot() + '/data/songs/${doc.songId}/${doc.songId}${doc.suffix}.ffc';
 
 	/** Devolve o caminho salvo (ou null em caso de erro). */
 	public static function save(doc:ChartDoc):Null<String>
@@ -96,7 +97,7 @@ class ChartIO
 		{
 			var path = pathFor(doc);
 			ModManager.mkdirs(path.substr(0, path.lastIndexOf("/")));
-			File.saveContent(path, Json.stringify(toJson(doc.chart)));
+			File.saveContent(path, ChartFormat.write(doc.chart));
 			Paths.rebuild(Settings.d.enabledMods);
 			doc.dirty = false;
 			clearAutosave(doc.songId, doc.suffix);

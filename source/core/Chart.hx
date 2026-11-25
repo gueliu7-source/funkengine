@@ -135,7 +135,7 @@ class ChartLoader
 	/** suffix: "" (normal), "-easy" ou "-hard". */
 	public static function load(id:String, suffix:String = "", week:Int = 0):Null<Chart>
 	{
-		var text = Paths.getText('data/songs/$id/$id$suffix.json');
+		var text = ChartFiles.text(id, suffix);
 		if (text == null)
 			text = Paths.getText('data/songs/$id/$id.json');
 		if (text == null)
@@ -159,8 +159,14 @@ class ChartLoader
 				trace('[Chart] _meta.json inválido em $id');
 		}
 
-		var json:Dynamic = Json.parse(extractJson(text));
-		var chart:Chart = (Reflect.field(json, "format") == "funkforge-2") ? fromV2(id, json) : fromLegacy(id, json, week);
+		var chart:Chart;
+		if (ChartFormat.isFfc(text))
+			chart = ChartFormat.read(id, text);
+		else
+		{
+			var json:Dynamic = Json.parse(extractJson(text));
+			chart = (Reflect.field(json, "format") == "funkforge-2") ? fromV2(id, json) : fromLegacy(id, json, week);
+		}
 
 		if (meta != null)
 		{

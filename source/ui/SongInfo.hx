@@ -17,15 +17,12 @@ class SongInfo
 		var icon = "face";
 		try
 		{
-			var text:String = null;
-			for (s in ["", "-hard", "-easy"])
-				if (text == null)
-					text = Paths.getText('data/songs/$id/$id$s.json');
-			if (text != null)
+			var ch = core.Chart.ChartLoader.load(id, "");
+			if (ch == null)
+				ch = core.Chart.ChartLoader.load(id, "-hard");
+			if (ch != null)
 			{
-				var j:Dynamic = haxe.Json.parse(core.Chart.ChartLoader.extractJson(text));
-				var s:Dynamic = Reflect.field(j, "song") != null && !Std.isOfType(Reflect.field(j, "song"), String) ? Reflect.field(j, "song") : j;
-				var p2:String = Reflect.field(s, "player2") != null ? Std.string(Reflect.field(s, "player2")) : "dad";
+				var p2 = ch.player2;
 				icon = p2;
 				var ct = Paths.getText('data/characters/$p2.json');
 				if (ct != null)
