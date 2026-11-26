@@ -1,0 +1,2 @@
+{ "name": "Strum Tween", "description": "Anima as setas. Alvo: player, opponent, all, 0-7 ou lista (0,2). Propriedades: x, y, angle, alpha, size, waveX, waveY, waveSpeed.", "color": "#B060F0",
+  "params": [ { "label": "Alvo,propriedade,valor", "kind": "text", "default": "player,angle,360" }, { "label": "Duração(s),ease,escalonamento(s)", "kind": "text", "default": "1,quadOut,0.1" } ] }

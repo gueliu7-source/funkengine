@@ -46,3 +46,20 @@ se houver ffmpeg). Ele cria os arquivos em mods/<mod>/ e registra a música em d
 Add Character (v1 "id" ou "id:tag"; v2 "seguir,dx,dy"), Remove Character, Move Character, Character Visible,
 Set Dance Speed, Set Zoom, Camera Angle, Screen Fade, Set Health, Play Sound. Play Animation também aceita a tag de extras.
 F3 no jogo: painel de FPS/RAM (oculto, simples, completo).
+
+=== MODCHART (scripts .hx/.lua da música) ===
+Alvo: 0-7 (0-3 oponente, 4-7 jogador), "player", "opponent", "all" ou lista "0,2,5".
+Propriedades: x, y (centro da seta na tela), angle, alpha, size (1 = normal), waveX, waveY (balanço em px), waveSpeed (ciclos/s).
+As notas acompanham a seta. A velocidade por seta continua em setStrumSpeed(jogador, lane, velocidade).
+  tweenStrum("giro", "player", {angle = 360}, 1, "quadOut", 0.1)   -- 0,1 s de atraso entre uma seta e a próxima
+  setStrum("opponent", {alpha = 0.3, x = 200})                      -- muda na hora
+  getStrum(4, "y")                                                  -- lê uma propriedade
+  resetStrums(0.5)                                                  -- volta tudo ao normal em 0,5 s (0 = na hora)
+  setStrum("all", {waveX = 30, waveSpeed = 0.5})                    -- balanço contínuo
+Sem script: o evento "Strum Tween" do chart (Chart Editor) faz o mesmo: Alvo,propriedade,valor + duração,ease,escalonamento.
+
+=== EXTRAS DOS SCRIPTS DE MENU ===
+tween(obj, {x=100}, 0.5, "quadOut", aoTerminar) · timer(seg, fn, ?vezes) · hover(obj) · clicked(obj)
+button(x, y, largura, altura, "texto", function() ... end, ?cor)  → objeto com .bg, .label, .enabled, setText()
+list(x, y, largura, ["A","B"], function(i, nome) ... end, ?tamanho) → ↑↓/W S/mouse/ENTER; objeto com .index, selected(), setIndex()
+saveData("chave", valor) / loadData("chave", padrão): salva entre sessões. Exemplo completo: mods/example/states/demo.hx

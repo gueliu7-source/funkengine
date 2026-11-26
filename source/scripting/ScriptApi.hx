@@ -80,7 +80,7 @@ class ScriptApi
 		return eases;
 	}
 
-	static function ease(name:String):Float->Float
+	public static function ease(name:String):Float->Float
 	{
 		var f = easeMap().get(name == null ? "linear" : name);
 		return f == null ? FlxEase.linear : f;
@@ -346,6 +346,14 @@ class ScriptApi
 		m.set("setReceptorAlpha", function(i:Int, a:Float):Void {
 			g.receptor(i).alpha = a;
 		});
+
+		// --- modchart (ver game/Modchart.hx). alvo: 0-7, "player", "opponent", "all" ou "0,2,5"
+		// tweenStrum("t", "player", {y = 300, angle = 360}, 1, "quadOut", 0.1)   (0,1 = atraso entre setas)
+		m.set("tweenStrum", function(tag:String, target:Dynamic, props:Dynamic, duration:Float, ?easeName:String, ?stagger:Float):Void
+			game.Modchart.tween(g, tag, target, props, duration, easeName, stagger));
+		m.set("setStrum", function(target:Dynamic, props:Dynamic):Void game.Modchart.set(g, target, props));
+		m.set("getStrum", function(i:Int, prop:String):Float return game.Modchart.get(g, i, prop));
+		m.set("resetStrums", function(?duration:Float):Void game.Modchart.reset(g, duration));
 
 		return m;
 	}

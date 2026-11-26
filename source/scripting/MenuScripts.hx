@@ -13,6 +13,7 @@ import flixel.tweens.FlxTween;
 import flixel.util.FlxTimer;
 import hscript.Interp;
 import hscript.Parser;
+import scripting.MenuUi;
 import ui.MenuUtil;
 
 /**
@@ -20,7 +21,8 @@ import ui.MenuUtil;
  * Telas: title, mainmenu, story, freeplay, options, mods, controls (e states/<nome>.hx, ver ScriptedState).
  * Callbacks: onCreate, onCreatePost, onUpdate(elapsed), onSelect(id) (true = cancela o padrão), onDestroy.
  * Cada script enxerga `state` (a tela), FlxG/FlxSprite/FlxText/FlxTween/FlxTimer/FlxEase/Paths/Settings/Math/Std
- * e as funções add, remove, insert, makeSprite, makeText, color, sound, music, go, get, set, readText, readJson.
+ * e as funções add, remove, insert, makeSprite, makeText, color, sound, music, go, get, set, readText, readJson,
+ * tween, timer, hover, clicked, button, list, saveData, loadData.
  */
 class MenuScripts
 {
@@ -32,6 +34,9 @@ class MenuScripts
 	var shownError:Bool = false;
 
 	var rels:Array<String>;
+	var buttons:Array<MenuButton> = [];
+	var lists:Array<MenuList> = [];
+	var sav:flixel.util.FlxSave;
 
 	/** Scripts de uma tela de menu (scripts/menus/all.hx + scripts/menus/<name>.hx). */
 	public static function make(state:FlxState, name:String):MenuScripts
@@ -62,6 +67,10 @@ class MenuScripts
 			call("onCreate");
 			call("onCreatePost");
 		}
+		for (b in buttons)
+			b.update();
+		for (l in lists)
+			l.update();
 		if (interps.length > 0)
 			call("onUpdate", [elapsed]);
 	}
@@ -158,6 +167,55 @@ class MenuScripts
 			v.set("go", function(target:String) Nav.go(target));
 			v.set("get", function(f:String):Dynamic return Reflect.getProperty(state, f));
 			v.set("set", function(f:String, val:Dynamic) Reflect.setProperty(state, f, val));
+			v.set("tween", function(obj:Dynamic, props:Dynamic, duration:Float, ?easeName:String, ?onDone:Void->Void):FlxTween {
+				return FlxTween.tween(obj, props, duration, {
+					ease: ScriptApi.ease(easeName),
+					onComplete: function(_) {
+						if (onDone != null)
+							onDone();
+					}
+				});
+			});
+			v.set("timer", function(seconds:Float, fn:Void->Void, ?loops:Int):FlxTimer
+				return new FlxTimer().start(seconds, function(_) fn(), loops == null ? 1 : loops));
+			v.set("hover", function(o:Dynamic):Bool return FlxG.mouse.overlaps(o));
+			v.set("clicked", function(o:Dynamic):Bool return FlxG.mouse.justPressed && FlxG.mouse.overlaps(o));
+			// button(x, y, largura, altura, "texto", function() {...}, ?cor)  -> objeto com .bg, .label, .enabled, setText()
+			v.set("button", function(x:Float, y:Float, w:Int, h:Int, text:String, onClick:Void->Void, ?col:String):MenuButton {
+				FlxG.mouse.visible = true;
+				var b = new MenuButton(x, y, w, h, text, onClick, col == null ? 0xFF3A3A5A : Hex.color(col, 0xFF3A3A5A));
+				state.add(b.bg);
+				state.add(b.label);
+				buttons.push(b);
+				return b;
+			});
+			// list(x, y, largura, ["A", "B"], function(i, nome) {...}, ?tamanho)  -> objeto com .index, selected(), setIndex()
+			v.set("list", function(x:Float, y:Float, w:Float, labels:Array<String>, onPick:Int->String->Void, ?size:Int):MenuList {
+				var l = new MenuList(x, y, w, labels, size == null ? 28 : size, onPick);
+				for (t in l.items)
+					state.add(t);
+				lists.push(l);
+				return l;
+			});
+			// dados salvos por mod/tela: saveData("chave", valor) / loadData("chave", padrão)
+			v.set("saveData", function(key:String, val:Dynamic):Void {
+				if (sav == null)
+				{
+					sav = new flixel.util.FlxSave();
+					sav.bind("menuscripts");
+				}
+				Reflect.setField(sav.data, name.split(":").join("_") + "_" + key, val);
+				sav.flush();
+			});
+			v.set("loadData", function(key:String, ?def:Dynamic):Dynamic {
+				if (sav == null)
+				{
+					sav = new flixel.util.FlxSave();
+					sav.bind("menuscripts");
+				}
+				var k = name.split(":").join("_") + "_" + key;
+				return Reflect.hasField(sav.data, k) ? Reflect.field(sav.data, k) : def;
+			});
 			v.set("readText", function(rel:String):String return Paths.getText(rel));
 			v.set("readJson", function(rel:String):Dynamic {
 				var t = Paths.getText(rel);

@@ -109,6 +109,8 @@ class Strumline extends FlxGroup
 	public function updateNotes(songPos:Float):Void
 	{
 		curMs = songPos;
+		for (r in receptors)
+			r.tickMods(songPos);
 		cur = map.at(songPos);
 		while (pendingIdx < pending.length && pending[pendingIdx].scrollPos - cur < spawnMs)
 			spawn(pending[pendingIdx++]);
@@ -165,13 +167,14 @@ class Strumline extends FlxGroup
 		var dt = n.scrollPos - cur;
 		// usa o centro atual do receptor: scripts podem mover receptores e as notas acompanham
 		var px = pxOf(n);
-		var cy = n.holding ? r.cy : r.cy + (downscroll ? -dt : dt) * px;
+		var ry = r.py();
+		var cy = n.holding ? ry : ry + (downscroll ? -dt : dt) * px;
 
 		if (n.head != null)
 		{
 			n.head.alpha = (n.missed ? 0.3 : 1) * n.nAlpha;
 			n.head.visible = n.nVisible;
-			n.head.setPosition(r.cx - n.head.width / 2, cy + n.yOff - n.head.height / 2);
+			n.head.setPosition(r.px() - n.head.width / 2, cy + n.yOff - n.head.height / 2);
 		}
 		if (n.body == null)
 			return;
@@ -199,7 +202,7 @@ class Strumline extends FlxGroup
 			}
 		}
 		body.alpha = tail.alpha = a;
-		body.x = tail.x = r.cx - body.width / 2;
+		body.x = tail.x = r.px() - body.width / 2;
 
 		if (downscroll)
 		{

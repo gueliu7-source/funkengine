@@ -531,7 +531,7 @@ class PlayState extends FlxState
 			n.done = true;
 
 		if (rating == "sick" && Settings.d.noteSplashes)
-			splashes.spawn(n.lane, r.cx, r.cy);
+			splashes.spawn(n.lane, r.px(), r.py());
 		hud.popRating(rating, judge.combo, diff);
 		hud.refresh();
 		scripts.curNote = n;
@@ -800,6 +800,8 @@ class PlayState extends FlxState
 					flixel.tweens.FlxTween.tween(camGame, {angle: num(v1, 0)}, ad, {ease: flixel.tweens.FlxEase.quadInOut});
 			case "Screen Fade":
 				screenFade(v1, num(v2, 0.5));
+			case "Strum Tween": // v1 = "alvo,propriedade,valor" · v2 = "duração(s),ease,escalonamento(s)"
+				game.Modchart.fromEvent(this, v1, v2);
 			case "Set Health":
 				judge.health = Math.max(0, Math.min(2, num(v1, 50) / 50));
 			case "Play Sound":
