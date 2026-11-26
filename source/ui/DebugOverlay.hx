@@ -120,7 +120,7 @@ class DebugOverlay extends Sprite
 			if (states.PlayState.instance != null && Std.isOfType(FlxG.state, states.PlayState))
 			{
 				var ps = states.PlayState.instance;
-				t += "\nvelocidade das notas " + core.Scroll.fmt(ps.scrollSpeed) + "\nvocê: " + ps.playerStrum.debugInfo(core.Conductor.songPosition - Settings.d.offsetMs) + "\noponente: " + ps.opponentStrum.debugInfo(core.Conductor.songPosition - Settings.d.offsetMs);
+				t += "\nvelocidade das notas " + core.Scroll.fmt(ps.scrollSpeed) + "  [" + core.Scroll.describe() + ", chart " + core.Scroll.fmt(ps.chart.speed) + "]" + "\nvocê: " + ps.playerStrum.debugInfo(core.Conductor.songPosition - Settings.d.offsetMs) + "\noponente: " + ps.opponentStrum.debugInfo(core.Conductor.songPosition - Settings.d.offsetMs);
 			}
 			t += "\n" + stateName() + "   objetos " + (st != null ? st.members.length : 0) + "   F3: ocultar";
 		}

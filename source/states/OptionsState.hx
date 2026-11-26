@@ -89,6 +89,8 @@ class OptionsState extends FlxState
 			case 7: d.hudJudgementCounter = !d.hudJudgementCounter;
 			case 8: d.hudMsDisplay = !d.hudMsDisplay;
 			case 9:
+				if (d.scrollMode == 0 && dir != 0 && (FlxG.keys.justPressed.LEFT || FlxG.keys.justPressed.RIGHT || FlxG.keys.justPressed.A || FlxG.keys.justPressed.D))
+					d.scrollMode = 1; // ←→ no modo "do chart" não fazia nada: agora passa para velocidade fixa
 				if (d.scrollMode == 1)
 					d.scrollSpeed = Math.min(10, Math.max(0.5, Math.round((d.scrollSpeed + 0.1 * dir) * 10) / 10));
 				else if (d.scrollMode == 2)
