@@ -29,6 +29,24 @@ class VideoSpr extends FlxVideoSprite
 		all.push(this);
 	}
 
+	/** Como no Psych: (x, y) é o canto da caixa de tamanho natural do vídeo e a escala cresce a partir do centro dela.
+	 * Garantido aqui todo frame, porque o tamanho do vídeo só é conhecido depois de aberto e updateHitbox() mudaria o ponto. */
+	override public function updateHitbox():Void
+	{
+	}
+
+	override public function draw():Void
+	{
+		if (frameWidth > 0)
+		{
+			width = frameWidth;
+			height = frameHeight;
+			offset.set(0, 0);
+			origin.set(frameWidth / 2, frameHeight / 2);
+		}
+		super.draw();
+	}
+
 	/** Abre o arquivo já na criação (sem tocar), para o play() depois não atrasar. */
 	public function preload():Void
 	{
@@ -37,7 +55,7 @@ class VideoSpr extends FlxVideoSprite
 		var abs = sys.FileSystem.fullPath(file);
 		loaded = load(abs, loops ? [":input-repeat=65535"] : []);
 		if (!loaded)
-			trace("[video] não abriu: " + abs);
+			core.Log.add("[video] não abriu: " + abs);
 	}
 
 	/** Começa a tocar (uma vez). */

@@ -537,6 +537,8 @@ class PsychLua
 				var gr = Paths.graphic("images/" + image + ".png");
 				if (gr != null)
 					s.loadGraphic(gr);
+				else
+					core.Log.add("imagem não encontrada: images/" + image + ".png (makeLuaSprite '" + tag + "')");
 			}
 			s.antialiasing = Settings.d.antialiasing;
 			g.tagged.set(tag, s);
@@ -553,6 +555,8 @@ class PsychLua
 					f = Paths.packer("images/" + image);
 				if (f != null)
 					s.frames = f;
+				else
+					core.Log.add("atlas não encontrado: images/" + image + " (makeAnimatedLuaSprite '" + tag + "')");
 			}
 			s.antialiasing = Settings.d.antialiasing;
 			g.tagged.set(tag, s);
@@ -747,7 +751,7 @@ class PsychLua
 			if (!warned.exists(fn))
 			{
 				warned.set(fn, true);
-				trace("[psych] vídeo ainda não é suportado: " + fn);
+				core.Log.add("[psych] vídeo: " + fn);
 			}
 		}
 		#if FEATURE_VIDEO

@@ -142,6 +142,7 @@ class ScriptManager
 			if (r.path == real)
 				return; // já carregado (personagem repetido)
 		var rel = real;
+		core.Log.add("script: " + real);
 
 		if (rel.endsWith(".hx"))
 			runners.push(new HScriptRunner(this, real, Paths.readFile(real)));
@@ -247,6 +248,7 @@ class ScriptManager
 
 	public function reportError(msg:String):Void
 	{
+		core.Log.add("ERRO " + msg);
 		errors.push(msg);
 		if (game != null)
 			game.showError(msg);

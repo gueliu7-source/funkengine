@@ -141,6 +141,7 @@ class PlayState extends FlxState
 		Conductor.sectionHit.add(onSection);
 		subStateClosed.add(onSubClosed);
 
+		core.Log.begin("música: " + chart.id + difficulty);
 		scripts = new ScriptManager(this);
 		scripts.loadAll(chart);
 		scripts.call("onCreate");
@@ -390,6 +391,7 @@ class PlayState extends FlxState
 		voices.time = 0;
 		oppVoices.time = 0;
 		hud.setSongLength(inst.length);
+		core.Log.add("onSongStart (" + scripts.runners.length + " scripts)");
 		scripts.call("onSongStart");
 	}
 
