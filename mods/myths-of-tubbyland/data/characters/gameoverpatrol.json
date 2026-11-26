@@ -1,0 +1,39 @@
+{
+	"animations": [
+		{
+			"offsets": [-146, -84],
+			"loop": true,
+			"fps": 13,
+			"anim": "deathConfirm",
+			"indices": [],
+			"name": "deathConfirm"
+		},
+		{
+			"offsets": [-146, -84],
+			"indices": [],
+			"fps": 8,
+			"anim": "firstDeath",
+			"loop": false,
+			"name": "firstDeath"
+		},
+		{
+			"offsets": [-146, -84],
+			"indices": [],
+			"fps": 8,
+			"anim": "deathLoop",
+			"loop": true,
+			"name": "deathLoop"
+		}
+	],
+	"vocals_file": "",
+	"no_antialiasing": false,
+	"image": "characters/morningpatrol/gameover",
+	"position": [-650, -310],
+	"healthicon": "guardian",
+	"flip_x": true,
+	"healthbar_colors": [161, 161, 161],
+	"camera_position": [100, 100],
+	"sing_duration": 4,
+	"scale": 7,
+	"_editor_isPlayer": true
+}

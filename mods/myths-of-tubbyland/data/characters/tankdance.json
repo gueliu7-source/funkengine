@@ -1,0 +1,31 @@
+{
+	"animations": [
+		{
+			"offsets": [0, 0],
+			"indices": [],
+			"fps": 12,
+			"anim": "idle",
+			"loop": false,
+			"name": "idle"
+		},
+		{
+			"offsets": [0, 0],
+			"indices": [],
+			"fps": 13,
+			"anim": "dance",
+			"loop": false,
+			"name": "idle"
+		}
+	],
+	"vocals_file": "",
+	"no_antialiasing": true,
+	"image": "characters/morningpatrol/tank_dance",
+	"position": [205, -262],
+	"healthicon": "tinkytank",
+	"flip_x": false,
+	"healthbar_colors": [98, 0, 183],
+	"camera_position": [90, -70],
+	"sing_duration": 4,
+	"scale": 2.4,
+	"_editor_isPlayer": false
+}

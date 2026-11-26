@@ -1,0 +1,39 @@
+{
+	"animations": [
+		{
+			"offsets": [-146, -84],
+			"loop": false,
+			"fps": 24,
+			"anim": "firstDeath",
+			"indices": [],
+			"name": "firstDeath"
+		},
+		{
+			"offsets": [-146, -84],
+			"loop": true,
+			"fps": 13,
+			"anim": "deathConfirm",
+			"indices": [],
+			"name": "deathConfirm"
+		},
+		{
+			"offsets": [-146, -84],
+			"indices": [],
+			"fps": 12,
+			"anim": "deathLoop",
+			"loop": true,
+			"name": "deathLoop"
+		}
+	],
+	"vocals_file": "",
+	"no_antialiasing": false,
+	"image": "characters/thelionsmouth/gameoverlion",
+	"position": [-650, -310],
+	"healthicon": "guardian",
+	"flip_x": true,
+	"healthbar_colors": [161, 161, 161],
+	"camera_position": [100, 100],
+	"sing_duration": 4,
+	"scale": 5.6,
+	"_editor_isPlayer": true
+}

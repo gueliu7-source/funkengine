@@ -1,0 +1,5 @@
+{"items":[
+  {"id":"freeplay","anim":"freeplay","state":"freeplay"},
+  {"id":"options","anim":"options","state":"options"},
+  {"id":"creditos","label":"Créditos","state":"mod:creditos"}
+]}
