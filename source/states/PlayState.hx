@@ -214,12 +214,13 @@ class PlayState extends FlxState
 		for (n in chart.notes)
 			(n.player ? plr : opp).push(n);
 
+		var smap = core.ScrollMap.fromChart(chart);
 		var down = Settings.d.downscroll;
 		var y = down ? 615.0 : 105.0;
 		var mid = Settings.d.middlescroll;
 
-		opponentStrum = new Strumline(false, opp, 320, y, scrollSpeed, Conductor.rate, mid, camHUD);
-		playerStrum = new Strumline(true, plr, mid ? 640 : 960, y, scrollSpeed, Conductor.rate, false, camHUD);
+		opponentStrum = new Strumline(false, opp, 320, y, scrollSpeed, Conductor.rate, mid, camHUD, smap);
+		playerStrum = new Strumline(true, plr, mid ? 640 : 960, y, scrollSpeed, Conductor.rate, false, camHUD, smap);
 		opponentStrum.onSpawn = playerStrum.onSpawn = function(n:NoteData) {
 			if (scripts != null && scripts.hasPsych)
 			{
@@ -401,7 +402,9 @@ class PlayState extends FlxState
 			return;
 		}
 
-		scripts.call("onUpdate", [elapsed]);
+		var hasScripts = scripts.runners.length > 0; // evita criar o array de argumentos todo frame sem scripts
+		if (hasScripts)
+			scripts.call("onUpdate", [elapsed]);
 		Conductor.update(elapsed, started ? inst : null);
 		if (!started && Conductor.songPosition >= 0)
 			startSong();
@@ -441,7 +444,8 @@ class PlayState extends FlxState
 		for (tag => c in extras)
 			c.holdingKeys = extraFollow.get(tag) == "bf" && boyfriend.holdingKeys;
 		super.update(elapsed);
-		scripts.call("onUpdatePost", [elapsed]);
+		if (hasScripts)
+			scripts.call("onUpdatePost", [elapsed]);
 	}
 
 	// ------------------------------------------------------------------ input do jogador

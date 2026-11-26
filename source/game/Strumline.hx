@@ -1,6 +1,7 @@
 package game;
 
 import core.Chart.NoteData;
+import core.ScrollMap;
 import core.Settings;
 import flixel.FlxCamera;
 import flixel.FlxG;
@@ -31,17 +32,26 @@ class Strumline extends FlxGroup
 	var baseSpeed:Float = 1;
 	var rate:Float = 1;
 	var spawnMs:Float;
+	var map:ScrollMap;
+	var cur:Float = 0; // posição de rolagem atual
+	var curMs:Float = 0;
 	var strumY:Float;
 
-	public function new(isPlayer:Bool, notes:Array<NoteData>, centerX:Float, strumY:Float, speed:Float, rate:Float, hidden:Bool, cam:FlxCamera)
+	public function new(isPlayer:Bool, notes:Array<NoteData>, centerX:Float, strumY:Float, speed:Float, rate:Float, hidden:Bool, cam:FlxCamera, ?map:ScrollMap)
 	{
 		super();
+		this.map = map != null ? map : new ScrollMap();
 		this.cam = cam;
 		this.isPlayer = isPlayer;
 		this.hidden = hidden;
 		this.strumY = strumY;
 		this.downscroll = Settings.d.downscroll;
 		pending = notes;
+		for (n in notes)
+		{
+			n.scrollPos = this.map.at(n.time);
+			n.scrollEnd = n.sustain > 0 ? this.map.at(n.time + n.sustain) : n.scrollPos;
+		}
 		setSpeed(speed, rate);
 
 		for (i in 0...4)
@@ -102,14 +112,16 @@ class Strumline extends FlxGroup
 	/** Cria os sprites das notas que entram na janela de tela e posiciona todas. */
 	public function updateNotes(songPos:Float):Void
 	{
-		while (pendingIdx < pending.length && pending[pendingIdx].time - songPos < spawnMs)
+		curMs = songPos;
+		cur = map.at(songPos);
+		while (pendingIdx < pending.length && pending[pendingIdx].scrollPos - cur < spawnMs)
 			spawn(pending[pendingIdx++]);
 
 		var i = activeNotes.length;
 		while (--i >= 0)
 		{
 			var n = activeNotes[i];
-			if (!n.done && songPos - (n.time + n.sustain) > spawnMs)
+			if (!n.done && cur - n.scrollEnd > spawnMs)
 				n.done = true; // saiu da tela por trás
 			if (n.done)
 			{
@@ -117,7 +129,7 @@ class Strumline extends FlxGroup
 				activeNotes.splice(i, 1);
 			}
 			else if (!hidden)
-				place(n, songPos);
+				place(n);
 		}
 	}
 
@@ -151,10 +163,10 @@ class Strumline extends FlxGroup
 		activeNotes.push(n);
 	}
 
-	function place(n:NoteData, songPos:Float):Void
+	function place(n:NoteData):Void
 	{
 		var r = receptors[n.lane];
-		var dt = n.time - songPos;
+		var dt = n.scrollPos - cur;
 		// usa o centro atual do receptor: scripts podem mover receptores e as notas acompanham
 		var px = pxOf(n);
 		var cy = n.holding ? r.cy : r.cy + (downscroll ? -dt : dt) * px;
@@ -168,7 +180,7 @@ class Strumline extends FlxGroup
 		if (n.body == null)
 			return;
 
-		var remaining = n.holding ? (n.time + n.sustain - songPos) : n.sustain;
+		var remaining = n.holding ? (n.scrollEnd - cur) : (n.scrollEnd - n.scrollPos);
 		if (remaining < 0)
 			remaining = 0;
 		var a = (n.missed || n.dropped) ? 0.3 : 0.6;
@@ -274,7 +286,7 @@ class Strumline extends FlxGroup
 		for (n in activeNotes)
 			if (!n.hit && n.head != null && (best == null || n.time < best.time))
 				best = n;
-		var t = "px/s " + Math.round(0.45 * baseSpeed / rate * 1000);
+		var t = "px/s " + Math.round(0.45 * baseSpeed / rate * 1000 * map.multAt(songPos)) + (map.trivial ? "" : "  SV ×" + Math.round(map.multAt(songPos) * 100) / 100);
 		if (best != null)
 			t += "  nota: dt " + Math.round(best.time - songPos) + " ms, y " + Math.round(best.head.y + best.head.height / 2) + " (seta " + Math.round(receptors[best.lane].cy) + ")";
 		return t;

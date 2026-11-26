@@ -34,6 +34,8 @@ class NoteData
 	public var scaleX:Float = 1;
 	public var scaleY:Float = 1;
 	public var noAnim:Bool = false;
+	public var scrollPos:Float = 0; // posição no ScrollMap (cabeça)
+	public var scrollEnd:Float = 0; // posição no ScrollMap (fim do sustain)
 	public var scrollSpeed:Null<Float> = null; // velocidade só desta nota (estilo Codename); null = a da seta/jogo
 
 	// estado de jogo

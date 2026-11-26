@@ -39,6 +39,7 @@
 	<haxedef name="hscriptPos" />
 
 	<!-- Otimizações: desliga recursos do Flixel que a engine não usa -->
+	<haxedef name="analyzer-optimize" unless="debug" />
 	<haxedef name="FLX_NO_DEBUG" unless="debug" />
 	<haxedef name="FLX_NO_FOCUS_LOST_SCREEN" />
 	<haxedef name="FLX_NO_TOUCH" if="desktop" />

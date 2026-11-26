@@ -1,0 +1,2 @@
+{ "name": "Scroll Velocity", "description": "Muda a velocidade de rolagem das notas de forma contínua (estilo SV): as notas aceleram/desaceleram sem pular.", "color": "#E0A040",
+  "params": [ { "label": "Multiplicador", "kind": "number", "default": "1" }, { "label": "Transição (ms)", "kind": "number", "default": "0" } ] }
