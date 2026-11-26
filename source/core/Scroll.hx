@@ -9,36 +9,18 @@ package core;
  */
 class Scroll
 {
-	/** Velocidade efetiva para uma velocidade base (a do chart, ou chart × evento). */
-	public static function effective(base:Float):Float
-	{
-		return switch (Settings.d.scrollMode)
-		{
-			case 1: Settings.d.scrollSpeed;
-			case 2: base * Settings.d.scrollMult;
-			default: base;
-		}
-	}
+	/** A velocidade é sempre a do chart (e dos eventos); não há mais modos nas Opções. */
+	public static inline function effective(base:Float):Float
+		return base;
 
-	/** Os eventos de mudança de velocidade valem? (não no modo fixo) */
 	public static inline function eventsApply():Bool
-		return Settings.d.scrollMode != 1;
+		return true;
 
 	public static function modeName():String
-		return switch (Settings.d.scrollMode)
-		{
-			case 1: "fixa";
-			case 2: "multiplicador";
-			default: "do chart";
-		}
+		return "do chart";
 
 	public static function describe():String
-		return switch (Settings.d.scrollMode)
-		{
-			case 1: "Fixa " + fmt(Settings.d.scrollSpeed);
-			case 2: "Chart × " + fmt(Settings.d.scrollMult);
-			default: "Do chart";
-		}
+		return "Do chart";
 
 	public static function fmt(v:Float):String
 		return Std.string(Math.round(v * 100) / 100);

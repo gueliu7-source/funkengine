@@ -5,6 +5,7 @@ import core.Paths;
 import core.Settings;
 import flixel.FlxG;
 import flixel.FlxSprite;
+import flixel.graphics.FlxGraphic;
 import flixel.group.FlxGroup;
 import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
@@ -19,10 +20,15 @@ private class Popup
 {
 	public var spr:FlxSprite;
 	public var life:Float = 0;
+	public var age:Float = 0;
+	public var base:Float = 1; // escala normal
+	public var delay:Float = 0; // atraso para animar os dígitos em sequência
+	public var wobble:Float = 0; // balanço lateral (rating ruim)
 
 	public function new(spr:FlxSprite)
 	{
 		this.spr = spr;
+		base = spr.scale.x;
 		spr.visible = false;
 		spr.active = false;
 	}
@@ -79,6 +85,8 @@ class Hud extends FlxGroup
 	var live:Array<Popup> = [];
 	var msText:FlxText;
 	var msLife:Float = 0;
+	var goldPool:Array<Popup>;
+	var goldBuilt:Bool = false;
 
 	public function new(judge:Judge, songTitle:String, p1Icon:String, p2Icon:String, p1Color:FlxColor, p2Color:FlxColor)
 	{
@@ -212,8 +220,10 @@ class Hud extends FlxGroup
 			var colors:Array<FlxColor> = [0xFF00D5FF, 0xFF6BFF6B, 0xFFFFB84D, 0xFFFF5A5A, 0xFFB01E1E];
 			for (i in 0...5)
 			{
-				var t = text(18, 250 + i * 26, 220, 20, FlxTextAlign.LEFT);
+				var t = text(18, 270 + i * 21, 200, 14, FlxTextAlign.LEFT);
 				t.color = colors[i];
+				t.alpha = 0.75;
+				t.borderSize = 1;
 				counters.push(t);
 				add(t);
 			}
@@ -276,6 +286,52 @@ class Hud extends FlxGroup
 			}
 			digitPools.push(list);
 		}
+	}
+
+	/** Sick dourado (estilo Forever): recolore o sick.png em tons de ouro, só na primeira vez que precisa. */
+	function ensureGold():Void
+	{
+		if (goldBuilt)
+			return;
+		goldBuilt = true;
+		var suffix = NoteSkin.pixel ? "-pixel" : "";
+		var folder = NoteSkin.pixel ? "pixelUI/" : "";
+		var g = Paths.graphic('images/$folder' + 'sick$suffix.png');
+		if (g == null)
+			g = Paths.graphic('images/sick.png');
+		if (g == null)
+			return;
+		var bd = g.bitmap.clone();
+		for (y in 0...bd.height)
+			for (x in 0...bd.width)
+			{
+				var px:Int = bd.getPixel32(x, y);
+				var a = (px >> 24) & 0xFF;
+				if (a == 0)
+					continue;
+				var l = (0.3 * ((px >> 16) & 0xFF) + 0.59 * ((px >> 8) & 0xFF) + 0.11 * (px & 0xFF)) / 255;
+				l = Math.min(1, l * 1.15);
+				var r = Std.int(110 + (255 - 110) * l);
+				var gg = Std.int(60 + (216 - 60) * l);
+				var b = Std.int(0 + (90 - 0) * l * l);
+				bd.setPixel32(x, y, (a << 24) | (r << 16) | (gg << 8) | b);
+			}
+		var gold = FlxGraphic.fromBitmapData(bd);
+		var zoom = NoteSkin.pixel ? NoteSkin.PIXEL_ZOOM * 0.7 : style.ratingScale;
+		goldPool = [];
+		for (i in 0...3)
+		{
+			var s = new FlxSprite();
+			s.loadGraphic(gold);
+			s.scale.set(zoom, zoom);
+			s.updateHitbox();
+			s.scrollFactor.set();
+			s.antialiasing = !NoteSkin.pixel && Settings.d.antialiasing;
+			s.cameras = cameras;
+			add(s);
+			goldPool.push(new Popup(s));
+		}
+		ratingPools.set("gold", goldPool);
 	}
 
 	// ---------------------------------------------------------------- API usada pelo PlayState
@@ -381,6 +437,12 @@ class Hud extends FlxGroup
 				scoreText.text = "Score (" + pad(Std.int(Math.round(shownScore)), 4) + ") - Accuracy (" + pad(none ? 0 : Std.int(judge.accuracy), 2) + "%) - Misses ("
 					+ judge.misses + ")" + fcTag;
 				scoreText.color = none ? FlxColor.WHITE : (judge.misses == 0 ? 0xFF9EF0FF : (judge.accuracy < 70 ? 0xFFFFB0B0 : FlxColor.WHITE));
+			case "funk":
+				// Score - Misses - Accuracy - Ranking - FC
+				var fcName = judge.fc == "" ? "-" : judge.fc;
+				scoreText.text = "Score: " + sc + "  -  Misses: " + judge.misses + "  -  Accuracy: " + (none ? "0.00" : acc) + "%  -  Ranking: "
+					+ (none ? "N/A" : psychRating(judge.accuracy)) + "  -  FC: " + fcName;
+				scoreText.color = none ? FlxColor.WHITE : (judge.accuracy >= 99.995 ? 0xFFFFD84A : (judge.misses == 0 ? 0xFF9EF0FF : (judge.accuracy < 70 ? 0xFFFFB0B0 : FlxColor.WHITE)));
 			case "kade":
 				scoreText.text = "Score:" + sc + " | Combo Breaks:" + judge.misses + " | Accuracy:" + (none ? "0" : acc) + "% | " + judge.rank;
 			case "psych":
@@ -429,14 +491,20 @@ class Hud extends FlxGroup
 		var baseX = FlxG.width * style.ratingX;
 		var baseY = FlxG.height * style.ratingY;
 
-		var p = take(ratingPools.get(rating));
+		var gold = rating == "sick" && judge.misses == 0 && judge.accuracy >= 99.995;
+		if (gold)
+			ensureGold();
+		var p = take(ratingPools.get(gold ? "gold" : rating));
 		if (p != null)
 		{
 			p.spr.setPosition(baseX - 40, baseY - 60);
 			p.spr.acceleration.y = 550;
 			p.spr.velocity.y = -FlxG.random.int(140, 175);
 			p.spr.velocity.x = FlxG.random.int(-5, 5);
-			show(p, 0.8);
+			p.wobble = (rating == "bad" || rating == "shit") ? 1 : 0;
+			show(p, gold ? 1.0 : 0.8);
+			if (gold)
+				p.spr.angle = 0;
 		}
 
 		if (combo >= 10)
@@ -454,7 +522,10 @@ class Hud extends FlxGroup
 				d.spr.acceleration.y = FlxG.random.int(200, 300);
 				d.spr.velocity.y = -FlxG.random.int(140, 160);
 				d.spr.velocity.x = FlxG.random.float(-5, 5);
+				d.wobble = 0;
 				show(d, 0.8);
+				d.delay = i * 0.045; // os números entram um depois do outro
+				d.spr.visible = false;
 			}
 		}
 
@@ -534,13 +605,27 @@ class Hud extends FlxGroup
 		while (--i >= 0)
 		{
 			var p = live[i];
+			if (p.delay > 0)
+			{
+				p.delay -= elapsed;
+				if (p.delay > 0)
+					continue;
+				p.spr.visible = true;
+			}
+			p.age += elapsed;
 			p.life -= elapsed;
+			// "pop": começa maior e assenta rápido (≈0,2 s); rating ruim balança de leve
+			var k = 1 + 0.5 * Math.exp(-p.age * 18);
+			p.spr.scale.set(p.base * k, p.base * k);
+			if (p.wobble > 0)
+				p.spr.angle = Math.sin(p.age * 38) * 7 * Math.exp(-p.age * 6);
 			if (p.life < 0.25)
 				p.spr.alpha = p.life < 0 ? 0 : p.life / 0.25;
 			if (p.life <= 0)
 			{
 				p.spr.visible = false;
 				p.spr.active = false;
+				p.spr.angle = 0;
 				p.spr.velocity.set(0, 0);
 				p.spr.acceleration.set(0, 0);
 				live.splice(i, 1);
@@ -622,6 +707,8 @@ class Hud extends FlxGroup
 	function show(p:Popup, life:Float):Void
 	{
 		p.life = life;
+		p.age = 0;
+		p.delay = 0;
 		p.spr.alpha = 1;
 		p.spr.visible = true;
 		p.spr.active = true;

@@ -27,6 +27,10 @@ class HudStyles
 {
 	public static final ALL:Array<HudStyle> = [
 		{
+			id: "funk", name: "FunkForge (novo)", barW: 520, barH: 10, barImage: false, border: 3, fixedColors: false, bump: 1.2, score: "funk",
+			scoreSize: 18, scoreDy: 12, time: "top", timeInside: false, counters: true, info: false, ratingX: 0.55, ratingY: 0.42, ratingScale: 0.6
+		},
+		{
 			id: "funkforge", name: "FunkForge", barW: 600, barH: 14, barImage: false, border: 4, fixedColors: false, bump: 1.2, score: "funkforge",
 			scoreSize: 20, scoreDy: 10, time: "top", timeInside: false, counters: true, info: false, ratingX: 0.55, ratingY: 0.42, ratingScale: 0.7
 		},

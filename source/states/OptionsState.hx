@@ -17,7 +17,7 @@ class OptionsState extends FlxState
 
 	static final NAMES:Array<String> = [
 		"Downscroll", "Middlescroll", "Ghost tapping", "Botplay", "Antialiasing", "Zoom da câmera na batida", "Barra da música",
-		"Contador de julgamentos", "Ms nos acertos", "Velocidade das notas", "Offset", "Estilo do HUD", "Precisão", "Splashes das notas", "Controles", "Mods"
+		"Contador de julgamentos", "Ms nos acertos", "Offset", "Estilo do HUD", "Precisão", "Splashes das notas", "Controles", "Mods"
 	];
 
 	var rows:Array<FlxText> = [];
@@ -64,12 +64,11 @@ class OptionsState extends FlxState
 			case 6: onOff(d.hudSongBar);
 			case 7: onOff(d.hudJudgementCounter);
 			case 8: onOff(d.hudMsDisplay);
-			case 9: core.Scroll.describe() + "   (ENTER troca o modo, ←→ valor)";
-			case 10: d.offsetMs + " ms";
-			case 11: HudStyles.get(d.hudStyle).name;
-			case 12: d.accuracyMode == "wife3" ? "Wife3 (Kade, rígida)" : "Simples (sick 100%, good 75%)";
-			case 13: onOff(d.noteSplashes);
-			case 14: "ENTER para trocar teclas";
+			case 9: d.offsetMs + " ms";
+			case 10: HudStyles.get(d.hudStyle).name;
+			case 11: d.accuracyMode == "wife3" ? "Wife3 (Kade, rígida)" : "Simples (sick 100%, good 75%)";
+			case 12: onOff(d.noteSplashes);
+			case 13: "ENTER para trocar teclas";
 			default: "(" + d.enabledMods.length + " ativos)";
 		}
 	}
@@ -88,18 +87,11 @@ class OptionsState extends FlxState
 			case 6: d.hudSongBar = !d.hudSongBar;
 			case 7: d.hudJudgementCounter = !d.hudJudgementCounter;
 			case 8: d.hudMsDisplay = !d.hudMsDisplay;
-			case 9:
-				if (d.scrollMode == 0 && dir != 0 && (FlxG.keys.justPressed.LEFT || FlxG.keys.justPressed.RIGHT || FlxG.keys.justPressed.A || FlxG.keys.justPressed.D))
-					d.scrollMode = 1; // ←→ no modo "do chart" não fazia nada: agora passa para velocidade fixa
-				if (d.scrollMode == 1)
-					d.scrollSpeed = Math.min(10, Math.max(0.5, Math.round((d.scrollSpeed + 0.1 * dir) * 10) / 10));
-				else if (d.scrollMode == 2)
-					d.scrollMult = Math.min(4, Math.max(0.25, Math.round((d.scrollMult + 0.05 * dir) * 100) / 100));
-			case 10: d.offsetMs += 5 * dir;
-			case 11: d.hudStyle = HudStyles.next(d.hudStyle, dir);
-			case 12: d.accuracyMode = d.accuracyMode == "wife3" ? "simple" : "wife3";
-			case 13: d.noteSplashes = !d.noteSplashes;
-			case 14:
+			case 9: d.offsetMs += 5 * dir;
+			case 10: d.hudStyle = HudStyles.next(d.hudStyle, dir);
+			case 11: d.accuracyMode = d.accuracyMode == "wife3" ? "simple" : "wife3";
+			case 12: d.noteSplashes = !d.noteSplashes;
+			case 13:
 				Settings.flush();
 				FlxG.switchState(new ControlsState());
 			default:
@@ -151,14 +143,7 @@ class OptionsState extends FlxState
 			dir = 1;
 		if (FlxG.keys.justPressed.ENTER)
 		{
-			if (cur == 9) // troca o modo de velocidade: chart → fixa → multiplicador
-			{
-				Settings.d.scrollMode = (Settings.d.scrollMode + 1) % 3;
-				MenuUtil.sfx("scrollMenu");
-				paint();
-			}
-			else
-				dir = 1;
+			dir = 1;
 		}
 		if (dir != 0)
 		{

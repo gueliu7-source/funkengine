@@ -63,7 +63,7 @@ class Settings
 			badMs: 135,
 			shitMs: 166,
 			accuracyMode: "simple",
-			hudStyle: "clean",
+			hudStyle: "funk",
 			enabledMods: [],
 			keys: [[FlxKey.A, FlxKey.LEFT], [FlxKey.S, FlxKey.DOWN], [FlxKey.W, FlxKey.UP], [FlxKey.D, FlxKey.RIGHT]]
 		};
@@ -80,6 +80,9 @@ class Settings
 		for (f in Reflect.fields(saved))
 			if (Reflect.hasField(d, f))
 				Reflect.setField(d, f, Reflect.field(saved, f));
+		d.scrollMode = 0; // a velocidade das notas é sempre a do chart
+		if (d.hudStyle == "clean" || d.hudStyle == "funkforge")
+			d.hudStyle = "funk"; // o HUD antigo foi substituído
 		// save antigo: scrollSpeed > 0 significava velocidade fixa
 		if (!Reflect.hasField(saved, "scrollMode"))
 		{

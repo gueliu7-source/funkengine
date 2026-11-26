@@ -76,13 +76,10 @@ class Strumline extends FlxGroup
 	/** Velocidade (do chart) de uma nota: a da nota, senão a da lane, senão a do jogo. O modo "fixa" vale para todas. */
 	public function speedOf(n:NoteData):Float
 	{
-		if (Settings.d.scrollMode != 1)
-		{
-			if (n.scrollSpeed != null)
-				return n.scrollSpeed;
-			if (receptors.length > n.lane && receptors[n.lane].scrollSpeed != null)
-				return receptors[n.lane].scrollSpeed;
-		}
+		if (n.scrollSpeed != null)
+			return n.scrollSpeed;
+		if (receptors.length > n.lane && receptors[n.lane].scrollSpeed != null)
+			return receptors[n.lane].scrollSpeed;
 		return baseSpeed;
 	}
 
@@ -102,10 +99,9 @@ class Strumline extends FlxGroup
 	function recalc():Void
 	{
 		var slow = baseSpeed;
-		if (Settings.d.scrollMode != 1)
-			for (r in receptors)
-				if (r.scrollSpeed != null && r.scrollSpeed < slow)
-					slow = r.scrollSpeed;
+		for (r in receptors)
+			if (r.scrollSpeed != null && r.scrollSpeed < slow)
+				slow = r.scrollSpeed;
 		spawnMs = (FlxG.height + 160) / (0.45 * Math.max(0.05, slow) / rate);
 	}
 
