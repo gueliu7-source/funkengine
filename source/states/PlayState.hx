@@ -82,6 +82,7 @@ class PlayState extends FlxState
 	public var started:Bool = false;
 	public var ended:Bool = false;
 	public var tagged:Map<String, FlxSprite> = new Map();
+	public var scriptTags:Array<String> = []; // sprites criados por scripts (para o recarregamento)
 
 	var camFollow:FlxObject;
 	var errorText:FlxText;
@@ -434,6 +435,8 @@ class PlayState extends FlxState
 				errorText.alpha = Math.max(0, errorTimer);
 		}
 
+		if (FlxG.keys.justPressed.F6)
+			reloadScripts();
 		if (FlxG.keys.justPressed.R)
 			judge.health = 0;
 		if (judge.health <= 0 && !Settings.d.botplay)
@@ -907,6 +910,41 @@ class PlayState extends FlxState
 		var p = v.split(",");
 		if (p.length >= 2 && num(p[0], 0) > 0)
 			c.shake(num(p[1], 0.03), num(p[0], 0.5));
+	}
+
+	/** Desfaz o que os scripts mudaram: sprites criados por eles, modchart e velocidades por seta. */
+	public function resetScriptEffects():Void
+	{
+		for (tag in scriptTags)
+		{
+			var o = tagged.get(tag);
+			if (o != null)
+			{
+				o.kill();
+				o.destroy();
+			}
+			tagged.remove(tag);
+		}
+		scriptTags = [];
+		game.Modchart.reset(this, 0);
+		for (lane in 0...4)
+		{
+			opponentStrum.setLaneSpeed(lane, null);
+			playerStrum.setLaneSpeed(lane, null);
+		}
+		applyScrollSpeed(core.Scroll.effective(chart.speed));
+	}
+
+	/** F6: recarrega os scripts da música sem reiniciar. */
+	public function reloadScripts():Void
+	{
+		Paths.rebuild(Settings.d.enabledMods);
+		scripts.reload(chart);
+		var n = scripts.errors.length;
+		if (n == 0)
+			showError("Scripts recarregados (" + scripts.runners.length + ")", 0xFF7DFF9A);
+		else
+			showError(n + " erro(s) ao recarregar: " + scripts.errors[0]);
 	}
 
 	/** Scripts: define a velocidade das notas (ignorado no modo de velocidade fixa). */

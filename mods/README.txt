@@ -63,3 +63,10 @@ tween(obj, {x=100}, 0.5, "quadOut", aoTerminar) · timer(seg, fn, ?vezes) · hov
 button(x, y, largura, altura, "texto", function() ... end, ?cor)  → objeto com .bg, .label, .enabled, setText()
 list(x, y, largura, ["A","B"], function(i, nome) ... end, ?tamanho) → ↑↓/W S/mouse/ENTER; objeto com .index, selected(), setIndex()
 saveData("chave", valor) / loadData("chave", padrão): salva entre sessões. Exemplo completo: mods/example/states/demo.hx
+
+=== FERRAMENTAS PARA MODDERS ===
+F6 durante a música: recarrega os scripts (.hx e Lua comum) do disco sem reiniciar. Desfaz sprites, tweens, timers,
+modchart e velocidades que os scripts criaram e roda onCreate/onCreatePost de novo. Erros aparecem na tela com arquivo e linha.
+(Scripts Lua no modo Psych não são recarregados, para não duplicar o que já criaram.)
+Criar um mod com arquivos de exemplo:   python3 tools/new_mod.py meu-mod --com tudo     (--com script modchart menu tela musica stage personagem)
+Guia completo da API (gerado do código): docs/API.md   — atualize com: python3 tools/gen_api_docs.py

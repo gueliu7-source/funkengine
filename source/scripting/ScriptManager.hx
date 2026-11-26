@@ -218,6 +218,33 @@ class ScriptManager
 		return stop;
 	}
 
+	/**
+	 * Recarrega os scripts com a música tocando (F6): lê os arquivos de novo do disco, desfaz o que os scripts
+	 * criaram (sprites, tweens, timers, modchart, velocidades) e roda onCreate/onCreatePost de novo.
+	 * Scripts Lua no modo Psych não são recarregados (continuam como estão), para não duplicar o que criaram.
+	 */
+	public function reload(chart:Chart):Void
+	{
+		call("onDestroy");
+		var keep:Array<ScriptRunner> = [];
+		for (r in runners)
+			if (r.psych)
+				keep.push(r);
+			else
+				r.destroy();
+		runners = keep;
+		errors = [];
+		var cl = api.get("__cleanup");
+		if (cl != null)
+			cl();
+		game.resetScriptEffects();
+		loadAll(chart);
+		call("onCreate");
+		call("onCreatePost");
+		if (game.started)
+			call("onSongStart");
+	}
+
 	public function reportError(msg:String):Void
 	{
 		errors.push(msg);

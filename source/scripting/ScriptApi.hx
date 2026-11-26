@@ -168,6 +168,7 @@ class ScriptApi
 			s.loadGraphic(gr);
 			s.antialiasing = Settings.d.antialiasing;
 			g.tagged.set(tag, s);
+			g.scriptTags.push(tag);
 			return true;
 		});
 		m.set("makeAnimatedSprite", function(tag:String, atlas:String, ?x:Float, ?y:Float):Bool {
@@ -178,6 +179,7 @@ class ScriptApi
 			s.frames = f;
 			s.antialiasing = Settings.d.antialiasing;
 			g.tagged.set(tag, s);
+			g.scriptTags.push(tag);
 			return true;
 		});
 		m.set("addAnimationByPrefix", function(tag:String, name:String, prefix:String, ?fps:Int, ?loop:Bool):Void {
@@ -248,6 +250,15 @@ class ScriptApi
 					mgr.call("onTweenCompleted", [tag]);
 				}
 			}));
+		});
+		// usado pelo recarregamento de scripts (F6): cancela tweens e timers dos scripts
+		m.set("__cleanup", function():Void {
+			for (t in tweens)
+				t.cancel();
+			tweens.clear();
+			for (t in timers)
+				t.cancel();
+			timers.clear();
 		});
 		m.set("cancelTween", function(tag:String):Void {
 			var t = tweens.get(tag);
